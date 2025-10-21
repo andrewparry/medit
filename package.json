@@ -1,0 +1,31 @@
+{
+  "name": "markdown-wysiwyg-editor",
+  "version": "1.0.0",
+  "description": "A browser-based markdown WYSIWYG editor",
+  "main": "js/editor.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "jsdom": "^22.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/test/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "js/**/*.js",
+      "!js/**/*.min.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ]
+  }
+}

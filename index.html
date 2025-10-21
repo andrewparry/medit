@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown WYSIWYG Editor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header with file operations -->
+        <header class="app-header" role="banner">
+            <h1 class="app-title">Markdown Editor</h1>
+            <nav class="file-operations" role="navigation" aria-label="File operations">
+                <button id="open-file" class="file-btn" aria-label="Open markdown file">
+                    <span class="btn-icon">📁</span>
+                    Open
+                </button>
+                <button id="save-file" class="file-btn" aria-label="Save markdown file">
+                    <span class="btn-icon">💾</span>
+                    Save
+                </button>
+            </nav>
+        </header>
+
+        <!-- Main editor area -->
+        <main class="editor-main" role="main">
+            <!-- Formatting toolbar -->
+            <section class="toolbar-section" role="toolbar" aria-label="Formatting options">
+                <div class="toolbar" id="formatting-toolbar">
+                    <div class="toolbar-group" role="group" aria-label="Text formatting">
+                        <button class="toolbar-btn" data-format="bold" aria-label="Bold" title="Bold (Ctrl+B)">
+                            <span class="btn-icon">B</span>
+                        </button>
+                        <button class="toolbar-btn" data-format="italic" aria-label="Italic" title="Italic (Ctrl+I)">
+                            <span class="btn-icon">I</span>
+                        </button>
+                        <button class="toolbar-btn" data-format="code" aria-label="Inline code" title="Code">
+                            <span class="btn-icon">&lt;/&gt;</span>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-separator" role="separator"></div>
+
+                    <div class="toolbar-group" role="group" aria-label="Headers">
+                        <button class="toolbar-btn" data-format="h1" aria-label="Header 1" title="Header 1">
+                            <span class="btn-text">H1</span>
+                        </button>
+                        <button class="toolbar-btn" data-format="h2" aria-label="Header 2" title="Header 2">
+                            <span class="btn-text">H2</span>
+                        </button>
+                        <button class="toolbar-btn" data-format="h3" aria-label="Header 3" title="Header 3">
+                            <span class="btn-text">H3</span>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-separator" role="separator"></div>
+
+                    <div class="toolbar-group" role="group" aria-label="Lists and links">
+                        <button class="toolbar-btn" data-format="ul" aria-label="Bullet list" title="Bullet List">
+                            <span class="btn-icon">•</span>
+                        </button>
+                        <button class="toolbar-btn" data-format="ol" aria-label="Numbered list" title="Numbered List">
+                            <span class="btn-icon">1.</span>
+                        </button>
+                        <button class="toolbar-btn" data-format="link" aria-label="Insert link" title="Link">
+                            <span class="btn-icon">🔗</span>
+                        </button>
+                        <button class="toolbar-btn" data-format="image" aria-label="Insert image" title="Image">
+                            <span class="btn-icon">🖼️</span>
+                        </button>
+                        <button class="toolbar-btn" data-format="table" aria-label="Insert table" title="Table">
+                            <span class="btn-icon">⊞</span>
+                        </button>
+                        <button class="toolbar-btn" data-format="codeBlock" aria-label="Code block" title="Code Block">
+                            <span class="btn-icon">{ }</span>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-separator" role="separator"></div>
+
+                    <div class="toolbar-group" role="group" aria-label="View options">
+                        <button id="toggle-preview" class="toolbar-btn" aria-label="Toggle preview"
+                            title="Toggle Preview">
+                            <span class="btn-icon">👁️</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Editor and preview container -->
+            <section class="editor-container">
+                <!-- Editor pane -->
+                <div class="editor-pane" role="region" aria-label="Markdown editor">
+                    <div id="editor" class="editor-content" contenteditable="true" role="textbox" aria-multiline="true"
+                        aria-label="Markdown content editor" spellcheck="true"
+                        data-placeholder="Start writing your markdown content..."></div>
+                </div>
+
+                <!-- Preview pane -->
+                <div class="preview-pane" role="region" aria-label="Markdown preview">
+                    <div id="preview" class="preview-content" aria-live="polite"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Status bar -->
+        <footer class="status-bar" role="contentinfo">
+            <div class="status-info">
+                <span class="current-file-name status-item editable-file-name" contenteditable="false" role="button"
+                    tabindex="0" aria-label="Click to edit file name" title="Click to edit file name">Untitled</span>
+                <span id="word-count" class="status-item">0 words</span>
+                <span id="char-count" class="status-item">0 characters</span>
+                <span class="parsing-status status-item">Ready</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Hidden file input for fallback file operations -->
+    <input type="file" id="file-input" accept=".md,.markdown,.txt" style="display: none;" aria-hidden="true">
+
+    <!-- Scripts -->
+    <script src="js/editor.js" defer></script>
+</body>
+
+</html>

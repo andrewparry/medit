@@ -3956,9 +3956,15 @@ console.log('Hello, World!');
         
         // Clean up multiple consecutive newlines (max 2)
         content = content.replace(/\n{3,}/g, '\n\n');
-        
-        // Trim leading/trailing whitespace but preserve internal structure
-        return content.trim();
+
+        // If the content only contains whitespace characters, treat it as empty
+        if (!/[\S\u00A0]/.test(content)) {
+            return '';
+        }
+
+        // Return content without trimming so intentional leading/trailing
+        // whitespace and newlines are preserved
+        return content;
     }
 
     /**

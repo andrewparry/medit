@@ -3932,33 +3932,53 @@ console.log('Hello, World!');
      */
     getEditorContent() {
         if (!this.editorElement) return '';
-        
-        // Get the HTML content and convert it back to markdown-friendly text
+
         const html = this.editorElement.innerHTML;
-        
-        // Convert HTML line breaks back to newlines while preserving markdown syntax
-        let content = html
-            .replace(/<br\s*\/?>/gi, '\n')     // Replace <br> tags with newlines
-            .replace(/<div[^>]*>/gi, '\n')     // Replace opening <div> tags with newlines  
-            .replace(/<\/div>/gi, '')          // Remove closing </div> tags
-            .replace(/<p[^>]*>/gi, '')         // Remove opening <p> tags
-            .replace(/<\/p>/gi, '\n\n')       // Replace closing </p> tags with double newlines
-            .replace(/&nbsp;/gi, ' ')          // Replace non-breaking spaces
-            .replace(/&lt;/gi, '<')            // Unescape HTML entities
+        const content = this.normalizeEditorHtml(html);
+
+        if (!/[\S\u00A0]/.test(content)) {
+            return '';
+        }
+
+        return content;
+    }
+
+    /**
+     * Normalize editor HTML into markdown-friendly text
+     * @param {string} html - Raw HTML from the editor
+     * @returns {string}
+     */
+    normalizeEditorHtml(html) {
+        if (!html) return '';
+
+        let content = html;
+
+        // Prevent leading newlines when the editor wraps the first line in a div
+        content = content.replace(/^\s*<div[^>]*>/i, '');
+
+        // Collapse empty divs and divs that only contain a line break into single newlines
+        content = content.replace(/<div[^>]*>\s*(?:<br\s*\/?>\s*)<\/div>/gi, '\n');
+        content = content.replace(/<div[^>]*>\s*<\/div>/gi, '\n');
+
+        // Convert remaining structural tags into newlines
+        content = content.replace(/<div[^>]*>/gi, '\n');
+        content = content.replace(/<\/div>/gi, '');
+        content = content.replace(/<p[^>]*>/gi, '');
+        content = content.replace(/<\/p>/gi, '\n\n');
+        content = content.replace(/<br\s*\/?>/gi, '\n');
+
+        // Decode HTML entities
+        content = content.replace(/&nbsp;/gi, ' ')
+            .replace(/&lt;/gi, '<')
             .replace(/&gt;/gi, '>')
             .replace(/&amp;/gi, '&')
             .replace(/&quot;/gi, '"')
             .replace(/&#39;/gi, "'");
-        
-        // Remove any HTML tags that might have been added by contenteditable
-        // but preserve the text content
+
+        // Strip any remaining tags
         content = content.replace(/<[^>]*>/g, '');
-        
-        // Clean up multiple consecutive newlines (max 2)
-        content = content.replace(/\n{3,}/g, '\n\n');
-        
-        // Trim leading/trailing whitespace but preserve internal structure
-        return content.trim();
+
+        return content;
     }
 
     /**
@@ -4555,37 +4575,92 @@ console.log('Hello, World!');
     getCurrentCursorPositionInText() {
         const selection = window.getSelection();
         if (!selection.rangeCount) return 0;
-        
+
         const range = selection.getRangeAt(0);
-        
-        // Create a range from the start of the editor to the cursor
+
         const preCaretRange = range.cloneRange();
         preCaretRange.selectNodeContents(this.editorElement);
         preCaretRange.setEnd(range.startContainer, range.startOffset);
-        
-        // Create a temporary container to get the HTML content before cursor
+
         const tempDiv = document.createElement('div');
-        tempDiv.appendChild(preCaretRange.cloneContents());
-        const htmlBeforeCursor = tempDiv.innerHTML;
-        
-        // Convert HTML to text using the same logic as getEditorContent
-        let textBeforeCursor = htmlBeforeCursor
-            .replace(/<br\s*\/?>/gi, '\n')
-            .replace(/<div[^>]*>/gi, '\n')
-            .replace(/<\/div>/gi, '')
-            .replace(/<p[^>]*>/gi, '')
-            .replace(/<\/p>/gi, '\n\n')
-            .replace(/&nbsp;/gi, ' ')
-            .replace(/&lt;/gi, '<')
-            .replace(/&gt;/gi, '>')
-            .replace(/&amp;/gi, '&')
-            .replace(/&quot;/gi, '"')
-            .replace(/&#39;/gi, "'");
-        
-        // Remove any remaining HTML tags
-        textBeforeCursor = textBeforeCursor.replace(/<[^>]*>/g, '');
-        
+        const fragment = preCaretRange.cloneContents();
+        if (fragment && fragment.childNodes && fragment.childNodes.length) {
+            tempDiv.appendChild(fragment);
+        }
+
+        let textBeforeCursor = this.normalizeEditorHtml(tempDiv.innerHTML);
+
+        if (!textBeforeCursor && range.startContainer) {
+            if (range.startContainer === this.editorElement) {
+                return this.getAccumulatedTextLengthUpToChild(this.editorElement, range.startOffset);
+            }
+
+            if (range.startContainer.nodeType === Node.ELEMENT_NODE) {
+                const offsetWithinContainer = this.getAccumulatedTextLengthUpToChild(range.startContainer, range.startOffset);
+                const parent = range.startContainer.parentNode;
+
+                if (parent) {
+                    return this.getAccumulatedTextLengthUpToChild(parent, Array.prototype.indexOf.call(parent.childNodes, range.startContainer)) + offsetWithinContainer;
+                }
+
+                return offsetWithinContainer;
+            }
+        }
+
         return textBeforeCursor.length;
+    }
+
+    /**
+     * Calculate the textual length contributed by a node
+     * @param {Node} node
+     * @returns {number}
+     */
+    getNodeTextLength(node) {
+        if (!node) return 0;
+
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent.length;
+        }
+
+        if (node.nodeName === 'BR') {
+            return 1;
+        }
+
+        let length = 0;
+
+        if (node.childNodes && node.childNodes.length) {
+            node.childNodes.forEach(child => {
+                length += this.getNodeTextLength(child);
+            });
+        }
+
+        if ((node.nodeName === 'DIV' || node.nodeName === 'P') && node !== this.editorElement) {
+            const lastChild = node.childNodes[node.childNodes.length - 1];
+            if (!lastChild || lastChild.nodeName !== 'BR') {
+                length += 1;
+            }
+        }
+
+        return length;
+    }
+
+    /**
+     * Calculate text length up to a specific child index within a container
+     * @param {Node} container
+     * @param {number} offset
+     * @returns {number}
+     */
+    getAccumulatedTextLengthUpToChild(container, offset) {
+        if (!container || !container.childNodes) return 0;
+
+        let length = 0;
+        const limit = Math.min(offset, container.childNodes.length);
+
+        for (let i = 0; i < limit; i++) {
+            length += this.getNodeTextLength(container.childNodes[i]);
+        }
+
+        return length;
     }
     
     /**

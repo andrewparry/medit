@@ -736,14 +736,28 @@ describe('Cursor Positioning During Formatting', () => {
             const content = 'First line\n\nThird line';
             editorCore.setEditorContent(content);
             editorCore.mockCursorPosition = 11; // Position on empty line
-            
+
             mockRange._setSelectedText('');
-            
+
             await editorCore.applyFormatting('h1');
-            
+
             expect(editorCore.getEditorContent()).toBe('First line\n# \nThird line');
             // Cursor should move forward by 2 characters (length of "# ")
             expect(editorCore.mockCursorPosition).toBe(13);
+        });
+
+        test('should format trailing empty line without jumping to first line', async () => {
+            const content = 'First line\n';
+            editorCore.setEditorContent(content);
+            editorCore.mockCursorPosition = content.length; // Cursor at start of trailing empty line
+
+            mockRange._setSelectedText('');
+
+            await editorCore.applyFormatting('h1');
+
+            expect(editorCore.getEditorContent()).toBe('First line\n# ');
+            // Cursor should move forward by 2 characters (length of "# ")
+            expect(editorCore.mockCursorPosition).toBe(content.length + 2);
         });
         
         test('should handle cursor at line boundary', async () => {

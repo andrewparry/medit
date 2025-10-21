@@ -69,6 +69,11 @@ class MockElement {
         // Mock focus behavior
     }
 
+    select() {
+        // Mock text selection behavior for inputs/textarea
+        this._isSelected = true;
+    }
+
     click() {
         const clickListeners = this.eventListeners.get('click') || [];
         clickListeners.forEach(callback => callback({ preventDefault: () => {} }));
@@ -479,7 +484,12 @@ class EditorCore {
             .replace(/<[^>]*>/g, '');
         
         content = content.replace(/\n{3,}/g, '\n\n');
-        return content.trim();
+
+        if (!/[\S\u00A0]/.test(content)) {
+            return '';
+        }
+
+        return content;
     }
     
     setEditorContent(content) {

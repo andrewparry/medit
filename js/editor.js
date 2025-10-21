@@ -3977,7 +3977,17 @@ console.log('Hello, World!');
 
         // Strip any remaining tags
         content = content.replace(/<[^>]*>/g, '');
+        
+        // Clean up multiple consecutive newlines (max 2)
+        content = content.replace(/\n{3,}/g, '\n\n');
 
+        // If the content only contains whitespace characters, treat it as empty
+        if (!/[\S\u00A0]/.test(content)) {
+            return '';
+        }
+
+        // Return content without trimming so intentional leading/trailing
+        // whitespace and newlines are preserved
         return content;
     }
 

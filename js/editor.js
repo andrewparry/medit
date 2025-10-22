@@ -8,6 +8,7 @@
     const toolbar = document.getElementById('formatting-toolbar');
     const togglePreviewButton = document.getElementById('toggle-preview');
     const editorContainer = document.querySelector('.editor-container');
+    const newButton = document.getElementById('new-file');
     const openButton = document.getElementById('open-file');
     const saveButton = document.getElementById('save-file');
     const fileInput = document.getElementById('file-input');
@@ -19,6 +20,7 @@
 
     const AUTOSAVE_KEY = 'markdown-editor-autosave';
     const AUTOSAVE_FILENAME_KEY = 'markdown-editor-filename';
+    const THEME_KEY = 'markdown-editor-theme';
     const AUTOSAVE_INTERVAL = 1500;
 
     const state = {
@@ -42,13 +44,19 @@
     const normalizeWhitespace = (text) => text.replace(/\s+/g, ' ').trim();
 
     const stripMarkdown = (markdown) => markdown
-        .replace(/````?[^]*?````?/g, ' ')
+        .replace(/```+[\s\S]*?```+/g, ' ')
         .replace(/`[^`]*`/g, ' ')
-        .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-        .replace(/[#>*_`~\-]{1,}/g, ' ')
-        .replace(/\d+\.\s+/g, ' ')
+        .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/^\s{0,3}#{1,6}\s*/gm, '')
+        .replace(/^\s*[-*+]\s+/gm, '')
+        .replace(/^\s*\d+\.\s+/gm, '')
+        .replace(/^\s*>+\s?/gm, '')
+        .replace(/^\s*\|?[-:\s|]+\|?\s*$/gm, ' ')
         .replace(/\|/g, ' ')
+        .replace(/[*_~`]/g, '')
+        .replace(/<\/?[^>]+>/g, ' ')
+        .replace(/\r?\n/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
 
@@ -134,7 +142,7 @@
             newEnd = newStart;
         }
 
-        setSelection(newStart, newEnd);
+        setSelection(newEnd, newEnd);
         updatePreview();
         updateCounters();
         markDirty(true);
@@ -142,13 +150,21 @@
     };
 
     // Wrap the current selection with a prefix/suffix pair, inserting placeholder text when nothing is selected.
-    const wrapSelection = (prefix, suffix, placeholder) => {
+    const wrapSelection = (prefix, suffix, placeholder = '') => {
         const { start, end, value } = getSelection();
-        const selection = value.slice(start, end) || placeholder;
-        const inserted = `${prefix}${selection}${suffix}`;
+        const selection = value.slice(start, end);
+        const hasSelection = selection.length > 0;
+        const inner = hasSelection ? selection : placeholder;
+        const inserted = `${prefix}${inner}${suffix}`;
+
+        if (hasSelection || !inner) {
+            replaceSelection(inserted, inserted.length);
+            return;
+        }
+
         replaceSelection(inserted, {
             start: prefix.length,
-            end: prefix.length + selection.length
+            end: prefix.length + inner.length
         });
     };
 
@@ -170,10 +186,10 @@
 
         const before = lines.slice(0, startLineIndex).join('\n');
         const selected = lines.slice(startLineIndex, endLineIndex + 1).join('\n');
-        const newStart = before.length + (startLineIndex > 0 ? 1 : 0);
-        const newEnd = newStart + selected.length;
+        const beforeLength = before.length + (startLineIndex > 0 ? 1 : 0);
+        const newEnd = beforeLength + selected.length;
 
-        setSelection(newStart, newEnd);
+        setSelection(newEnd, newEnd);
         updatePreview();
         updateCounters();
         markDirty(true);
@@ -223,9 +239,9 @@
         editor.value = lines.join('\n');
         const before = lines.slice(0, selectionStartIndex).join('\n');
         const selected = lines.slice(selectionStartIndex, selectionEndIndex + 1).join('\n');
-        const newStart = before.length + (selectionStartIndex > 0 ? 1 : 0);
-        const newEnd = newStart + selected.length;
-        setSelection(newStart, newEnd);
+        const beforeLength = before.length + (selectionStartIndex > 0 ? 1 : 0);
+        const newEnd = beforeLength + selected.length;
+        setSelection(newEnd, newEnd);
         updatePreview();
         updateCounters();
         markDirty(true);
@@ -235,13 +251,25 @@
     const applyCodeBlock = () => {
         const { start, end, value } = getSelection();
         const selection = value.slice(start, end);
-        const placeholder = selection || 'code here';
+        const hasSelection = selection.length > 0;
+        const placeholder = hasSelection ? selection : 'code here';
         const fence = '```';
-        const block = `\n${fence}\n${placeholder}\n${fence}\n`;
-        const prefixLength = (`\n${fence}\n`).length;
+        const needsLeadingNewline = start > 0 && value[start - 1] !== '\n';
+        const needsTrailingNewline = end === value.length || value[end] !== '\n';
+        const leading = needsLeadingNewline ? '\n' : '';
+        const trailing = needsTrailingNewline ? '\n' : '';
+        const blockCore = `${fence}\n${placeholder}\n${fence}`;
+        const block = `${leading}${blockCore}${trailing}`;
+
+        if (hasSelection) {
+            replaceSelection(block, block.length);
+            return;
+        }
+
+        const placeholderStart = leading.length + fence.length + 1;
         replaceSelection(block, {
-            start: prefixLength,
-            end: prefixLength + placeholder.length
+            start: placeholderStart,
+            end: placeholderStart + placeholder.length
         });
     };
 
@@ -253,7 +281,12 @@
     const insertLink = () => {
         const { start, end, value } = getSelection();
         const selectedText = value.slice(start, end);
-        const text = selectedText || promptForInput('Link text', 'link text');
+        let text = selectedText;
+
+        if (!text) {
+            text = promptForInput('Link text', 'link text');
+        }
+
         if (!text) {
             return;
         }
@@ -261,10 +294,8 @@
         if (!url) {
             return;
         }
-        replaceSelection(`[${text}](${url})`, {
-            start: 1,
-            end: 1 + text.length
-        });
+        const inserted = `[${text}](${url})`;
+        replaceSelection(inserted, inserted.length);
     };
 
     const insertImage = () => {
@@ -274,17 +305,29 @@
             return;
         }
         const alt = altText || 'image';
-        replaceSelection(`![${alt}](${url})`, {
-            start: 2,
-            end: 2 + alt.length
-        });
+        const inserted = `![${alt}](${url})`;
+        replaceSelection(inserted, inserted.length);
     };
 
     // Insert a two-column Markdown table skeleton and place the caret after the block.
     const insertTable = () => {
-        const table = ['| Column 1 | Column 2 |', '| --- | --- |', '| Row 1 | Row 1 value |', '| Row 2 | Row 2 value |'].join('\n');
-        const block = `\n${table}\n`;
-        replaceSelection(block, block.length);
+        const { start, end, value } = getSelection();
+        const rows = ['| Column 1 | Column 2 |', '| --- | --- |', '| Row 1 | Row 1 value |', '| Row 2 | Row 2 value |'];
+        const table = rows.join('\n');
+        const needsLeadingNewline = start > 0 && value[start - 1] !== '\n';
+        const needsTrailingNewline = end === value.length || value[end] !== '\n';
+        const leading = needsLeadingNewline ? '\n' : '';
+        const trailing = needsTrailingNewline ? '\n' : '';
+        const block = `${leading}${table}${trailing}`;
+        const focusText = 'Row 1 value';
+        const focusIndex = table.indexOf(focusText);
+        const selectionStart = focusIndex >= 0 ? leading.length + focusIndex : block.length;
+        const selectionEnd = focusIndex >= 0 ? selectionStart + focusText.length : selectionStart;
+
+        replaceSelection(block, {
+            start: selectionStart,
+            end: selectionEnd
+        });
     };
 
     const handleFormatting = (action) => {
@@ -346,14 +389,48 @@
         togglePreviewButton.title = state.isPreviewVisible ? 'Hide preview (Ctrl+Shift+P)' : 'Show preview (Ctrl+Shift+P)';
     };
 
-    // Toggle the global theme and keep the toggle state accessible for assistive tech.
-    const toggleDarkMode = () => {
-        const isDark = document.body.classList.toggle('theme-dark');
+    const persistTheme = (isDark) => {
+        if (!window.localStorage) {
+            return;
+        }
+
+        try {
+            localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+        } catch (error) {
+            console.error('Theme persistence failed', error);
+        }
+    };
+
+    const setTheme = (isDark) => {
+        document.body.classList.toggle('theme-dark', isDark);
         document.body.classList.toggle('theme-light', !isDark);
         darkModeToggle.setAttribute('aria-checked', isDark);
         darkModeToggle.querySelector('.btn-text').textContent = isDark ? 'Light' : 'Dark';
+    };
+
+    const initializeTheme = () => {
+        let isDark = document.body.classList.contains('theme-dark');
+
+        if (window.localStorage) {
+            try {
+                const stored = localStorage.getItem(THEME_KEY);
+                if (stored) {
+                    isDark = stored === 'dark';
+                }
+            } catch (error) {
+                console.error('Theme restore failed', error);
+            }
+        }
+
+        setTheme(isDark);
+    };
+
+    // Toggle the global theme and keep the toggle state accessible for assistive tech.
+    const toggleDarkMode = () => {
+        const isDark = !document.body.classList.contains('theme-dark');
+        setTheme(isDark);
         autosaveStatus.textContent = isDark ? 'Dark mode on' : 'Dark mode off';
-        scheduleAutosave();
+        persistTheme(isDark);
     };
 
     const handleFilenameEdit = () => {
@@ -372,6 +449,83 @@
         fileNameDisplay.contentEditable = 'false';
         delete fileNameDisplay.dataset.originalName;
         scheduleAutosave();
+    };
+
+    const clearAutosave = () => {
+        if (!window.localStorage) {
+            return;
+        }
+
+        try {
+            localStorage.removeItem(AUTOSAVE_KEY);
+            localStorage.removeItem(AUTOSAVE_FILENAME_KEY);
+        } catch (error) {
+            console.error('Failed to clear autosave', error);
+        }
+    };
+
+    const resetEditor = () => {
+        editor.value = '';
+        updatePreview();
+        updateCounters();
+        fileNameDisplay.textContent = 'Untitled.md';
+        autosaveStatus.textContent = 'Draft saved';
+        state.lastSavedContent = '';
+        markDirty(false);
+        clearTimeout(state.autosaveTimer);
+        state.autosaveTimer = null;
+        clearAutosave();
+        editor.focus();
+    };
+
+    const promptNewDocumentAction = () => {
+        const message = 'You have unsaved changes. Save them before starting a new document?\nType "save", "don\'t save", or "cancel".';
+
+        while (true) {
+            const response = window.prompt(message, 'save');
+
+            if (response === null) {
+                return 'cancel';
+            }
+
+            const normalized = response.trim().toLowerCase();
+
+            if (normalized === 'save' || normalized === 's') {
+                return 'save';
+            }
+
+            if (normalized === "don't save" || normalized === 'dont save' || normalized === 'discard' || normalized === 'd' || normalized === 'no') {
+                return 'discard';
+            }
+
+            if (normalized === 'cancel' || normalized === 'c') {
+                return 'cancel';
+            }
+
+            window.alert('Please choose Save, Don\'t Save, or Cancel.');
+        }
+    };
+
+    const handleNewDocument = () => {
+        if (state.dirty) {
+            const decision = promptNewDocumentAction();
+
+            if (decision === 'cancel') {
+                autosaveStatus.textContent = 'New document cancelled';
+                return;
+            }
+
+            if (decision === 'save') {
+                const saved = saveFile();
+
+                if (!saved) {
+                    autosaveStatus.textContent = 'Save cancelled';
+                    return;
+                }
+            }
+        }
+
+        resetEditor();
     };
 
     const loadFile = () => {
@@ -396,21 +550,39 @@
         reader.readAsText(file);
     };
 
+    const ensureMarkdownExtension = (name) => (name.toLowerCase().endsWith('.md') ? name : `${name}.md`);
+
     const saveFile = () => {
-        const filename = fileNameDisplay.textContent.trim() || 'Untitled.md';
+        let filename = fileNameDisplay.textContent.trim() || 'Untitled.md';
+
+        if (filename === 'Untitled.md') {
+            const userProvided = promptForInput('File name', 'Untitled');
+
+            if (!userProvided) {
+                autosaveStatus.textContent = 'Save cancelled';
+                return false;
+            }
+
+            filename = ensureMarkdownExtension(userProvided);
+        } else {
+            filename = ensureMarkdownExtension(filename);
+        }
+
         const blob = new Blob([editor.value], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = filename.endsWith('.md') ? filename : `${filename}.md`;
+        link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        fileNameDisplay.textContent = filename;
         state.lastSavedContent = editor.value;
         markDirty(false);
-        autosaveStatus.textContent = `Saved ${link.download}`;
+        autosaveStatus.textContent = `Saved ${filename}`;
         scheduleAutosave();
+        return true;
     };
 
     const handleShortcut = (event) => {
@@ -498,6 +670,7 @@
         toolbar.addEventListener('click', handleToolbarClick);
         editor.addEventListener('input', handleInput);
         togglePreviewButton.addEventListener('click', togglePreview);
+        newButton.addEventListener('click', handleNewDocument);
         openButton.addEventListener('click', loadFile);
         saveButton.addEventListener('click', saveFile);
         darkModeToggle.addEventListener('click', toggleDarkMode);
@@ -545,6 +718,7 @@
         });
     };
 
+    initializeTheme();
     restoreAutosave();
     updatePreview();
     updateCounters();

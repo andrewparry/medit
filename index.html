@@ -1,128 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown WYSIWYG Editor</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
-<body>
+<body class="theme-light">
     <div class="app-container">
-        <!-- Header with file operations -->
         <header class="app-header" role="banner">
             <h1 class="app-title">Markdown Editor</h1>
-            <nav class="file-operations" role="navigation" aria-label="File operations">
-                <button id="open-file" class="file-btn" aria-label="Open markdown file">
-                    <span class="btn-icon">📁</span>
-                    Open
+            <div class="header-actions">
+                <button id="dark-mode-toggle" class="file-btn" type="button" role="switch" aria-checked="false" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <span class="btn-icon" aria-hidden="true">🌙</span>
+                    <span class="btn-text">Dark</span>
                 </button>
-                <button id="save-file" class="file-btn" aria-label="Save markdown file">
-                    <span class="btn-icon">💾</span>
-                    Save
-                </button>
-            </nav>
+                <nav class="file-operations" role="navigation" aria-label="File operations">
+                    <button id="open-file" class="file-btn" type="button" aria-label="Open markdown file" title="Open markdown file">
+                        <span class="btn-icon" aria-hidden="true">📁</span>
+                        <span class="btn-text">Open</span>
+                    </button>
+                    <button id="save-file" class="file-btn" type="button" aria-label="Save markdown file" title="Save markdown file">
+                        <span class="btn-icon" aria-hidden="true">💾</span>
+                        <span class="btn-text">Save</span>
+                    </button>
+                </nav>
+            </div>
         </header>
 
-        <!-- Main editor area -->
         <main class="editor-main" role="main">
-            <!-- Formatting toolbar -->
             <section class="toolbar-section" role="toolbar" aria-label="Formatting options">
                 <div class="toolbar" id="formatting-toolbar">
                     <div class="toolbar-group" role="group" aria-label="Text formatting">
-                        <button class="toolbar-btn" data-format="bold" aria-label="Bold" title="Bold (Ctrl+B)">
-                            <span class="btn-icon">B</span>
+                        <button class="toolbar-btn" type="button" data-format="bold" aria-label="Bold" title="Bold (Ctrl+B)">
+                            <span class="btn-icon" aria-hidden="true">B</span>
                         </button>
-                        <button class="toolbar-btn" data-format="italic" aria-label="Italic" title="Italic (Ctrl+I)">
-                            <span class="btn-icon">I</span>
+                        <button class="toolbar-btn" type="button" data-format="italic" aria-label="Italic" title="Italic (Ctrl+I)">
+                            <span class="btn-icon" aria-hidden="true">I</span>
                         </button>
-                        <button class="toolbar-btn" data-format="code" aria-label="Inline code" title="Code">
-                            <span class="btn-icon">&lt;/&gt;</span>
+                        <button class="toolbar-btn" type="button" data-format="code" aria-label="Inline code" title="Inline code (Ctrl+`)">
+                            <span class="btn-icon" aria-hidden="true">&lt;/&gt;</span>
                         </button>
                     </div>
 
-                    <div class="toolbar-separator" role="separator"></div>
+                    <div class="toolbar-separator" role="separator" aria-hidden="true"></div>
 
                     <div class="toolbar-group" role="group" aria-label="Headers">
-                        <button class="toolbar-btn" data-format="h1" aria-label="Header 1" title="Header 1">
-                            <span class="btn-text">H1</span>
+                        <button class="toolbar-btn" type="button" data-format="h1" aria-label="Heading level 1" title="Heading 1 (Ctrl+1)">
+                            <span class="btn-text" aria-hidden="true">H1</span>
                         </button>
-                        <button class="toolbar-btn" data-format="h2" aria-label="Header 2" title="Header 2">
-                            <span class="btn-text">H2</span>
+                        <button class="toolbar-btn" type="button" data-format="h2" aria-label="Heading level 2" title="Heading 2 (Ctrl+2)">
+                            <span class="btn-text" aria-hidden="true">H2</span>
                         </button>
-                        <button class="toolbar-btn" data-format="h3" aria-label="Header 3" title="Header 3">
-                            <span class="btn-text">H3</span>
-                        </button>
-                    </div>
-
-                    <div class="toolbar-separator" role="separator"></div>
-
-                    <div class="toolbar-group" role="group" aria-label="Lists and links">
-                        <button class="toolbar-btn" data-format="ul" aria-label="Bullet list" title="Bullet List">
-                            <span class="btn-icon">•</span>
-                        </button>
-                        <button class="toolbar-btn" data-format="ol" aria-label="Numbered list" title="Numbered List">
-                            <span class="btn-icon">1.</span>
-                        </button>
-                        <button class="toolbar-btn" data-format="link" aria-label="Insert link" title="Link">
-                            <span class="btn-icon">🔗</span>
-                        </button>
-                        <button class="toolbar-btn" data-format="image" aria-label="Insert image" title="Image">
-                            <span class="btn-icon">🖼️</span>
-                        </button>
-                        <button class="toolbar-btn" data-format="table" aria-label="Insert table" title="Table">
-                            <span class="btn-icon">⊞</span>
-                        </button>
-                        <button class="toolbar-btn" data-format="codeBlock" aria-label="Code block" title="Code Block">
-                            <span class="btn-icon">{ }</span>
+                        <button class="toolbar-btn" type="button" data-format="h3" aria-label="Heading level 3" title="Heading 3 (Ctrl+3)">
+                            <span class="btn-text" aria-hidden="true">H3</span>
                         </button>
                     </div>
 
-                    <div class="toolbar-separator" role="separator"></div>
+                    <div class="toolbar-separator" role="separator" aria-hidden="true"></div>
+
+                    <div class="toolbar-group" role="group" aria-label="Lists and inserts">
+                        <button class="toolbar-btn" type="button" data-format="ul" aria-label="Bullet list" title="Bullet list (Ctrl+Shift+8)">
+                            <span class="btn-icon" aria-hidden="true">•</span>
+                        </button>
+                        <button class="toolbar-btn" type="button" data-format="ol" aria-label="Numbered list" title="Numbered list (Ctrl+Shift+7)">
+                            <span class="btn-icon" aria-hidden="true">1.</span>
+                        </button>
+                        <button class="toolbar-btn" type="button" data-format="link" aria-label="Insert link" title="Insert link (Ctrl+K)">
+                            <span class="btn-icon" aria-hidden="true">🔗</span>
+                        </button>
+                        <button class="toolbar-btn" type="button" data-format="image" aria-label="Insert image" title="Insert image">
+                            <span class="btn-icon" aria-hidden="true">🖼️</span>
+                        </button>
+                        <button class="toolbar-btn" type="button" data-format="table" aria-label="Insert table" title="Insert table">
+                            <span class="btn-icon" aria-hidden="true">⊞</span>
+                        </button>
+                        <button class="toolbar-btn" type="button" data-format="codeBlock" aria-label="Code block" title="Code block (Ctrl+Shift+C)">
+                            <span class="btn-icon" aria-hidden="true">{ }</span>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-separator" role="separator" aria-hidden="true"></div>
 
                     <div class="toolbar-group" role="group" aria-label="View options">
-                        <button id="toggle-preview" class="toolbar-btn" aria-label="Toggle preview"
-                            title="Toggle Preview">
-                            <span class="btn-icon">👁️</span>
+                        <button id="toggle-preview" class="toolbar-btn" type="button" aria-label="Toggle preview" title="Toggle preview (Ctrl+Shift+P)" aria-pressed="true">
+                            <span class="btn-icon" aria-hidden="true">👁️</span>
                         </button>
                     </div>
                 </div>
             </section>
 
-            <!-- Editor and preview container -->
             <section class="editor-container">
-                <!-- Editor pane -->
                 <div class="editor-pane" role="region" aria-label="Markdown editor">
-                    <div id="editor" class="editor-content" contenteditable="true" role="textbox" aria-multiline="true"
-                        aria-label="Markdown content editor" spellcheck="true"
-                        data-placeholder="Start writing your markdown content..."></div>
+                    <label class="sr-only" for="editor">Markdown content editor</label>
+                    <textarea id="editor" class="editor-content" aria-label="Markdown content editor" spellcheck="true" placeholder="Start writing your markdown content..."></textarea>
                 </div>
 
-                <!-- Preview pane -->
                 <div class="preview-pane" role="region" aria-label="Markdown preview">
                     <div id="preview" class="preview-content" aria-live="polite"></div>
                 </div>
             </section>
         </main>
 
-        <!-- Status bar -->
         <footer class="status-bar" role="contentinfo">
             <div class="status-info">
-                <span class="current-file-name status-item editable-file-name" contenteditable="false" role="button"
-                    tabindex="0" aria-label="Click to edit file name" title="Click to edit file name">Untitled</span>
-                <span id="word-count" class="status-item">0 words</span>
-                <span id="char-count" class="status-item">0 characters</span>
-                <span class="parsing-status status-item">Ready</span>
+                <span class="status-item" id="file-name-label">File:</span>
+                <span id="file-name" class="status-item editable-file-name" contenteditable="false" role="textbox" tabindex="0" aria-label="File name">Untitled.md</span>
+                <span id="word-count" class="status-item" aria-live="polite">0 words / 0 characters</span>
+                <span id="char-count" class="status-item sr-only" aria-live="polite">0 characters</span>
+                <span class="status-item" id="autosave-status" aria-live="polite">Draft saved</span>
             </div>
         </footer>
     </div>
 
-    <!-- Hidden file input for fallback file operations -->
-    <input type="file" id="file-input" accept=".md,.markdown,.txt" style="display: none;" aria-hidden="true">
+    <input type="file" id="file-input" accept=".md,.markdown,.txt" hidden aria-hidden="true">
 
-    <!-- Scripts -->
+    <script src="js/marked-lite.js" defer></script>
+    <script src="js/sanitizer.js" defer></script>
     <script src="js/editor.js" defer></script>
 </body>
-
 </html>

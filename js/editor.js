@@ -43,28 +43,37 @@
 
     const normalizeWhitespace = (text) => text.replace(/\s+/g, ' ').trim();
 
-    const stripMarkdown = (markdown) => markdown
-        .replace(/```[\s\S]*?```/g, ' ')
-        .replace(/`[^`]*`/g, ' ')
-        .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-        .replace(/<(?:.|\n)*?>/g, ' ')
-        .replace(/^\s{0,3}>\s?/gm, '')
-        .replace(/^\s{0,3}[-*+]\s+/gm, '')
-        .replace(/^\s{0,3}\d+\.\s+/gm, '')
-        .replace(/(\*\*|__)(.*?)\1/g, '$2')
-        .replace(/(\*|_)(.*?)\1/g, '$2')
-        .replace(/(~~)(.*?)\1/g, '$2')
-        .replace(/\|/g, ' ')
-        .replace(/[#`*_~>\-]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+    const stripMarkdown = (markdown) => {
+        if (!markdown || typeof markdown !== 'string') {
+            return '';
+        }
+        
+        return markdown
+            .replace(/```[\s\S]*?```/g, ' ')
+            .replace(/`[^`]*`/g, ' ')
+            .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+            .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+            .replace(/<(?:.|\n)*?>/g, ' ')
+            .replace(/^\s{0,3}>\s?/gm, '')
+            .replace(/^\s{0,3}[-*+]\s+/gm, '')
+            .replace(/^\s{0,3}\d+\.\s+/gm, '')
+            .replace(/(\*\*|__)(.*?)\1/g, '$2')
+            .replace(/(\*|_)(.*?)\1/g, '$2')
+            .replace(/(~~)(.*?)\1/g, '$2')
+            .replace(/^\s*#{1,6}\s+/gm, '')
+            .replace(/\|/g, ' ')
+            .replace(/[-]{3,}/g, ' ')
+            .replace(/[`*_~>#]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    };
 
     const updateCounters = () => {
-        const plain = stripMarkdown(editor.value);
+        const content = editor.value || '';
+        const plain = stripMarkdown(content);
         const normalized = normalizeWhitespace(plain);
-        const words = normalized ? normalized.split(' ').filter(Boolean).length : 0;
-        const characters = normalized.length;
+        const words = normalized ? normalized.split(' ').filter(w => w.length > 0).length : 0;
+        const characters = plain.length;
 
         wordCountDisplay.textContent = `${words} ${words === 1 ? 'word' : 'words'} / ${characters} ${characters === 1 ? 'character' : 'characters'}`;
         charCountDisplay.textContent = `${characters} ${characters === 1 ? 'character' : 'characters'}`;
@@ -185,7 +194,7 @@
         scheduleAutosave();
     };
 
-    // Wrap the current selection with delimiters, positioning the caret after the inserted content when text was selected.
+    // Wrap the current selection with delimiters, positioning the caret after the closing delimiter
     const applyInlineFormat = (prefix, suffix, placeholder = '') => {
         const { start, end, value } = getSelection();
         const hasSelection = start !== end;
@@ -193,8 +202,10 @@
         const inserted = `${prefix}${selection}${suffix}`;
 
         if (hasSelection) {
+            // Place cursor after the closing delimiter
             replaceSelection(inserted, inserted.length);
         } else {
+            // Select the placeholder text so user can type over it
             replaceSelection(inserted, {
                 start: prefix.length,
                 end: prefix.length + selection.length
@@ -438,21 +449,20 @@
         const after = value.slice(end);
         const selection = value.slice(start, end);
         const hasSelection = start !== end && selection.length > 0;
-        const placeholder = hasSelection ? selection : 'code here';
+        const content = hasSelection ? selection : '';
         const fence = '```';
         const leading = start > 0 && !before.endsWith('\n') ? '\n' : '';
         const trailing = after.startsWith('\n') || after.length === 0 ? '' : '\n';
         const prefix = `${leading}${fence}\n`;
         const suffix = `\n${fence}${trailing}`;
-        const inserted = `${prefix}${placeholder}${suffix}`;
+        const inserted = `${prefix}${content}${suffix}`;
 
         if (hasSelection) {
+            // Place cursor after the code block
             replaceSelection(inserted, inserted.length - trailing.length);
         } else {
-            replaceSelection(inserted, {
-                start: prefix.length,
-                end: prefix.length + placeholder.length
-            });
+            // Place cursor on the empty line between fences
+            replaceSelection(inserted, prefix.length);
         }
     };
 
@@ -575,9 +585,23 @@
         const { start, end, value } = getSelection();
         const before = value.slice(0, start);
         const after = value.slice(end);
-        const table = ['| Column 1 | Column 2 |', '| --- | --- |', '| Row 1 | Row 1 value |', '| Row 2 | Row 2 value |'].join('\n');
-        const leading = start > 0 && !before.endsWith('\n') ? '\n' : '';
-        const trailing = after.startsWith('\n') || after.length === 0 ? '' : '\n';
+        
+        // Check if we're inside a code block
+        const beforeText = before;
+        const afterText = after;
+        const backticksBefore = (beforeText.match(/```/g) || []).length;
+        const backticksAfter = (afterText.match(/```/g) || []).length;
+        const isInsideCodeBlock = backticksBefore % 2 !== 0;
+        
+        if (isInsideCodeBlock) {
+            // Don't insert table inside code block
+            autosaveStatus.textContent = 'Cannot insert table inside code block';
+            return;
+        }
+        
+        const table = ['| Column 1 | Column 2 |', '| --- | --- |', '| Cell 1 | Cell 2 |', '| Cell 3 | Cell 4 |'].join('\n');
+        const leading = start > 0 && !before.endsWith('\n') ? '\n\n' : '';
+        const trailing = after.startsWith('\n') || after.length === 0 ? '' : '\n\n';
         const inserted = `${leading}${table}${trailing}`;
         const placeholder = 'Column 1';
         const placeholderIndex = inserted.indexOf(placeholder);
@@ -649,6 +673,15 @@
         togglePreviewButton.setAttribute('aria-pressed', state.isPreviewVisible);
         editorContainer.classList.toggle('preview-hidden', !state.isPreviewVisible);
         togglePreviewButton.title = state.isPreviewVisible ? 'Hide preview (Ctrl+Shift+P)' : 'Show preview (Ctrl+Shift+P)';
+        
+        // Persist preview state
+        if (window.localStorage) {
+            try {
+                localStorage.setItem('markdown-editor-preview', state.isPreviewVisible ? 'visible' : 'hidden');
+            } catch (error) {
+                console.error('Failed to persist preview state', error);
+            }
+        }
     };
 
     // Toggle the global theme and keep the toggle state accessible for assistive tech.
@@ -677,6 +710,18 @@
         }
 
         applyTheme(isDark);
+    };
+
+    const initializePreviewState = () => {
+        if (window.localStorage) {
+            const storedPreview = localStorage.getItem('markdown-editor-preview');
+            if (storedPreview === 'hidden') {
+                state.isPreviewVisible = false;
+                togglePreviewButton.setAttribute('aria-pressed', 'false');
+                editorContainer.classList.add('preview-hidden');
+                togglePreviewButton.title = 'Show preview (Ctrl+Shift+P)';
+            }
+        }
     };
 
     const handleFilenameEdit = () => {
@@ -932,6 +977,7 @@
     };
 
     initializeTheme();
+    initializePreviewState();
     restoreAutosave();
     updatePreview();
     updateCounters();

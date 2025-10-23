@@ -147,6 +147,19 @@
         editor.setSelectionRange(start, end);
     };
 
+    const getLineOffsets = (lines) => {
+        const offsets = [];
+        let position = 0;
+        lines.forEach((line, index) => {
+            offsets[index] = position;
+            position += line.length;
+            if (index < lines.length - 1) {
+                position += 1;
+            }
+        });
+        return offsets;
+    };
+
     // Replace the current textarea selection while optionally restoring a custom selection range.
     const replaceSelection = (text, selectionRange) => {
         const { start, end, value } = getSelection();
@@ -168,7 +181,7 @@
         setSelection(newStart, newEnd);
         updatePreview();
         updateCounters();
-        markDirty(true);
+        markDirty(editor.value !== state.lastSavedContent);
         scheduleAutosave();
     };
 
@@ -192,80 +205,230 @@
     const applyHeading = (level) => {
         const { start, end, value } = getSelection();
         const lines = value.split('\n');
+        const lineOffsets = getLineOffsets(lines);
         const startLineIndex = value.slice(0, start).split('\n').length - 1;
         const endLineIndex = value.slice(0, end).split('\n').length - 1;
 
-        for (let i = startLineIndex; i <= endLineIndex; i += 1) {
-            const line = lines[i];
-            const trimmed = line.replace(/^#{1,6}\s*/, '');
-            const newLine = `${'#'.repeat(level)} ${trimmed}`.trim();
+        let cumulativeDelta = 0;
+        let newStart = start;
+        let newEnd = end;
+        let startAdjusted = false;
+        let endAdjusted = false;
+
+        for (let i = 0; i < lines.length; i += 1) {
+            const originalLine = lines[i];
+            let newLine = originalLine;
+            let listPrefix = '';
+            let content = originalLine;
+            let oldHeadingLength = 0;
+            let newHeadingLength = 0;
+
+            if (i >= startLineIndex && i <= endLineIndex) {
+                const listMatch = content.match(/^(\s*(?:[-*+] |\d+\. ))/);
+                if (listMatch) {
+                    listPrefix = listMatch[1];
+                    content = content.slice(listPrefix.length);
+                }
+
+                content = content.replace(/^\s+/, '');
+
+                const headingMatch = content.match(/^(#{1,6})(\s*)(.*)$/);
+                const existingLevel = headingMatch ? headingMatch[1].length : 0;
+                const existingText = headingMatch ? headingMatch[3] : content;
+                const normalizedText = existingText.replace(/^\s+/, '');
+
+                oldHeadingLength = headingMatch ? headingMatch[1].length + headingMatch[2].length : 0;
+                const hasCleanSpacing = headingMatch ? headingMatch[2] === ' ' : false;
+
+                if (existingLevel === level && headingMatch && hasCleanSpacing) {
+                    newLine = `${listPrefix}${normalizedText}`;
+                    newHeadingLength = 0;
+                } else {
+                    const hashes = '#'.repeat(level);
+                    if (normalizedText.length > 0) {
+                        newLine = `${listPrefix}${hashes} ${normalizedText}`;
+                    } else {
+                        newLine = `${listPrefix}${hashes} `;
+                    }
+                    newHeadingLength = hashes.length + 1;
+                }
+            }
+
+            const lineStartOriginal = lineOffsets[i];
+            const lineStartNew = lineStartOriginal + cumulativeDelta;
+            const lineDelta = newLine.length - originalLine.length;
+            const listLength = listPrefix.length;
+
+            const adjustWithinLine = (offset) => {
+                const offsetInLine = offset - lineStartOriginal;
+                if (offsetInLine < listLength) {
+                    return lineStartNew + offsetInLine;
+                }
+                if (offsetInLine === listLength) {
+                    return lineStartNew + listLength + newHeadingLength;
+                }
+                const offsetAfterList = offsetInLine - listLength;
+                const offsetIntoContent = Math.max(0, offsetAfterList - oldHeadingLength);
+                const newOffsetInLine = listLength + newHeadingLength + offsetIntoContent;
+                return lineStartNew + Math.min(newOffsetInLine, newLine.length);
+            };
+
+            if (!startAdjusted) {
+                if (start < lineStartOriginal) {
+                    newStart = start + cumulativeDelta;
+                } else if (start <= lineStartOriginal + originalLine.length) {
+                    newStart = adjustWithinLine(start);
+                    startAdjusted = true;
+                }
+            }
+
+            if (!endAdjusted) {
+                if (end < lineStartOriginal) {
+                    newEnd = end + cumulativeDelta;
+                } else if (end <= lineStartOriginal + originalLine.length) {
+                    newEnd = adjustWithinLine(end);
+                    endAdjusted = true;
+                }
+            }
+
             lines[i] = newLine;
+            cumulativeDelta += lineDelta;
         }
 
-        const newValue = lines.join('\n');
-        editor.value = newValue;
+        if (!startAdjusted) {
+            newStart = start + cumulativeDelta;
+        }
+        if (!endAdjusted) {
+            newEnd = end + cumulativeDelta;
+        }
 
-        const before = lines.slice(0, startLineIndex).join('\n');
-        const selected = lines.slice(startLineIndex, endLineIndex + 1).join('\n');
-        const newStart = before.length + (startLineIndex > 0 ? 1 : 0);
-        const newEnd = newStart + selected.length;
+        editor.value = lines.join('\n');
 
-        setSelection(newEnd, newEnd);
+        setSelection(newStart, newEnd);
         updatePreview();
         updateCounters();
-        markDirty(true);
+        markDirty(editor.value !== state.lastSavedContent);
         scheduleAutosave();
     };
 
     // Toggle bullet/numbered list markers for the selected lines, converting between list types when needed.
     const toggleList = (type) => {
         const { start, end, value } = getSelection();
-        const beforeSelection = value.slice(0, start);
-        const selection = value.slice(start, end);
-
-        const selectionStartIndex = beforeSelection.split('\n').length - 1;
-        const selectionEndIndex = selection ? selectionStartIndex + selection.split('\n').length - 1 : selectionStartIndex;
         const lines = value.split('\n');
+        const lineOffsets = getLineOffsets(lines);
+        const selectionStartIndex = value.slice(0, start).split('\n').length - 1;
+        const selectionEndIndex = value.slice(0, end).split('\n').length - 1;
 
-        const normalizeLine = (line) => line
-            .replace(/^\s*[-*+]\s+/, '')
-            .replace(/^\s*\d+\.\s+/, '');
+        const markerText = type === 'ol' ? '1. ' : '- ';
+        const isTargetLine = (line) => {
+            const trimmed = line.replace(/^\s*/, '');
+            if (type === 'ol') {
+                return /^\d+\.\s+/.test(trimmed);
+            }
+            return /^[-*+]\s+/.test(trimmed);
+        };
 
-        const marker = type === 'ol' ? (index) => `${index + 1}. ` : () => '- ';
-        let removeMarkers = true;
-
+        let shouldRemove = true;
         for (let i = selectionStartIndex; i <= selectionEndIndex; i += 1) {
             const line = lines[i] || '';
-            if (type === 'ol' && /^\s*\d+\.\s+/.test(line)) {
-                continue;
+            if (!isTargetLine(line)) {
+                shouldRemove = false;
+                break;
             }
-            if (type === 'ul' && /^\s*[-*+]\s+/.test(line)) {
-                continue;
-            }
-            removeMarkers = false;
-            break;
         }
 
-        for (let i = selectionStartIndex; i <= selectionEndIndex; i += 1) {
-            const rawLine = lines[i] || '';
-            const content = normalizeLine(rawLine);
-            if (removeMarkers) {
-                lines[i] = content;
-            } else {
-                const index = type === 'ol' ? i - selectionStartIndex : 0;
-                lines[i] = `${marker(index)}${content}`;
+        let cumulativeDelta = 0;
+        let newStart = start;
+        let newEnd = end;
+        let startAdjusted = false;
+        let endAdjusted = false;
+
+        for (let i = 0; i < lines.length; i += 1) {
+            const originalLine = lines[i];
+            let newLine = originalLine;
+            let indent = '';
+            let remainder = originalLine;
+            let oldMarkerLength = 0;
+            let newMarkerLength = 0;
+
+            if (i >= selectionStartIndex && i <= selectionEndIndex) {
+                const indentMatch = remainder.match(/^(\s*)/);
+                indent = indentMatch ? indentMatch[1] : '';
+                remainder = remainder.slice(indent.length);
+
+                const bulletMatch = remainder.match(/^([-*+]\s+)/);
+                const numberMatch = remainder.match(/^(\d+\.\s+)/);
+
+                if (bulletMatch) {
+                    oldMarkerLength = bulletMatch[1].length;
+                    remainder = remainder.slice(oldMarkerLength);
+                } else if (numberMatch) {
+                    oldMarkerLength = numberMatch[1].length;
+                    remainder = remainder.slice(oldMarkerLength);
+                }
+
+                if (shouldRemove && isTargetLine(originalLine)) {
+                    newMarkerLength = 0;
+                    newLine = `${indent}${remainder}`;
+                } else {
+                    newMarkerLength = markerText.length;
+                    newLine = `${indent}${markerText}${remainder}`;
+                }
             }
+
+            const lineStartOriginal = lineOffsets[i];
+            const lineStartNew = lineStartOriginal + cumulativeDelta;
+            const lineDelta = newLine.length - originalLine.length;
+            const indentLength = indent.length;
+
+            const adjustWithinLine = (offset) => {
+                const offsetInLine = offset - lineStartOriginal;
+                if (offsetInLine < indentLength) {
+                    return lineStartNew + offsetInLine;
+                }
+                if (offsetInLine === indentLength) {
+                    return lineStartNew + indentLength + newMarkerLength;
+                }
+                const offsetAfterIndent = offsetInLine - indentLength;
+                const offsetIntoContent = Math.max(0, offsetAfterIndent - oldMarkerLength);
+                const newOffsetInLine = indentLength + newMarkerLength + offsetIntoContent;
+                return lineStartNew + Math.min(newOffsetInLine, newLine.length);
+            };
+
+            if (!startAdjusted) {
+                if (start < lineStartOriginal) {
+                    newStart = start + cumulativeDelta;
+                } else if (start <= lineStartOriginal + originalLine.length) {
+                    newStart = adjustWithinLine(start);
+                    startAdjusted = true;
+                }
+            }
+
+            if (!endAdjusted) {
+                if (end < lineStartOriginal) {
+                    newEnd = end + cumulativeDelta;
+                } else if (end <= lineStartOriginal + originalLine.length) {
+                    newEnd = adjustWithinLine(end);
+                    endAdjusted = true;
+                }
+            }
+
+            lines[i] = newLine;
+            cumulativeDelta += lineDelta;
+        }
+
+        if (!startAdjusted) {
+            newStart = start + cumulativeDelta;
+        }
+        if (!endAdjusted) {
+            newEnd = end + cumulativeDelta;
         }
 
         editor.value = lines.join('\n');
-        const before = lines.slice(0, selectionStartIndex).join('\n');
-        const selected = lines.slice(selectionStartIndex, selectionEndIndex + 1).join('\n');
-        const newStart = before.length + (selectionStartIndex > 0 ? 1 : 0);
-        const newEnd = newStart + selected.length;
-        setSelection(newEnd, newEnd);
+        setSelection(newStart, newEnd);
         updatePreview();
         updateCounters();
-        markDirty(true);
+        markDirty(editor.value !== state.lastSavedContent);
         scheduleAutosave();
     };
 
@@ -301,24 +464,92 @@
         return response.trim();
     };
 
+    const showUnsavedChangesDialog = () => new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'dialog-overlay';
+
+        const dialog = document.createElement('div');
+        dialog.className = 'dialog-surface';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-label', 'Unsaved changes');
+
+        const message = document.createElement('p');
+        message.className = 'dialog-message';
+        message.textContent = 'You have unsaved changes. Save before starting a new document?';
+
+        const actions = document.createElement('div');
+        actions.className = 'dialog-actions';
+
+        const buttons = [
+            { label: 'Save', value: 'save', className: 'dialog-btn dialog-btn-primary' },
+            { label: "Don't Save", value: 'discard', className: 'dialog-btn' },
+            { label: 'Cancel', value: 'cancel', className: 'dialog-btn' }
+        ];
+
+        const cleanup = () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.removeChild(overlay);
+        };
+
+        const handleChoice = (choice) => {
+            cleanup();
+            resolve(choice);
+        };
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                handleChoice('cancel');
+            }
+        };
+
+        buttons.forEach((config, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = config.className;
+            button.textContent = config.label;
+            button.addEventListener('click', () => handleChoice(config.value));
+            if (index === 0) {
+                button.autofocus = true;
+            }
+            actions.appendChild(button);
+        });
+
+        dialog.appendChild(message);
+        dialog.appendChild(actions);
+        overlay.appendChild(dialog);
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                handleChoice('cancel');
+            }
+        });
+        document.body.appendChild(overlay);
+        document.addEventListener('keydown', handleKeyDown);
+
+        const firstButton = actions.querySelector('button');
+        if (firstButton) {
+            firstButton.focus();
+        }
+    });
+
     const insertLink = () => {
         const { start, end, value } = getSelection();
         const selectedText = value.slice(start, end);
-        let text = selectedText;
-
-        if (!text) {
-            const response = promptForInput('Link text', 'link text');
-            if (response === null) {
-                return;
-            }
-            text = response || 'link';
-        }
 
         const url = promptForInput('Link URL (https://...)', 'https://');
         if (!url) {
             return;
         }
-        const linkSyntax = `[${text}](${url})`;
+
+        const defaultText = selectedText || url;
+        const textResponse = promptForInput('Link text (optional)', defaultText);
+        if (textResponse === null) {
+            return;
+        }
+
+        const linkText = textResponse || defaultText;
+        const linkSyntax = `[${linkText}](${url})`;
 
         replaceSelection(linkSyntax, linkSyntax.length);
     };
@@ -474,6 +705,12 @@
     };
 
     const readFile = (file) => {
+        if (!/\.(md|markdown)$/i.test(file.name)) {
+            autosaveStatus.textContent = 'Only Markdown files can be opened';
+            window.alert('Please choose a Markdown (.md or .markdown) file.');
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = () => {
             editor.value = reader.result;
@@ -484,6 +721,11 @@
             markDirty(false);
             autosaveStatus.textContent = `Opened ${file.name}`;
             scheduleAutosave();
+        };
+        reader.onerror = () => {
+            console.error('Failed to read file', reader.error);
+            autosaveStatus.textContent = 'Unable to open file';
+            window.alert('Unable to open the selected file.');
         };
         reader.readAsText(file);
     };
@@ -532,12 +774,12 @@
         state.autosaveTimer = null;
         state.lastSavedContent = '';
         markDirty(false);
-        autosaveStatus.textContent = 'Draft saved';
+        autosaveStatus.textContent = 'Ready';
         clearAutosaveDraft();
         setSelection(0, 0);
     };
 
-    const handleNewDocument = () => {
+    const handleNewDocument = async () => {
         const hasUnsavedChanges = state.dirty && editor.value !== state.lastSavedContent;
 
         if (!hasUnsavedChanges) {
@@ -545,36 +787,14 @@
             return;
         }
 
-        const promptMessage = 'You have unsaved changes. Save them before starting a new document?\nType "Save", "Don\'t Save", or "Cancel".';
+        const choice = await showUnsavedChangesDialog();
 
-        while (true) {
-            const response = window.prompt(promptMessage, 'Save');
-
-            if (response === null) {
-                return;
-            }
-
-            const normalized = response.trim().toLowerCase();
-
-            if (!normalized) {
-                continue;
-            }
-
-            if (normalized === 'cancel') {
-                return;
-            }
-
-            if (normalized === 'save') {
-                if (saveFile()) {
-                    resetEditorState();
-                }
-                return;
-            }
-
-            if (normalized === "don't save" || normalized === 'dont save') {
+        if (choice === 'save') {
+            if (saveFile()) {
                 resetEditorState();
-                return;
             }
+        } else if (choice === 'discard') {
+            resetEditorState();
         }
     };
 

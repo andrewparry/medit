@@ -544,39 +544,47 @@
     });
 
     const insertLink = () => {
+        console.log('insertLink function called');
         const { start, end, value } = getSelection();
         const selectedText = value.slice(start, end);
 
         const url = promptForInput('Link URL (https://...)', 'https://');
         if (!url) {
+            console.log('Link insertion cancelled - no URL');
             return;
         }
 
         const defaultText = selectedText || url;
         const textResponse = promptForInput('Link text (optional)', defaultText);
         if (textResponse === null) {
+            console.log('Link insertion cancelled - no text');
             return;
         }
 
         const linkText = textResponse || defaultText;
         const linkSyntax = `[${linkText}](${url})`;
 
+        console.log('Inserting link:', linkSyntax);
         replaceSelection(linkSyntax, linkSyntax.length);
     };
 
     const insertImage = () => {
+        console.log('insertImage function called');
         const altResponse = promptForInput('Image description (alt text)', 'Image description');
         if (altResponse === null) {
+            console.log('Image insertion cancelled - no alt text');
             return;
         }
 
         const altText = altResponse || 'image';
         const url = promptForInput('Image URL (https://...)', 'https://');
         if (!url) {
+            console.log('Image insertion cancelled - no URL');
             return;
         }
 
         const imageSyntax = `![${altText}](${url})`;
+        console.log('Inserting image:', imageSyntax);
         replaceSelection(imageSyntax, imageSyntax.length);
     };
 
@@ -665,6 +673,7 @@
             return;
         }
         event.preventDefault();
+        console.log('Toolbar button clicked:', target.dataset.format);
         handleFormatting(target.dataset.format);
     };
 

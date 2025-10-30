@@ -5,6 +5,7 @@
 (() => {
     const editor = document.getElementById('editor');
     const preview = document.getElementById('preview');
+    const editorHighlights = document.getElementById('editor-highlights');
     const toolbar = document.getElementById('formatting-toolbar');
     const togglePreviewButton = document.getElementById('toggle-preview');
     const editorContainer = document.querySelector('.editor-container');
@@ -20,6 +21,20 @@
     const charCountDisplay = document.getElementById('char-count');
     const autosaveStatus = document.getElementById('autosave-status');
     const darkModeToggle = document.getElementById('dark-mode-toggle');
+    // Find/Replace elements
+    const findBar = document.getElementById('find-bar');
+    const findInput = document.getElementById('find-input');
+    const findPrevBtn = document.getElementById('find-prev');
+    const findNextBtn = document.getElementById('find-next');
+    const findCount = document.getElementById('find-count');
+    const findCase = document.getElementById('find-case');
+    const findRegex = document.getElementById('find-regex');
+    const findWhole = document.getElementById('find-whole');
+    const findClose = null; // close button removed
+    const replaceInput = document.getElementById('replace-input');
+    const replaceOneBtn = document.getElementById('replace-one');
+    const replaceAllBtn = document.getElementById('replace-all');
+    const toggleFindButton = document.getElementById('toggle-find');
 
     const AUTOSAVE_KEY = 'markdown-editor-autosave';
     const AUTOSAVE_FILENAME_KEY = 'markdown-editor-filename';
@@ -41,6 +56,14 @@
         historyTimer: null,
         historyStack: [], // past states (oldest at 0, newest at end)
         futureStack: []   // redo states (most recent at end)
+    };
+
+    // Find/replace state
+    const searchState = {
+        lastIndex: 0,
+        freshQuery: false,
+        matches: [],
+        current: -1
     };
 
     if (!editor || !preview) {
@@ -141,6 +164,7 @@
         state.futureStack.push(current);
         applyEditorSnapshot(prev);
         updateToolbarStates();
+        recalcFindAfterChange();
     };
 
     const redo = () => {
@@ -151,6 +175,29 @@
         state.historyStack.push(current);
         applyEditorSnapshot(next);
         updateToolbarStates();
+        recalcFindAfterChange();
+    };
+
+    const recalcFindAfterChange = () => {
+        if (!findBar || findBar.hidden) return;
+        const q = findInput?.value || '';
+        if (!q) {
+            if (editorHighlights) editorHighlights.innerHTML = '';
+            if (findCount) findCount.textContent = '0/0';
+            return;
+        }
+        updateRawHighlights();
+        // Try to set current index to match current selection
+        const selStart = editor.selectionStart;
+        const selEnd = editor.selectionEnd;
+        let idx = -1;
+        if (searchState.matches && searchState.matches.length) {
+            idx = searchState.matches.findIndex(m => m.start === selStart && m.end === selEnd);
+        }
+        searchState.current = idx;
+        const total = (searchState.matches?.length) || 0;
+        if (findCount) findCount.textContent = `${idx >= 0 ? idx + 1 : 0}/${total}`;
+        if (idx >= 0) scrollCurrentRawHitIntoView(true);
     };
 
     const markDirty = (dirty = true) => {
@@ -2014,6 +2061,14 @@
         }
     };
 
+    // Keep raw highlight overlay scrolling in sync with textarea
+    if (editor && editorHighlights) {
+        editor.addEventListener('scroll', () => {
+            editorHighlights.scrollTop = editor.scrollTop;
+            editorHighlights.scrollLeft = editor.scrollLeft;
+        });
+    }
+
     const handleFilenameEdit = () => {
         fileNameDisplay.contentEditable = 'true';
         fileNameDisplay.dataset.originalName = fileNameDisplay.textContent.trim();
@@ -2104,6 +2159,20 @@
             state.historyStack = [getEditorSnapshot()];
             state.futureStack = [];
             updateToolbarStates();
+            // Close and clear find/replace UI and highlights for new document
+            if (findBar) {
+                findBar.hidden = true;
+            }
+            if (findInput) findInput.value = '';
+            if (replaceInput) replaceInput.value = '';
+            if (findCount) findCount.textContent = '0/0';
+            searchState.matches = [];
+            searchState.current = -1;
+            if (editorHighlights) editorHighlights.innerHTML = '';
+            if (toggleFindButton) {
+                toggleFindButton.setAttribute('aria-pressed', 'false');
+                toggleFindButton.classList.remove('active');
+            }
             setButtonLoading(openButton, false);
         };
         reader.onerror = async () => {
@@ -2185,6 +2254,20 @@
         autosaveStatus.textContent = 'Ready';
         clearAutosaveDraft();
         setSelection(0, 0);
+        // Close and clear find/replace UI and highlights
+        if (findBar) {
+            findBar.hidden = true;
+        }
+        if (findInput) findInput.value = '';
+        if (replaceInput) replaceInput.value = '';
+        if (findCount) findCount.textContent = '0/0';
+        searchState.matches = [];
+        searchState.current = -1;
+        if (editorHighlights) editorHighlights.innerHTML = '';
+        if (toggleFindButton) {
+            toggleFindButton.setAttribute('aria-pressed', 'false');
+            toggleFindButton.classList.remove('active');
+        }
     };
 
     const handleNewDocument = async () => {
@@ -2243,6 +2326,14 @@
         }
 
         switch (key) {
+            case 'f':
+                event.preventDefault();
+                openFind();
+                break;
+            case 'h':
+                event.preventDefault();
+                openFind();
+                break;
             case 'z':
                 event.preventDefault();
                 // Ctrl/Cmd+Z -> undo
@@ -2294,6 +2385,412 @@
         }
     };
 
+    const buildSearchRegex = (query) => {
+        if (!query) return null;
+        try {
+            if (findRegex && findRegex.checked) {
+                return new RegExp(query, findCase?.checked ? 'g' : 'gi');
+            }
+            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = findWhole?.checked ? `(^|[^\\w])(${escaped})(?=[^\\w]|$)` : escaped;
+            return new RegExp(pattern, findCase?.checked ? 'g' : 'gi');
+        } catch (e) {
+            return null;
+        }
+    };
+
+    // Highlight all hits in the preview
+    const clearPreviewHighlights = () => {
+        const marks = preview.querySelectorAll('.find-hit');
+        marks.forEach((mark) => {
+            const parent = mark.parentNode;
+            if (!parent) return;
+            while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+            parent.removeChild(mark);
+            parent.normalize();
+        });
+    };
+
+    const highlightPreviewFindHits = () => {
+        clearPreviewHighlights();
+        const query = findInput?.value || '';
+        const regex = buildSearchRegex(query);
+        if (!regex || !query) return;
+
+        const walker = document.createTreeWalker(preview, NodeFilter.SHOW_TEXT, {
+            acceptNode: (node) => {
+                // Skip hidden nodes or empty
+                if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+                // Avoid highlighting inside interactive controls (none expected) but keep in code/pre
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+
+        const textNodes = [];
+        let n;
+        while ((n = walker.nextNode())) textNodes.push(n);
+
+        let total = 0;
+        textNodes.forEach((text) => {
+            const value = text.nodeValue;
+            let m;
+            let lastIndex = 0;
+            const fragments = [];
+            const re = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : regex.flags + 'g');
+            while ((m = re.exec(value)) !== null) {
+                const start = m.index + (m[1] ? m[1].length : 0);
+                const len = (m[2] ? m[2].length : m[0].length);
+                const end = start + len;
+                if (start > lastIndex) {
+                    fragments.push(document.createTextNode(value.slice(lastIndex, start)));
+                }
+                const mark = document.createElement('mark');
+                mark.className = 'find-hit';
+                mark.textContent = value.slice(start, end);
+                fragments.push(mark);
+                lastIndex = end;
+                total += 1;
+            }
+            if (lastIndex === 0) return; // no match in this node
+            if (lastIndex < value.length) fragments.push(document.createTextNode(value.slice(lastIndex)));
+            const parent = text.parentNode;
+            if (!parent) return;
+            fragments.forEach((f) => parent.insertBefore(f, text));
+            parent.removeChild(text);
+        });
+
+        // Update count in the UI based on current match index
+        // Recompute global match positions from the editor text so selection aligns
+        const positions = [];
+        const src = editor.value;
+        const reAll = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : regex.flags + 'g');
+        let mm;
+        while ((mm = reAll.exec(src)) !== null) {
+            const s = mm.index + (mm[1] ? mm[1].length : 0);
+            const l = (mm[2] ? mm[2].length : mm[0].length);
+            positions.push({ start: s, end: s + l });
+        }
+        searchState.matches = positions;
+        if (findCount) {
+            const cur = searchState.current >= 0 ? searchState.current + 1 : 0;
+            findCount.textContent = `${cur}/${positions.length}`;
+        }
+    };
+
+    // Render highlights in raw editor overlay using the computed match positions
+    const escapeHtml = (s) => s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    const updateRawHighlights = () => {
+        if (!editorHighlights) return;
+        if (!findBar || findBar.hidden) {
+            editorHighlights.innerHTML = '';
+            return;
+        }
+        const text = editor.value || '';
+        const query = findInput?.value || '';
+        const regex = buildSearchRegex(query);
+        if (!regex || !query) {
+            editorHighlights.innerHTML = escapeHtml(text);
+            return;
+        }
+
+        // Ensure positions are up-to-date
+        const positions = [];
+        const reAll = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : regex.flags + 'g');
+        let mm;
+        while ((mm = reAll.exec(text)) !== null) {
+            const s = mm.index + (mm[1] ? mm[1].length : 0);
+            const l = (mm[2] ? mm[2].length : mm[0].length);
+            positions.push({ start: s, end: s + l });
+        }
+        searchState.matches = positions;
+
+        let html = '';
+        let last = 0;
+        positions.forEach((pos, idx) => {
+            if (pos.start > last) html += escapeHtml(text.slice(last, pos.start));
+            const cls = (idx === searchState.current) ? 'find-hit-current' : 'find-hit';
+            html += `<mark class="${cls}">` + escapeHtml(text.slice(pos.start, pos.end)) + '</mark>';
+            last = pos.end;
+        });
+        html += escapeHtml(text.slice(last));
+        editorHighlights.innerHTML = html;
+        // Keep scroll in sync
+        editorHighlights.scrollTop = editor.scrollTop;
+    };
+
+    const scrollCurrentRawHitIntoView = (center = true) => {
+        if (!editor || !editorHighlights) return;
+        const current = editorHighlights.querySelector('.find-hit-current');
+        if (!current) return;
+
+        // 1) Center within the textarea's own scroll area
+        if (center) {
+            const hitOffsetTop = current.offsetTop; // relative to overlay container
+            const hitHeight = current.offsetHeight || 1;
+            const desiredTop = hitOffsetTop - (editor.clientHeight / 2 - hitHeight / 2);
+            const maxScroll = Math.max(0, editor.scrollHeight - editor.clientHeight);
+            const targetScroll = Math.min(maxScroll, Math.max(0, desiredTop));
+            if (Math.abs(editor.scrollTop - targetScroll) > 1) {
+                editor.scrollTop = targetScroll;
+                editorHighlights.scrollTop = targetScroll;
+            }
+        } else {
+            // Ensure at least visible if not centering
+            const hitRect = current.getBoundingClientRect();
+            const containerRect = editor.getBoundingClientRect();
+            const isAbove = hitRect.top < containerRect.top;
+            const isBelow = hitRect.bottom > containerRect.bottom;
+            if (isAbove || isBelow) {
+                const offsetFromTop = hitRect.top - containerRect.top;
+                const targetScrollTop = editor.scrollTop + offsetFromTop;
+                editor.scrollTop = targetScrollTop;
+                editorHighlights.scrollTop = targetScrollTop;
+            }
+        }
+
+        // 2) Center the hit within the viewport (account for sticky header/toolbar/find bar)
+        requestAnimationFrame(() => {
+            const currentRect = current.getBoundingClientRect();
+            const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || 0;
+            const toolbarH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--toolbar-height')) || 0;
+            const findH = (findBar && !findBar.hidden) ? findBar.getBoundingClientRect().height : 0;
+            const topInset = headerH + toolbarH + findH;
+            const usableHeight = window.innerHeight - topInset;
+            const desiredCenterY = topInset + usableHeight / 2;
+            const hitCenterY = currentRect.top + currentRect.height / 2;
+            const deltaY = hitCenterY - desiredCenterY;
+            if (Math.abs(deltaY) > 1) {
+                window.scrollBy({ top: deltaY, left: 0, behavior: 'smooth' });
+            }
+        });
+    };
+
+    const findInEditor = (direction = 1) => {
+        const query = findInput?.value || '';
+        if (!query) return false;
+        const regex = buildSearchRegex(query);
+        if (!regex) return false;
+
+        const value = editor.value;
+        const startFrom = direction === -1 ? Math.max(0, editor.selectionStart - 1) : Math.max(editor.selectionEnd, searchState.lastIndex);
+
+        // Forward search from startFrom
+        regex.lastIndex = startFrom;
+        let match = regex.exec(value);
+
+        // Wrap-around
+        if (!match && startFrom > 0) {
+            regex.lastIndex = 0;
+            match = regex.exec(value);
+        }
+
+        if (match) {
+            let s = match.index;
+            let e = s + (match[2] ? match[2].length : match[0].length);
+            // When whole-word using groups, adjust indices
+            if (match[2]) {
+                s = match.index + (match[1] ? match[1].length : 0);
+            }
+            editor.focus();
+            editor.setSelectionRange(s, e);
+            // Determine current match index for count and scrolling
+            if (searchState.matches && searchState.matches.length > 0) {
+                const idx = searchState.matches.findIndex((p) => p.start === s && p.end === e);
+                searchState.current = idx;
+                if (findCount) findCount.textContent = `${idx + 1}/${searchState.matches.length}`;
+                updateRawHighlights();
+                scrollCurrentRawHitIntoView(true);
+            }
+            // For the first query, ensure raw overlay renders and caret visible
+            if (searchState.freshQuery) {
+                updateRawHighlights();
+                scrollCurrentRawHitIntoView(true);
+                searchState.freshQuery = false;
+            }
+            searchState.lastIndex = e;
+            return true;
+        }
+        return false;
+    };
+
+    const replaceOne = () => {
+        const query = findInput?.value || '';
+        const replacement = replaceInput?.value ?? '';
+        if (!query) return false;
+        const regex = buildSearchRegex(query);
+        if (!regex) return false;
+        const { start, end, value } = getSelection();
+        const selected = value.slice(start, end);
+        let matchOk = false;
+        if (findRegex?.checked) {
+            try { matchOk = new RegExp(`^${regex.source}$`, regex.flags.replace('g','')).test(selected); } catch (_) { matchOk = false; }
+        } else if (findWhole?.checked) {
+            const equal = findCase?.checked ? selected === query : selected.toLowerCase() === query.toLowerCase();
+            matchOk = equal;
+        } else {
+            const equal = findCase?.checked ? selected === query : selected.toLowerCase() === query.toLowerCase();
+            matchOk = equal;
+        }
+
+        if (!matchOk) {
+            // move to next match
+            if (!findInEditor(1)) return false;
+            return replaceOne();
+        }
+
+        const before = editor.value.slice(0, start);
+        const after = editor.value.slice(end);
+        const replaceWith = findRegex?.checked ? selected.replace(new RegExp(regex.source, regex.flags.replace('g','')), replacement) : replacement;
+        editor.value = `${before}${replaceWith}${after}`;
+        const newPos = before.length + replaceWith.length;
+        editor.setSelectionRange(newPos, newPos);
+        updatePreview();
+        updateCounters();
+        markDirty(editor.value !== state.lastSavedContent);
+        scheduleAutosave();
+        // Record single history entry AFTER change so one undo reverts this replace
+        pushHistory();
+        // Refresh raw highlights and update counts; keep cursor at this replacement
+        updateRawHighlights();
+        const totalAfter = (searchState.matches?.length) || 0;
+        searchState.current = -1;
+        if (findCount) findCount.textContent = `0/${totalAfter}`;
+        return true;
+    };
+
+    const replaceAll = () => {
+        const query = findInput?.value || '';
+        const replacement = replaceInput?.value ?? '';
+        if (!query) return 0;
+        const regex = buildSearchRegex(query);
+        if (!regex) return 0;
+
+        const original = editor.value;
+        let count = 0;
+        let caretAfter = 0;
+        if (findRegex?.checked) {
+            const reG = new RegExp(regex.source, regex.flags);
+            const parts = [];
+            let last = 0;
+            let accLen = 0;
+            let m;
+            while ((m = reG.exec(original)) !== null) {
+                const s0 = m.index;
+                const s = s0 + (m[1] ? m[1].length : 0);
+                const e = s + (m[2] ? m[2].length : m[0].length);
+                parts.push(original.slice(last, s));
+                parts.push(replacement);
+                accLen += (s - last) + replacement.length;
+                caretAfter = accLen;
+                last = e;
+                count += 1;
+            }
+            parts.push(original.slice(last));
+            editor.value = parts.join('');
+        } else {
+            if (findWhole?.checked) {
+                // whole word replacement: iterate to build and track caret
+                const parts = [];
+                let last = 0;
+                let accLen = 0;
+                const wordRe = buildSearchRegex(query);
+                let m;
+                while ((m = wordRe.exec(original)) !== null) {
+                    const s = m.index + (m[1] ? m[1].length : 0);
+                    const e = s + (m[2] ? m[2].length : m[0].length);
+                    parts.push(original.slice(last, s));
+                    parts.push(replacement);
+                    accLen += (s - last) + replacement.length;
+                    caretAfter = accLen;
+                    last = e;
+                    count += 1;
+                }
+                parts.push(original.slice(last));
+                editor.value = parts.join('');
+            } else {
+                const flags = findCase?.checked ? 'g' : 'gi';
+                const safe = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const re = new RegExp(safe, flags);
+                const parts = [];
+                let last = 0;
+                let accLen = 0;
+                let m;
+                while ((m = re.exec(original)) !== null) {
+                    const s = m.index;
+                    const e = s + m[0].length;
+                    parts.push(original.slice(last, s));
+                    parts.push(replacement);
+                    accLen += (s - last) + replacement.length;
+                    caretAfter = accLen;
+                    last = e;
+                    count += 1;
+                }
+                parts.push(original.slice(last));
+                editor.value = parts.join('');
+            }
+        }
+        updatePreview();
+        updateCounters();
+        markDirty(editor.value !== state.lastSavedContent);
+        scheduleAutosave();
+        // Record single history entry AFTER change so one undo reverts all replacements
+        pushHistory();
+        // Refresh raw highlights and counts immediately; leave cursor at last replacement
+        if (count > 0) {
+            editor.setSelectionRange(caretAfter, caretAfter);
+        }
+        updateRawHighlights();
+        const totalAfterAll = (searchState.matches?.length) || 0;
+        searchState.current = -1;
+        if (findCount) findCount.textContent = `0/${totalAfterAll}`;
+        return count;
+    };
+
+    const openFind = () => {
+        if (!findBar) return;
+        findBar.hidden = false;
+        setTimeout(() => { findInput.focus(); findInput.select(); }, 0);
+        searchState.freshQuery = true;
+        updateRawHighlights();
+        // highlight toolbar find button
+        if (toggleFindButton) {
+            toggleFindButton.setAttribute('aria-pressed', 'true');
+            toggleFindButton.classList.add('active');
+        }
+    };
+
+    const closeFind = (clearFields = false) => {
+        if (!findBar) return;
+        findBar.hidden = true;
+        clearPreviewHighlights();
+        if (clearFields) {
+            if (findInput) findInput.value = '';
+            if (replaceInput) replaceInput.value = '';
+            if (findCount) findCount.textContent = '0/0';
+            searchState.matches = [];
+            searchState.current = -1;
+            if (editorHighlights) editorHighlights.innerHTML = '';
+        } else if (editorHighlights) {
+            // keep existing overlay if not clearing
+            editorHighlights.innerHTML = editorHighlights.innerHTML;
+        }
+        editor.focus();
+        if (toggleFindButton) {
+            toggleFindButton.setAttribute('aria-pressed', 'false');
+            toggleFindButton.classList.remove('active');
+        }
+    };
+
+    const recomputeFindBarOffset = () => {
+        const toolbarEl = document.querySelector('.toolbar-section');
+        const h = toolbarEl ? toolbarEl.getBoundingClientRect().height : 0;
+        document.documentElement.style.setProperty('--toolbar-height', `${Math.max(0, Math.round(h))}px`);
+    };
+
     const handleInput = () => {
         updatePreview();
         updateCounters();
@@ -2302,6 +2799,7 @@
         markDirty(editor.value !== state.lastSavedContent);
         scheduleAutosave();
         pushHistoryDebounced();
+        updateRawHighlights();
     };
 
     const bindEvents = () => {
@@ -2370,8 +2868,59 @@
                     preview.offsetHeight;
                     preview.style.display = '';
                 }
+                recomputeFindBarOffset();
             }, 100);
         });
+
+        // Find/Replace bindings
+        if (findBar) {
+            findNextBtn?.addEventListener('click', () => findInEditor(1));
+            findPrevBtn?.addEventListener('click', () => findInEditor(-1));
+            toggleFindButton?.addEventListener('click', () => {
+                if (!findBar.hidden) {
+                    closeFind(true);
+                } else {
+                    openFind();
+                }
+            });
+            findInput?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    findInEditor(e.shiftKey ? -1 : 1);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeFind(false);
+                }
+            });
+            findInput?.addEventListener('input', () => {
+                searchState.lastIndex = 0;
+                searchState.freshQuery = true;
+                updateRawHighlights();
+            });
+            // Start search when focus leaves the find box if there is a query
+            findInput?.addEventListener('blur', () => {
+                const q = findInput.value.trim();
+                if (!q) return;
+                searchState.lastIndex = 0;
+                searchState.freshQuery = true;
+                updateRawHighlights();
+                // Perform first find and center it
+                findInEditor(1);
+            });
+            [findCase, findRegex, findWhole].forEach((el) => el?.addEventListener('change', () => {
+                searchState.lastIndex = 0;
+                searchState.freshQuery = true;
+                updateRawHighlights();
+            }));
+            replaceInput?.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'enter') {
+                    e.preventDefault();
+                    replaceOne();
+                }
+            });
+            replaceOneBtn?.addEventListener('click', () => replaceOne());
+            replaceAllBtn?.addEventListener('click', () => replaceAll());
+        }
     };
 
     initializeTheme();
@@ -2390,5 +2939,11 @@
     // seed initial history state
     state.historyStack = [getEditorSnapshot()];
     state.futureStack = [];
+    // Ensure find bar hidden on startup
+    if (findBar) {
+        findBar.hidden = true;
+    }
+    // Initialize toolbar dynamic height for find bar positioning
+    recomputeFindBarOffset();
     bindEvents();
 })();

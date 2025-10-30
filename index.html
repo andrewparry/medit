@@ -90,13 +90,38 @@
                         <button id="toggle-preview" class="toolbar-btn" type="button" aria-label="Toggle preview" title="Toggle preview (Ctrl+Shift+P)" aria-pressed="true">
                             <span class="btn-icon" aria-hidden="true">👁️</span>
                         </button>
+                        <button id="toggle-find" class="toolbar-btn" type="button" aria-label="Find and replace" title="Find (Ctrl+F)">
+                            <span class="btn-icon" aria-hidden="true">🔍</span>
+                        </button>
                     </div>
                 </div>
+            </section>
+
+            <!-- Find/Replace bar -->
+            <section id="find-bar" class="find-bar" role="region" aria-label="Find and replace" hidden>
+                <div class="find-controls">
+                    <label class="sr-only" for="find-input">Find</label>
+                    <input id="find-input" class="find-input" type="text" placeholder="Find" aria-label="Find" />
+                    <button id="find-next" class="toolbar-btn" type="button" title="Next (Enter)">↓</button>
+                    <button id="find-prev" class="toolbar-btn" type="button" title="Previous (Shift+Enter)">↑</button>
+                    <span id="find-count" class="find-count" aria-live="polite">0/0</span>
+                    <label class="find-option"><input id="find-case" type="checkbox" /> Case</label>
+                    <label class="find-option"><input id="find-regex" type="checkbox" /> Regex</label>
+                    <label class="find-option"><input id="find-whole" type="checkbox" /> Whole</label>
+                </div>
+                <div class="replace-controls">
+                    <label class="sr-only" for="replace-input">Replace</label>
+                    <input id="replace-input" class="find-input" type="text" placeholder="Replace" aria-label="Replace" />
+                    <button id="replace-one" class="toolbar-btn" type="button" title="Replace (Cmd/Ctrl+Enter)">Replace</button>
+                    <button id="replace-all" class="toolbar-btn" type="button" title="Replace All">Replace All</button>
+                </div>
+                
             </section>
 
             <section class="editor-container">
                 <div class="editor-pane" role="region" aria-label="Markdown editor">
                     <label class="sr-only" for="editor">Markdown content editor</label>
+                    <div id="editor-highlights" class="editor-highlights" aria-hidden="true"></div>
                     <textarea id="editor" class="editor-content" aria-label="Markdown content editor" spellcheck="true" placeholder="Start writing your markdown content..."></textarea>
                 </div>
 

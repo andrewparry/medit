@@ -145,14 +145,6 @@ const updateToolbarStates = () => {
 
 ---
 
-## Low Priority Enhancements
-
-### 9. Keyboard Shortcut Overlay
-
-**Add:** Press `?` to show all available keyboard shortcuts.
-
-**Implementation:** Create modal with table of shortcuts, similar to unsaved changes dialog.
-
 ### 10. Find/Replace Functionality
 
 **Add:** `Ctrl+F` for find, `Ctrl+H` for find and replace.
@@ -190,7 +182,13 @@ const updateToolbarStates = () => {
 - 9. Automatic link detection: pasting a URL doesn’t auto‑convert it to a link.
 - 10. Escaped characters and inline HTML: there’s no way to toggle between escaped code and rendered HTML snippets.
 
+## Low Priority Enhancements
 
+### 14. Keyboard Shortcut Overlay
+
+**Add:** Press `?` to show all available keyboard shortcuts.
+
+**Implementation:** Create modal with table of shortcuts, similar to unsaved changes dialog.
 ---
 
 ## Specific Code Fixes

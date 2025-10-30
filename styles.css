@@ -15,6 +15,7 @@
   --font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   --font-mono: "Fira Code", "Cascadia Code", Menlo, monospace;
   --header-height: 64px;
+  --toolbar-height: 52px;
 }
 
 body.theme-dark {
@@ -175,6 +176,73 @@ textarea:focus-visible,
   z-index: 10;
 }
 
+.find-bar {
+  position: sticky;
+  top: calc(var(--header-height) + var(--toolbar-height) - 1px);
+  z-index: 9;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: 0.5rem 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.find-bar[hidden] {
+  display: none !important;
+  height: 0;
+  padding: 0;
+  border: 0;
+}
+
+.find-controls, .replace-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.find-input {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.45rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  min-width: 14ch;
+}
+
+.find-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.find-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.find-count {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  min-width: 3.5ch;
+  text-align: right;
+}
+
+/* Highlight for find hits in preview */
+.find-hit {
+  background: #fff59d;
+  color: #000; /* keep foreground readable */
+  padding: 0 0.05em;
+  border-radius: 0.15rem;
+}
+
+.find-hit-current {
+  background: #bfdbfe;
+  color: #000; /* keep foreground readable */
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -254,6 +322,7 @@ textarea:focus-visible,
 
 .editor-pane {
   border-right: 1px solid var(--color-border);
+  position: relative;
 }
 
 .preview-pane {
@@ -311,6 +380,21 @@ textarea:focus-visible,
   word-wrap: break-word;
   overflow-wrap: break-word;
   white-space: pre-wrap;
+}
+
+.editor-highlights {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  padding: 1.25rem 1.5rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  font-size: 1rem;
+  line-height: 1.55;
+  font-family: inherit;
+  color: transparent;
+  pointer-events: none;
 }
 
 .editor-content::placeholder {

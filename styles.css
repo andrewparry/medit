@@ -14,6 +14,7 @@
   --transition: 180ms ease-in-out;
   --font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   --font-mono: "Fira Code", "Cascadia Code", Menlo, monospace;
+  --header-height: 64px;
 }
 
 body.theme-dark {
@@ -40,6 +41,10 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   min-height: 100vh;
+}
+
+html, body {
+  height: 100%;
 }
 
 button,
@@ -74,6 +79,9 @@ textarea:focus-visible,
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .app-title {
@@ -114,6 +122,39 @@ textarea:focus-visible,
   transform: scale(0.97);
 }
 
+.file-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.file-btn.loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+
+.file-btn.loading::after {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  top: 50%;
+  left: 50%;
+  margin-left: -0.5rem;
+  margin-top: -0.5rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .btn-icon {
   font-weight: 600;
 }
@@ -122,13 +163,16 @@ textarea:focus-visible,
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: hidden;
+  overflow: visible; /* allow sticky toolbar to adhere to viewport */
 }
 
 .toolbar-section {
   padding: 0.5rem 1.5rem;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: var(--header-height);
+  z-index: 10;
 }
 
 .toolbar {
@@ -168,11 +212,22 @@ textarea:focus-visible,
   transform: translateY(1px);
 }
 
-.toolbar-btn[aria-pressed="true"] {
+.toolbar-btn[aria-pressed="true"],
+.toolbar-btn.active {
   background: var(--color-primary);
   color: #fff;
   border-color: var(--color-primary);
   box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.35);
+}
+
+.toolbar-btn.active:hover {
+  background: var(--color-primary);
+  opacity: 0.9;
+}
+
+.toolbar-btn.active:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .toolbar-separator {
@@ -185,6 +240,7 @@ textarea:focus-visible,
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
 }
 
 .editor-pane,
@@ -193,12 +249,53 @@ textarea:focus-visible,
   display: flex;
   flex-direction: column;
   background: var(--color-surface);
+  min-width: 200px;
+}
+
+.editor-pane {
   border-right: 1px solid var(--color-border);
 }
 
 .preview-pane {
-  border-right: none;
   border-left: 1px solid var(--color-border);
+}
+
+.resize-handle {
+  width: 4px;
+  background: var(--color-border);
+  cursor: col-resize;
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--transition);
+  user-select: none;
+  touch-action: none;
+  -webkit-user-drag: none;
+}
+
+.resize-handle:hover,
+.resize-handle:focus-visible {
+  background: var(--color-primary);
+  width: 5px;
+}
+
+.resize-handle:active {
+  background: var(--color-primary);
+  width: 5px;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.resize-handle.dragging {
+  background: var(--color-primary);
+  width: 5px;
 }
 
 .editor-content {
@@ -211,6 +308,9 @@ textarea:focus-visible,
   line-height: 1.55;
   color: var(--color-text);
   background: transparent;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .editor-content::placeholder {
@@ -221,9 +321,13 @@ textarea:focus-visible,
   flex: 1;
   padding: 1.25rem 1.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
   font-size: 1rem;
   line-height: 1.6;
   color: var(--color-text);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .preview-placeholder {
@@ -255,6 +359,19 @@ body.theme-dark .preview-content code {
   background: rgb(255 255 255 / 0.08);
 }
 
+.preview-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 0.1);
+}
+
+body.theme-dark .preview-content img {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+}
+
 .preview-hidden .preview-pane {
   display: none;
 }
@@ -263,10 +380,17 @@ body.theme-dark .preview-content code {
   flex: 1 1 100%;
 }
 
+.preview-hidden .resize-handle {
+  display: none;
+}
+
 .status-bar {
   padding: 0.6rem 1.5rem;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .status-info {
@@ -376,9 +500,49 @@ body.theme-dark #autosave-status {
   border-color: var(--color-primary-hover);
 }
 
+.dialog-input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.dialog-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.dialog-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dialog-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0;
+}
+
 @media (max-width: 960px) {
   .editor-container {
     flex-direction: column;
+  }
+
+  /* Header may wrap more; give a larger sticky offset */
+  :root {
+    --header-height: 96px;
   }
 
   .preview-pane {

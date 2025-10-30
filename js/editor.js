@@ -24,6 +24,8 @@
     const AUTOSAVE_KEY = 'markdown-editor-autosave';
     const AUTOSAVE_FILENAME_KEY = 'markdown-editor-filename';
     const AUTOSAVE_INTERVAL = 1500;
+    const HISTORY_LIMIT = 100;
+    const HISTORY_DEBOUNCE = 300;
     const THEME_KEY = 'markdown-editor-theme';
     const AUTOSAVE_DISABLED_KEY = 'markdown-editor-autosave-disabled';
     const SPLIT_RATIO_KEY = 'markdown-editor-split-ratio';
@@ -34,7 +36,11 @@
         lastSavedContent: '',
         isPreviewVisible: true,
         autosaveDisabled: false,
-        quotaExceededShown: false
+        quotaExceededShown: false,
+        isApplyingHistory: false,
+        historyTimer: null,
+        historyStack: [], // past states (oldest at 0, newest at end)
+        futureStack: []   // redo states (most recent at end)
     };
 
     if (!editor || !preview) {
@@ -84,6 +90,67 @@
 
         wordCountDisplay.textContent = `${words} ${words === 1 ? 'word' : 'words'} / ${characters} ${characters === 1 ? 'character' : 'characters'}`;
         charCountDisplay.textContent = `${characters} ${characters === 1 ? 'character' : 'characters'}`;
+    };
+
+    const getEditorSnapshot = () => ({
+        value: editor.value,
+        selectionStart: editor.selectionStart,
+        selectionEnd: editor.selectionEnd,
+        scrollTop: editor.scrollTop
+    });
+
+    const applyEditorSnapshot = (snapshot) => {
+        if (!snapshot) return;
+        state.isApplyingHistory = true;
+        editor.value = snapshot.value;
+        updatePreview();
+        updateCounters();
+        editor.focus();
+        editor.scrollTop = snapshot.scrollTop || 0;
+        editor.setSelectionRange(snapshot.selectionStart || 0, snapshot.selectionEnd || 0);
+        markDirty(editor.value !== state.lastSavedContent);
+        state.isApplyingHistory = false;
+    };
+
+    const pushHistory = () => {
+        if (state.isApplyingHistory) return;
+        const snap = getEditorSnapshot();
+        const last = state.historyStack[state.historyStack.length - 1];
+        if (last && last.value === snap.value && last.selectionStart === snap.selectionStart && last.selectionEnd === snap.selectionEnd) {
+            return; // no change
+        }
+        state.historyStack.push(snap);
+        if (state.historyStack.length > HISTORY_LIMIT) {
+            state.historyStack.shift();
+        }
+        // clear redo on new change
+        state.futureStack = [];
+    };
+
+    const pushHistoryDebounced = () => {
+        if (state.isApplyingHistory) return;
+        clearTimeout(state.historyTimer);
+        state.historyTimer = setTimeout(pushHistory, HISTORY_DEBOUNCE);
+    };
+
+    const undo = () => {
+        if (state.historyStack.length === 0) return;
+        const current = getEditorSnapshot();
+        const prev = state.historyStack.pop();
+        // push current to future for redo
+        state.futureStack.push(current);
+        applyEditorSnapshot(prev);
+        updateToolbarStates();
+    };
+
+    const redo = () => {
+        if (state.futureStack.length === 0) return;
+        const current = getEditorSnapshot();
+        const next = state.futureStack.pop();
+        // current goes back to history
+        state.historyStack.push(current);
+        applyEditorSnapshot(next);
+        updateToolbarStates();
     };
 
     const markDirty = (dirty = true) => {
@@ -615,6 +682,8 @@
 
     // Replace the current textarea selection while optionally restoring a custom selection range.
     const replaceSelection = (text, selectionRange) => {
+        // history: capture pre-change snapshot
+        pushHistory();
         const { start, end, value } = getSelection();
         const before = value.slice(0, start);
         const after = value.slice(end);
@@ -636,6 +705,8 @@
         updateCounters();
         markDirty(editor.value !== state.lastSavedContent);
         scheduleAutosave();
+        // history: capture post-change snapshot
+        pushHistory();
     };
 
     // Wrap the current selection with delimiters, positioning the caret after the closing delimiter
@@ -2029,6 +2100,10 @@
             markDirty(false);
             autosaveStatus.textContent = `Opened ${file.name}`;
             scheduleAutosave();
+            // reset history baseline to loaded document
+            state.historyStack = [getEditorSnapshot()];
+            state.futureStack = [];
+            updateToolbarStates();
             setButtonLoading(openButton, false);
         };
         reader.onerror = async () => {
@@ -2153,6 +2228,11 @@
                     event.preventDefault();
                     handleFormatting('codeBlock');
                     return;
+                case 'z':
+                    event.preventDefault();
+                    // Ctrl/Cmd+Shift+Z -> redo
+                    redo();
+                    return;
                 case 'p':
                     event.preventDefault();
                     togglePreview();
@@ -2163,6 +2243,16 @@
         }
 
         switch (key) {
+            case 'z':
+                event.preventDefault();
+                // Ctrl/Cmd+Z -> undo
+                undo();
+                break;
+            case 'y':
+                event.preventDefault();
+                // Ctrl/Cmd+Y -> redo
+                redo();
+                break;
             case 'b':
                 event.preventDefault();
                 handleFormatting('bold');
@@ -2211,6 +2301,7 @@
         autosaveStatus.textContent = 'Saving draft...';
         markDirty(editor.value !== state.lastSavedContent);
         scheduleAutosave();
+        pushHistoryDebounced();
     };
 
     const bindEvents = () => {
@@ -2296,5 +2387,8 @@
     if (!state.autosaveDisabled) {
         autosaveStatus.textContent = 'Ready';
     }
+    // seed initial history state
+    state.historyStack = [getEditorSnapshot()];
+    state.futureStack = [];
     bindEvents();
 })();

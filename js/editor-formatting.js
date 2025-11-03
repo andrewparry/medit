@@ -113,6 +113,9 @@
             h1: false,
             h2: false,
             h3: false,
+            h4: false,
+            h5: false,
+            h6: false,
             ul: false,
             ol: false,
             codeBlock: false,
@@ -256,6 +259,12 @@
             formatting.h2 = true;
         } else if (lineText.match(/^#{3}\s/)) {
             formatting.h3 = true;
+        } else if (lineText.match(/^#{4}\s/)) {
+            formatting.h4 = true;
+        } else if (lineText.match(/^#{5}\s/)) {
+            formatting.h5 = true;
+        } else if (lineText.match(/^#{6}\s/)) {
+            formatting.h6 = true;
         }
 
         // Check for lists (at start of line)
@@ -345,6 +354,9 @@
         const h1Button = elements.toolbar.querySelector('[data-format="h1"]');
         const h2Button = elements.toolbar.querySelector('[data-format="h2"]');
         const h3Button = elements.toolbar.querySelector('[data-format="h3"]');
+        const h4Button = elements.toolbar.querySelector('[data-format="h4"]');
+        const h5Button = elements.toolbar.querySelector('[data-format="h5"]');
+        const h6Button = elements.toolbar.querySelector('[data-format="h6"]');
         
         if (h1Button) {
             h1Button.classList.toggle('active', formatting.h1);
@@ -357,6 +369,18 @@
         if (h3Button) {
             h3Button.classList.toggle('active', formatting.h3);
             h3Button.setAttribute('aria-pressed', formatting.h3);
+        }
+        if (h4Button) {
+            h4Button.classList.toggle('active', formatting.h4);
+            h4Button.setAttribute('aria-pressed', formatting.h4);
+        }
+        if (h5Button) {
+            h5Button.classList.toggle('active', formatting.h5);
+            h5Button.setAttribute('aria-pressed', formatting.h5);
+        }
+        if (h6Button) {
+            h6Button.classList.toggle('active', formatting.h6);
+            h6Button.setAttribute('aria-pressed', formatting.h6);
         }
 
         // Update list buttons
@@ -877,7 +901,30 @@
         const selectionStartIndex = value.slice(0, start).split('\n').length - 1;
         const selectionEndIndex = value.slice(0, end).split('\n').length - 1;
 
-        const markerText = type === 'ol' ? '1. ' : '- ';
+        // Smart marker detection for ordered lists
+        let markerText = type === 'ol' ? '1. ' : '- ';
+        
+        // For ordered lists, check if we're continuing an existing list
+        if (type === 'ol' && selectionStartIndex > 0) {
+            // Look at the previous line
+            const prevLine = lines[selectionStartIndex - 1];
+            const prevMatch = prevLine.match(/^(\s*)(\d+)\.\s+/);
+            
+            if (prevMatch) {
+                // We're continuing a list - use the next number
+                const prevNumber = parseInt(prevMatch[2], 10);
+                const prevIndent = prevMatch[1];
+                
+                // Check if current line has same indentation
+                const currentLine = lines[selectionStartIndex];
+                const currentIndent = currentLine.match(/^(\s*)/)[1];
+                
+                if (currentIndent === prevIndent) {
+                    markerText = `${prevNumber + 1}. `;
+                }
+            }
+        }
+        
         const isTargetLine = (line) => {
             const trimmed = line.replace(/^\s*/, '');
             if (type === 'ol') {
@@ -1028,6 +1075,14 @@
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
         }
+        
+        // If we added ordered list markers, immediately renumber to ensure consistency
+        if (type === 'ol' && !shouldRemove) {
+            // Use setTimeout to allow the editor to update first
+            setTimeout(() => {
+                renumberAllOrderedLists();
+            }, 0);
+        }
     };
 
     /**
@@ -1066,6 +1121,526 @@
         });
     };
 
+    /**
+     * Indent list items (add 2 spaces of indentation)
+     */
+    const indentListItem = () => {
+        if (!elements.editor) return;
+        
+        // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
+        const scrollTop = elements.editor.scrollTop;
+        const scrollLeft = elements.editor.scrollLeft;
+        const hadFocus = document.activeElement === elements.editor;
+        
+        const { start, end, value } = utils.getSelection();
+        const lines = value.split('\n');
+        const lineOffsets = utils.getLineOffsets(lines);
+        const startLineIndex = value.slice(0, start).split('\n').length - 1;
+        const endLineIndex = value.slice(0, end).split('\n').length - 1;
+
+        let cumulativeDelta = 0;
+        let newStart = start;
+        let newEnd = end;
+        let startAdjusted = false;
+        let endAdjusted = false;
+        let modified = false;
+
+        for (let i = 0; i < lines.length; i += 1) {
+            const originalLine = lines[i];
+            let newLine = originalLine;
+
+            if (i >= startLineIndex && i <= endLineIndex) {
+                // Check if this line is a list item (ordered or unordered)
+                const listMatch = originalLine.match(/^(\s*)([-*+]|\d+\.)\s+/);
+                if (listMatch) {
+                    // Add 2 spaces of indentation
+                    newLine = `  ${originalLine}`;
+                    modified = true;
+                }
+            }
+
+            const lineStartOriginal = lineOffsets[i];
+            const lineStartNew = lineStartOriginal + cumulativeDelta;
+            const lineDelta = newLine.length - originalLine.length;
+
+            if (!startAdjusted) {
+                if (start < lineStartOriginal) {
+                    newStart = start + cumulativeDelta;
+                } else if (start <= lineStartOriginal + originalLine.length) {
+                    // Cursor position: add the delta to maintain relative position
+                    const offsetInLine = start - lineStartOriginal;
+                    newStart = lineStartNew + offsetInLine + lineDelta;
+                    startAdjusted = true;
+                }
+            }
+
+            if (!endAdjusted) {
+                if (end < lineStartOriginal) {
+                    newEnd = end + cumulativeDelta;
+                } else if (end <= lineStartOriginal + originalLine.length) {
+                    const offsetInLine = end - lineStartOriginal;
+                    newEnd = lineStartNew + offsetInLine + lineDelta;
+                    endAdjusted = true;
+                }
+            }
+
+            lines[i] = newLine;
+            cumulativeDelta += lineDelta;
+        }
+
+        if (!startAdjusted) {
+            newStart = start + cumulativeDelta;
+        }
+        if (!endAdjusted) {
+            newEnd = end + cumulativeDelta;
+        }
+
+        // Only update if we actually modified something
+        if (!modified) {
+            return;
+        }
+
+        elements.editor.value = lines.join('\n');
+
+        // ✅ IMMEDIATE scroll lock #1 (after content change)
+        elements.editor.scrollTop = scrollTop;
+        elements.editor.scrollLeft = scrollLeft;
+        
+        // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
+        if (!hadFocus) {
+            elements.editor.focus({ preventScroll: true });
+        }
+        
+        // ✅ Set selection
+        elements.editor.setSelectionRange(newStart, newEnd);
+        
+        // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
+        elements.editor.scrollTop = scrollTop;
+        elements.editor.scrollLeft = scrollLeft;
+        
+        // ✅ TRIPLE RAF for maximum browser compatibility
+        requestAnimationFrame(() => {
+            elements.editor.scrollTop = scrollTop;
+            elements.editor.scrollLeft = scrollLeft;
+            
+            requestAnimationFrame(() => {
+                elements.editor.scrollTop = scrollTop;
+                elements.editor.scrollLeft = scrollLeft;
+                
+                requestAnimationFrame(() => {
+                    elements.editor.scrollTop = scrollTop;
+                    elements.editor.scrollLeft = scrollLeft;
+                });
+            });
+        });
+        
+        if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+            MarkdownEditor.preview.updatePreview();
+        }
+        if (utils.updateCounters) {
+            utils.updateCounters();
+        }
+        if (MarkdownEditor.stateManager) {
+            MarkdownEditor.stateManager.markDirty(elements.editor.value !== state.lastSavedContent);
+        }
+        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+            MarkdownEditor.autosave.scheduleAutosave();
+        }
+    };
+
+    /**
+     * Renumber ordered list items starting from a given line
+     */
+    const renumberOrderedList = () => {
+        if (!elements.editor) return;
+        
+        const { start, value } = utils.getSelection();
+        const lines = value.split('\n');
+        const currentLineIndex = value.slice(0, start).split('\n').length - 1;
+        const currentLine = lines[currentLineIndex];
+        
+        // Check if current line is part of an ordered list
+        const listMatch = currentLine.match(/^(\s*)\d+\.\s+/);
+        if (!listMatch) return;
+        
+        const indent = listMatch[1];
+        
+        // Find the start and end of the current list block with same indentation
+        let listStart = currentLineIndex;
+        let listEnd = currentLineIndex;
+        
+        // Find start of list
+        for (let i = currentLineIndex - 1; i >= 0; i--) {
+            const line = lines[i];
+            const lineMatch = line.match(/^(\s*)\d+\.\s+/);
+            if (!lineMatch || lineMatch[1] !== indent) {
+                break;
+            }
+            listStart = i;
+        }
+        
+        // Find end of list
+        for (let i = currentLineIndex + 1; i < lines.length; i++) {
+            const line = lines[i];
+            const lineMatch = line.match(/^(\s*)\d+\.\s+/);
+            if (!lineMatch || lineMatch[1] !== indent) {
+                break;
+            }
+            listEnd = i;
+        }
+        
+        // Renumber the list
+        let number = 1;
+        for (let i = listStart; i <= listEnd; i++) {
+            const line = lines[i];
+            const lineMatch = line.match(/^(\s*)\d+\.\s+(.*)$/);
+            if (lineMatch && lineMatch[1] === indent) {
+                lines[i] = `${indent}${number}. ${lineMatch[2]}`;
+                number++;
+            }
+        }
+        
+        elements.editor.value = lines.join('\n');
+        elements.editor.setSelectionRange(start, start);
+        
+        if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+            MarkdownEditor.preview.updatePreview();
+        }
+        if (utils.updateCounters) {
+            utils.updateCounters();
+        }
+        if (MarkdownEditor.stateManager) {
+            MarkdownEditor.stateManager.markDirty(elements.editor.value !== state.lastSavedContent);
+        }
+        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+            MarkdownEditor.autosave.scheduleAutosave();
+        }
+    };
+
+    /**
+     * Renumber ALL ordered lists in the document to match preview rendering
+     * This ensures editor numbers match what the preview will show
+     */
+    const renumberAllOrderedLists = () => {
+        if (!elements.editor) return;
+        
+        const { start, end, value } = utils.getSelection();
+        const lines = value.split('\n');
+        let modified = false;
+        
+        // Track list state at each indentation level
+        const listCounters = new Map(); // Map<indent, number>
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const listMatch = line.match(/^(\s*)(\d+)\.\s+(.*)$/);
+            
+            if (listMatch) {
+                const indent = listMatch[1].length;
+                const currentNumber = parseInt(listMatch[2], 10);
+                const content = listMatch[3];
+                
+                // Get or initialize counter for this indentation level
+                if (!listCounters.has(indent)) {
+                    listCounters.set(indent, 1);
+                    // Clear deeper indentation levels when we start/restart a list
+                    for (const [key] of listCounters) {
+                        if (key > indent) {
+                            listCounters.delete(key);
+                        }
+                    }
+                }
+                
+                const expectedNumber = listCounters.get(indent);
+                
+                // If number doesn't match expected, renumber it
+                if (currentNumber !== expectedNumber) {
+                    lines[i] = `${listMatch[1]}${expectedNumber}. ${content}`;
+                    modified = true;
+                }
+                
+                // Increment counter for next item at this level
+                listCounters.set(indent, expectedNumber + 1);
+            } else {
+                // Non-list line: reset all counters (list has ended)
+                if (line.trim() !== '') {
+                    listCounters.clear();
+                }
+            }
+        }
+        
+        if (modified) {
+            elements.editor.value = lines.join('\n');
+            elements.editor.setSelectionRange(start, end);
+        }
+    };
+
+    // Debounced version of renumberAllOrderedLists
+    let renumberDebounceTimer = null;
+    const renumberAllOrderedListsDebounced = () => {
+        clearTimeout(renumberDebounceTimer);
+        renumberDebounceTimer = setTimeout(() => {
+            renumberAllOrderedLists();
+        }, 500); // Wait 500ms after user stops typing
+    };
+
+    /**
+     * Handle Enter key in lists for smart continuation
+     * Returns true if handled, false otherwise
+     */
+    const handleEnterInList = () => {
+        if (!elements.editor) return false;
+        
+        const { start, end, value } = utils.getSelection();
+        
+        // Only handle single cursor (no selection)
+        if (start !== end) return false;
+        
+        const lines = value.split('\n');
+        const currentLineIndex = value.slice(0, start).split('\n').length - 1;
+        const currentLine = lines[currentLineIndex];
+        
+        // Check if we're in a list item
+        const unorderedMatch = currentLine.match(/^(\s*)([-*+])\s+(.*)$/);
+        const orderedMatch = currentLine.match(/^(\s*)(\d+)\.\s+(.*)$/);
+        
+        if (!unorderedMatch && !orderedMatch) {
+            return false; // Not in a list
+        }
+        
+        const isOrdered = !!orderedMatch;
+        const match = isOrdered ? orderedMatch : unorderedMatch;
+        const indent = match[1];
+        const marker = match[2];
+        const content = match[3];
+        
+        // Get cursor position within the line
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const cursorPosInLine = start - lineStart;
+        
+        // If the list item is empty (only marker), exit the list
+        if (content.trim() === '' && cursorPosInLine <= (indent.length + marker.length + 2)) {
+            // Remove the empty list item and exit list
+            const before = value.slice(0, lineStart);
+            const after = value.slice(value.indexOf('\n', start) !== -1 ? value.indexOf('\n', start) : value.length);
+            
+            elements.editor.value = before + after;
+            elements.editor.setSelectionRange(lineStart, lineStart);
+            
+            if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+                MarkdownEditor.preview.updatePreview();
+            }
+            if (utils.updateCounters) {
+                utils.updateCounters();
+            }
+            if (MarkdownEditor.stateManager) {
+                MarkdownEditor.stateManager.markDirty(elements.editor.value !== state.lastSavedContent);
+            }
+            if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+                MarkdownEditor.autosave.scheduleAutosave();
+            }
+            
+            return true;
+        }
+        
+        // Split the content at cursor position
+        const contentBeforeCursor = content.slice(0, cursorPosInLine - indent.length - marker.length - 2);
+        const contentAfterCursor = content.slice(cursorPosInLine - indent.length - marker.length - 2);
+        
+        // Determine the next marker
+        let nextMarker;
+        if (isOrdered) {
+            const currentNumber = parseInt(marker, 10);
+            nextMarker = `${currentNumber + 1}.`;
+        } else {
+            nextMarker = `${marker}`;
+        }
+        
+        // Build the new content
+        const lineEnd = value.indexOf('\n', start);
+        const actualLineEnd = lineEnd === -1 ? value.length : lineEnd;
+        
+        const before = value.slice(0, lineStart);
+        const after = value.slice(actualLineEnd);
+        
+        const newCurrentLine = isOrdered ? `${indent}${marker}. ${contentBeforeCursor}` : `${indent}${marker} ${contentBeforeCursor}`;
+        const newNextLine = `${indent}${nextMarker} ${contentAfterCursor}`;
+        
+        const newValue = before + newCurrentLine + '\n' + newNextLine + after;
+        elements.editor.value = newValue;
+        
+        // Position cursor at start of content on new line
+        const newCursorPos = before.length + newCurrentLine.length + 1 + indent.length + nextMarker.length + 1;
+        elements.editor.setSelectionRange(newCursorPos, newCursorPos);
+        
+        // If ordered list, renumber subsequent items
+        if (isOrdered) {
+            // Use setTimeout to allow the value to be set first
+            setTimeout(() => {
+                renumberOrderedList();
+            }, 0);
+        }
+        
+        if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+            MarkdownEditor.preview.updatePreview();
+        }
+        if (utils.updateCounters) {
+            utils.updateCounters();
+        }
+        if (MarkdownEditor.stateManager) {
+            MarkdownEditor.stateManager.markDirty(elements.editor.value !== state.lastSavedContent);
+        }
+        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+            MarkdownEditor.autosave.scheduleAutosave();
+        }
+        
+        return true;
+    };
+
+    /**
+     * Outdent list items (remove up to 2 spaces of indentation)
+     */
+    const outdentListItem = () => {
+        if (!elements.editor) return;
+        
+        // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
+        const scrollTop = elements.editor.scrollTop;
+        const scrollLeft = elements.editor.scrollLeft;
+        const hadFocus = document.activeElement === elements.editor;
+        
+        const { start, end, value } = utils.getSelection();
+        const lines = value.split('\n');
+        const lineOffsets = utils.getLineOffsets(lines);
+        const startLineIndex = value.slice(0, start).split('\n').length - 1;
+        const endLineIndex = value.slice(0, end).split('\n').length - 1;
+
+        let cumulativeDelta = 0;
+        let newStart = start;
+        let newEnd = end;
+        let startAdjusted = false;
+        let endAdjusted = false;
+        let modified = false;
+
+        for (let i = 0; i < lines.length; i += 1) {
+            const originalLine = lines[i];
+            let newLine = originalLine;
+
+            if (i >= startLineIndex && i <= endLineIndex) {
+                // Check if this line is a list item (ordered or unordered)
+                const listMatch = originalLine.match(/^(\s*)([-*+]|\d+\.)\s+/);
+                if (listMatch) {
+                    const currentIndent = listMatch[1];
+                    // Remove up to 2 spaces of indentation
+                    if (currentIndent.length >= 2) {
+                        newLine = originalLine.slice(2);
+                        modified = true;
+                    } else if (currentIndent.length === 1) {
+                        newLine = originalLine.slice(1);
+                        modified = true;
+                    }
+                }
+            }
+
+            const lineStartOriginal = lineOffsets[i];
+            const lineStartNew = lineStartOriginal + cumulativeDelta;
+            const lineDelta = newLine.length - originalLine.length;
+
+            if (!startAdjusted) {
+                if (start < lineStartOriginal) {
+                    newStart = start + cumulativeDelta;
+                } else if (start <= lineStartOriginal + originalLine.length) {
+                    // Cursor position: maintain relative position but account for removed spaces
+                    const offsetInLine = start - lineStartOriginal;
+                    const spacesRemoved = -lineDelta;
+                    // If cursor was in the indentation area, move it to start of content
+                    if (offsetInLine <= spacesRemoved) {
+                        newStart = lineStartNew;
+                    } else {
+                        newStart = lineStartNew + offsetInLine + lineDelta;
+                    }
+                    startAdjusted = true;
+                }
+            }
+
+            if (!endAdjusted) {
+                if (end < lineStartOriginal) {
+                    newEnd = end + cumulativeDelta;
+                } else if (end <= lineStartOriginal + originalLine.length) {
+                    const offsetInLine = end - lineStartOriginal;
+                    const spacesRemoved = -lineDelta;
+                    if (offsetInLine <= spacesRemoved) {
+                        newEnd = lineStartNew;
+                    } else {
+                        newEnd = lineStartNew + offsetInLine + lineDelta;
+                    }
+                    endAdjusted = true;
+                }
+            }
+
+            lines[i] = newLine;
+            cumulativeDelta += lineDelta;
+        }
+
+        if (!startAdjusted) {
+            newStart = start + cumulativeDelta;
+        }
+        if (!endAdjusted) {
+            newEnd = end + cumulativeDelta;
+        }
+
+        // Only update if we actually modified something
+        if (!modified) {
+            return;
+        }
+
+        elements.editor.value = lines.join('\n');
+
+        // ✅ IMMEDIATE scroll lock #1 (after content change)
+        elements.editor.scrollTop = scrollTop;
+        elements.editor.scrollLeft = scrollLeft;
+        
+        // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
+        if (!hadFocus) {
+            elements.editor.focus({ preventScroll: true });
+        }
+        
+        // ✅ Set selection
+        elements.editor.setSelectionRange(newStart, newEnd);
+        
+        // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
+        elements.editor.scrollTop = scrollTop;
+        elements.editor.scrollLeft = scrollLeft;
+        
+        // ✅ TRIPLE RAF for maximum browser compatibility
+        requestAnimationFrame(() => {
+            elements.editor.scrollTop = scrollTop;
+            elements.editor.scrollLeft = scrollLeft;
+            
+            requestAnimationFrame(() => {
+                elements.editor.scrollTop = scrollTop;
+                elements.editor.scrollLeft = scrollLeft;
+                
+                requestAnimationFrame(() => {
+                    elements.editor.scrollTop = scrollTop;
+                    elements.editor.scrollLeft = scrollLeft;
+                });
+            });
+        });
+        
+        if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+            MarkdownEditor.preview.updatePreview();
+        }
+        if (utils.updateCounters) {
+            utils.updateCounters();
+        }
+        if (MarkdownEditor.stateManager) {
+            MarkdownEditor.stateManager.markDirty(elements.editor.value !== state.lastSavedContent);
+        }
+        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+            MarkdownEditor.autosave.scheduleAutosave();
+        }
+    };
+
     // Expose public API
     MarkdownEditor.formatting = {
         detectFormatting,
@@ -1075,7 +1650,13 @@
         applyBlockquote,
         toggleList,
         applyCodeBlock,
-        replaceSelection
+        replaceSelection,
+        indentListItem,
+        outdentListItem,
+        handleEnterInList,
+        renumberOrderedList,
+        renumberAllOrderedLists,
+        renumberAllOrderedListsDebounced
     };
 
     window.MarkdownEditor = MarkdownEditor;

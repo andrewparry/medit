@@ -48,10 +48,16 @@
     };
 
     const closeListIfNeeded = (state, output) => {
-        if (!state.listType) return;
-        output.push(`<${state.listType}>${state.listBuffer.join('')}</${state.listType}>`);
-        state.listType = null;
-        state.listBuffer = [];
+        // Close all nested lists
+        while (state.listStack.length > 0) {
+            const level = state.listStack.pop();
+            state.listBuffer.push(`</${level.type}>`);
+        }
+        
+        if (state.listBuffer.length > 0) {
+            output.push(state.listBuffer.join(''));
+            state.listBuffer = [];
+        }
     };
 
     const isTableDivider = (line) => /^\s*\|?(\s*:?-{3,}:?\s*\|)+\s*:?-{3,}:?\s*\|?\s*$/.test(line);
@@ -66,7 +72,10 @@
     const parse = (markdown) => {
         const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
         const output = [];
-        const state = { listType: null, listBuffer: [] };
+        const state = { 
+            listStack: [],  // Stack of { type: 'ul'|'ol', indent: number }
+            listBuffer: []  // Buffer for building nested list HTML
+        };
         let inCodeBlock = false;
         let codeFenceBuffer = [];
         let codeBlockLanguage = '';
@@ -136,25 +145,47 @@
                 continue;
             }
 
-            const orderedMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
-            if (orderedMatch) {
-                if (state.listType !== 'ol') {
-                    closeListIfNeeded(state, output);
-                    state.listType = 'ol';
-                    state.listBuffer = [];
+            // Check for list items (ordered or unordered) with indentation support
+            const listMatch = line.match(/^(\s*)([-*+]|\d+\.)\s+(.*)$/);
+            if (listMatch) {
+                const indent = listMatch[1].length;
+                const marker = listMatch[2];
+                const content = listMatch[3];
+                const listType = /^\d+\.$/.test(marker) ? 'ol' : 'ul';
+                const level = Math.floor(indent / 2); // 2 spaces = 1 level
+                
+                // Adjust list stack to match current indentation level
+                while (state.listStack.length > level + 1) {
+                    // Close deeper nested lists
+                    const closedLevel = state.listStack.pop();
+                    state.listBuffer.push(`</li></${closedLevel.type}>`);
                 }
-                state.listBuffer.push(`<li>${parseInline(orderedMatch[2])}</li>`);
-                continue;
-            }
-
-            const unorderedMatch = trimmed.match(/^[-*+]\s+(.*)$/);
-            if (unorderedMatch) {
-                if (state.listType !== 'ul') {
-                    closeListIfNeeded(state, output);
-                    state.listType = 'ul';
-                    state.listBuffer = [];
+                
+                if (state.listStack.length === 0) {
+                    // Start a new top-level list
+                    state.listStack.push({ type: listType, indent: indent });
+                    state.listBuffer.push(`<${listType}>`);
+                } else if (state.listStack.length === level + 1) {
+                    // Same level - check if list type changed
+                    const currentLevel = state.listStack[state.listStack.length - 1];
+                    if (currentLevel.type !== listType) {
+                        // Close current list and open new one at same level
+                        state.listStack.pop();
+                        state.listBuffer.push(`</li></${currentLevel.type}>`);
+                        state.listStack.push({ type: listType, indent: indent });
+                        state.listBuffer.push(`<${listType}>`);
+                    } else {
+                        // Same type and level - close previous item
+                        state.listBuffer.push('</li>');
+                    }
+                } else if (state.listStack.length < level + 1) {
+                    // Deeper nesting - open new nested list
+                    state.listStack.push({ type: listType, indent: indent });
+                    state.listBuffer.push(`<${listType}>`);
                 }
-                state.listBuffer.push(`<li>${parseInline(unorderedMatch[1])}</li>`);
+                
+                // Add the list item
+                state.listBuffer.push(`<li>${parseInline(content)}`);
                 continue;
             }
 

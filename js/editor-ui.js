@@ -293,6 +293,15 @@
             case 'h3':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyHeading(3);
                 break;
+            case 'h4':
+                if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyHeading(4);
+                break;
+            case 'h5':
+                if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyHeading(5);
+                break;
+            case 'h6':
+                if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyHeading(6);
+                break;
             case 'ul':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.toggleList('ul');
                 break;
@@ -335,6 +344,34 @@
     const handleShortcut = (event) => {
         const key = event.key.toLowerCase();
         const ctrlOrCmd = event.ctrlKey || event.metaKey;
+
+        // Handle Tab and Shift+Tab for list indentation (without Ctrl/Cmd)
+        if (key === 'tab' && !ctrlOrCmd) {
+            // Check if we're in the editor
+            if (document.activeElement === elements.editor) {
+                event.preventDefault();
+                if (event.shiftKey) {
+                    // Shift+Tab: Outdent
+                    if (MarkdownEditor.formatting) MarkdownEditor.formatting.outdentListItem();
+                } else {
+                    // Tab: Indent
+                    if (MarkdownEditor.formatting) MarkdownEditor.formatting.indentListItem();
+                }
+                return;
+            }
+        }
+
+        // Handle Enter for smart list continuation
+        if (key === 'enter' && !ctrlOrCmd && !event.shiftKey) {
+            // Check if we're in the editor
+            if (document.activeElement === elements.editor) {
+                const handled = MarkdownEditor.formatting && MarkdownEditor.formatting.handleEnterInList();
+                if (handled) {
+                    event.preventDefault();
+                    return;
+                }
+            }
+        }
 
         if (!ctrlOrCmd) {
             return;
@@ -407,6 +444,18 @@
             case '3':
                 event.preventDefault();
                 handleFormatting('h3');
+                break;
+            case '4':
+                event.preventDefault();
+                handleFormatting('h4');
+                break;
+            case '5':
+                event.preventDefault();
+                handleFormatting('h5');
+                break;
+            case '6':
+                event.preventDefault();
+                handleFormatting('h6');
                 break;
             case 's':
                 event.preventDefault();

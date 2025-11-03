@@ -36,6 +36,10 @@
         if (MarkdownEditor.syntaxHighlight && MarkdownEditor.syntaxHighlight.updateRawHighlights) {
             MarkdownEditor.syntaxHighlight.updateRawHighlights();
         }
+        // Auto-renumber ordered lists to keep editor in sync with preview
+        if (MarkdownEditor.formatting && MarkdownEditor.formatting.renumberAllOrderedListsDebounced) {
+            MarkdownEditor.formatting.renumberAllOrderedListsDebounced();
+        }
     };
 
     /**

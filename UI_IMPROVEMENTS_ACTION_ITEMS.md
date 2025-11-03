@@ -218,13 +218,83 @@ const updateToolbarStates = () => {
   - ✅ All three syntaxes (---, ***, ___) are detected and can be toggled off
   - ✅ Preview rendering converts horizontal rule markdown to `<hr>` HTML element
   - ✅ Follows same toggle pattern as blockquote and other formatting elements
-- 4. Headings beyond H3: the toolbar only provides H1–H3; higher-level headings (H4–H6) are absent.
-- 5. Nested or multi‑level lists: there’s no way to indent list items to create sublists.
-- 6. Task/checkbox lists: Markdown checkboxes (- [ ] / - [x]) aren’t supported.
-- 7. While underline isn’t standard Markdown but is in some dialects.
-- 8. Footnotes: Markdown footnote syntax ([^1]…[^1]:) isn’t handled.
-- 9. Automatic link detection: pasting a URL doesn’t auto‑convert it to a link.
-- 10. Escaped characters and inline HTML: there’s no way to toggle between escaped code and rendered HTML snippets.
+- 4. Headings beyond H3: the toolbar only provides H1–H3; higher-level headings (H4–H6) are absent. ✅ COMPLETE
+  
+  **Status:** ✅ **RESOLVED** - H4, H5, and H6 heading buttons added to toolbar with full functionality
+  
+  **Implementation:**
+  - ✅ Added H4, H5, and H6 buttons to toolbar in index.html after H3 button
+  - ✅ Buttons use "H4", "H5", "H6" text labels with proper aria-label and title attributes
+  - ✅ Added h4, h5, h6 to formatting detection object in editor-formatting.js
+  - ✅ Updated `detectFormatting()` function to detect h4 (####), h5 (#####), and h6 (######) headings
+  - ✅ Updated `updateToolbarStates()` function to update H4, H5, H6 button states
+  - ✅ Added h4, h5, h6 case handlers in editor-ui.js `handleFormatting()` function
+  - ✅ Added keyboard shortcuts: Ctrl+4 (H4), Ctrl+5 (H5), Ctrl+6 (H6)
+  - ✅ All heading levels now have toggle functionality (click again to remove heading)
+  - ✅ Button highlights (aria-pressed="true") when cursor is on a heading line
+  - ✅ Preview rendering already supported (marked-lite.js handles all heading levels)
+  - ✅ Follows same behavior pattern as H1-H3 headings
+- 5. Nested or multi‑level lists: there's no way to indent list items to create sublists. ✅ COMPLETE
+  
+  **Status:** ✅ **RESOLVED** - Full nested list support with Tab/Shift+Tab keyboard shortcuts
+  
+  **Implementation:**
+  - ✅ Added `indentListItem()` function in editor-formatting.js
+  - ✅ Added `outdentListItem()` function in editor-formatting.js
+  - ✅ Added Tab key handler to indent list items (adds 2 spaces of indentation)
+  - ✅ Added Shift+Tab key handler to outdent list items (removes up to 2 spaces of indentation)
+  - ✅ Updated marked-lite.js parser to properly render nested lists with indentation levels
+  - ✅ Parser now creates nested `<ul>` and `<ol>` tags based on indentation (2 spaces = 1 level)
+  - ✅ Both ordered and unordered lists can be nested at any depth
+  - ✅ Mixed list types (ul inside ol, ol inside ul) are supported
+  - ✅ Tab/Shift+Tab work on both single lines and multi-line selections
+  - ✅ Cursor position is preserved after indentation changes
+  - ✅ Follows same scroll-locking pattern as other formatting operations
+  
+  **Features:**
+  - Press Tab on a list item to indent it (create a sublist)
+  - Press Shift+Tab on a list item to outdent it (promote to parent level)
+  - Works with both ordered (1. 2. 3.) and unordered (- * +) lists
+  - Indentation uses 2 spaces per level (standard Markdown convention)
+  - Preview renders nested lists with proper HTML structure
+  - Multiple list items can be indented/outdented at once by selecting multiple lines
+- 6. Smart List Auto-numbering: Ordered lists don't auto-increment or renumber. ✅ COMPLETE
+  
+  **Status:** ✅ **RESOLVED** - Full smart numbering for ordered lists with auto-continuation
+  
+  **Implementation:**
+  - ✅ Added `handleEnterInList()` function in editor-formatting.js
+  - ✅ Added `renumberOrderedList()` function in editor-formatting.js
+  - ✅ Added Enter key handler in editor-ui.js to intercept Enter in lists
+  - ✅ Pressing Enter in an ordered list automatically inserts the next number
+  - ✅ Pressing Enter in an unordered list continues the list with same marker
+  - ✅ Pressing Enter on an empty list item exits the list
+  - ✅ After inserting a line in an ordered list, subsequent items are automatically renumbered
+  - ✅ Works with nested lists (preserves indentation)
+  - ✅ Splits content correctly when Enter is pressed in middle of list item text
+  
+  **Features:**
+  - **Auto-continuation:** Press Enter in a list item to automatically create the next item
+  - **Smart numbering:** New items in ordered lists get the next sequential number
+  - **Auto-renumbering:** Adding items in the middle automatically renumbers subsequent items
+  - **Exit on empty:** Press Enter on an empty list item to exit the list
+  - **Content splitting:** Press Enter in the middle of text to split it across two list items
+  - **Indentation preserved:** Nested list items maintain their indentation level
+  - **Both list types:** Works for both ordered (1. 2. 3.) and unordered (- * +) lists
+  
+  **Usage:**
+  - Type `1. ` and some text, then press Enter → automatically creates `2. `
+  - Press Enter on empty `3. ` → exits list (removes the empty item)
+  - Type text mid-list and press Enter → renumbers all subsequent items
+  - Edit any list item → all lists are automatically renumbered after 500ms to match preview
+  - Click numbered list button on line after `5.` → **automatically uses `6.`** (context-aware!)
+  - **Editor and preview numbering stay in perfect sync** - no more mismatched numbers!
+  
+- 7. Task/checkbox lists: Markdown checkboxes (- [ ] / - [x]) aren't supported.
+- 8. While underline isn't standard Markdown but is in some dialects.
+- 9. Footnotes: Markdown footnote syntax ([^1]…[^1]:) isn't handled.
+- 10. Automatic link detection: pasting a URL doesn't auto‑convert it to a link.
+- 11. Escaped characters and inline HTML: there's no way to toggle between escaped code and rendered HTML snippets.
 
 ## Low Priority Enhancements
 

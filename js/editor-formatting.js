@@ -109,6 +109,7 @@
             strikethrough: false,
             code: false,
             blockquote: false,
+            hr: false,
             h1: false,
             h2: false,
             h3: false,
@@ -244,6 +245,11 @@
             formatting.blockquote = true;
         }
         
+        // Check for horizontal rule (---, ***, or ___)
+        if (lineText.match(/^(\*\s*\*\s*\*[\s*]*|_\s*_\s*_[\s_]*|-\s*-\s*-[\s-]*)$/)) {
+            formatting.hr = true;
+        }
+        
         if (lineText.match(/^#{1}\s/)) {
             formatting.h1 = true;
         } else if (lineText.match(/^#{2}\s/)) {
@@ -326,6 +332,13 @@
         if (blockquoteButton) {
             blockquoteButton.classList.toggle('active', formatting.blockquote);
             blockquoteButton.setAttribute('aria-pressed', formatting.blockquote);
+        }
+
+        // Update horizontal rule button
+        const hrButton = elements.toolbar.querySelector('[data-format="hr"]');
+        if (hrButton) {
+            hrButton.classList.toggle('active', formatting.hr);
+            hrButton.setAttribute('aria-pressed', formatting.hr);
         }
 
         // Update header buttons

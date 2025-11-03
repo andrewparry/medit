@@ -199,7 +199,25 @@ const updateToolbarStates = () => {
   - ✅ Sanitizer already allows `<del>` tag for preview rendering
 
 - 2. Blockquotes: the ability to prepend > to create quoted sections is missing.
-- 3. Horizontal rules: inserting a horizontal line using ---, *** or ___ isn’t implemented.
+- 3. Horizontal rules: inserting a horizontal line using ---, *** or ___. ✅ COMPLETE
+  
+  **Status:** ✅ **RESOLVED** - Horizontal rule button with toggle functionality added to toolbar
+  
+  **Implementation:**
+  - ✅ Added horizontal rule button in toolbar after blockquote button
+  - ✅ Button uses "─" icon with proper aria-label and title attributes
+  - ✅ Implemented `insertHorizontalRule()` function in editor-inserts.js with toggle behavior
+  - ✅ Function inserts "---" with proper blank line spacing before/after
+  - ✅ Function detects when cursor is on a horizontal rule line and removes it (toggle off)
+  - ✅ Added horizontal rule parsing in marked-lite.js (supports ---, ***, and ___)
+  - ✅ Added case handler in editor-ui.js for 'hr' action
+  - ✅ Added `hr: false` to formatting detection object in editor-formatting.js
+  - ✅ Added horizontal rule detection in `detectFormatting()` function (line-based detection)
+  - ✅ Added HR button state updates in `updateToolbarStates()` function
+  - ✅ Button highlights (aria-pressed="true") when cursor is on a horizontal rule line
+  - ✅ All three syntaxes (---, ***, ___) are detected and can be toggled off
+  - ✅ Preview rendering converts horizontal rule markdown to `<hr>` HTML element
+  - ✅ Follows same toggle pattern as blockquote and other formatting elements
 - 4. Headings beyond H3: the toolbar only provides H1–H3; higher-level headings (H4–H6) are absent.
 - 5. Nested or multi‑level lists: there’s no way to indent list items to create sublists.
 - 6. Task/checkbox lists: Markdown checkboxes (- [ ] / - [x]) aren’t supported.

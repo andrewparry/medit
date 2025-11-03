@@ -165,6 +165,14 @@
                 continue;
             }
 
+            // Horizontal rule: ---, ***, or ___ (with optional spaces between characters)
+            const hrMatch = trimmed.match(/^(\*\s*\*\s*\*[\s*]*|_\s*_\s*_[\s_]*|-\s*-\s*-[\s-]*)$/);
+            if (hrMatch) {
+                closeListIfNeeded(state, output);
+                output.push('<hr>');
+                continue;
+            }
+
             closeListIfNeeded(state, output);
             output.push(`<p>${parseInline(trimmed)}</p>`);
         }

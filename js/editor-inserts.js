@@ -93,6 +93,86 @@
     };
 
     /**
+     * Insert a horizontal rule (or remove it if cursor is on one - toggle behavior)
+     */
+    const insertHorizontalRule = () => {
+        if (!elements.editor) return;
+
+        const { start, end, value } = utils.getSelection();
+        
+        // Find the current line
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const lineEnd = value.indexOf('\n', start);
+        const actualLineEnd = lineEnd === -1 ? value.length : lineEnd;
+        const lineText = value.slice(lineStart, actualLineEnd);
+        
+        // Check if cursor is on a horizontal rule line (---, ***, or ___)
+        const hrPattern = /^(\*\s*\*\s*\*[\s*]*|_\s*_\s*_[\s_]*|-\s*-\s*-[\s-]*)$/;
+        if (hrPattern.test(lineText.trim())) {
+            // TOGGLE OFF: Remove the horizontal rule line
+            const before = value.slice(0, lineStart);
+            const after = value.slice(actualLineEnd);
+            
+            // Remove the line and any extra blank lines around it
+            let newBefore = before;
+            let newAfter = after;
+            
+            // Remove trailing newline from before if it ends with double newline
+            if (newBefore.endsWith('\n\n')) {
+                newBefore = newBefore.slice(0, -1);
+            }
+            
+            // Remove leading newline from after if present
+            if (newAfter.startsWith('\n')) {
+                newAfter = newAfter.slice(1);
+            }
+            
+            elements.editor.value = newBefore + newAfter;
+            
+            // Position cursor where the HR was
+            const newCursorPos = newBefore.length;
+            elements.editor.setSelectionRange(newCursorPos, newCursorPos);
+            elements.editor.focus({ preventScroll: true });
+            
+            // Trigger updates
+            if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+                MarkdownEditor.preview.updatePreview();
+            }
+            if (utils.updateCounters) {
+                utils.updateCounters();
+            }
+            if (MarkdownEditor.stateManager) {
+                MarkdownEditor.stateManager.markDirty(elements.editor.value !== MarkdownEditor.state.lastSavedContent);
+            }
+            if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+                MarkdownEditor.autosave.scheduleAutosave();
+            }
+            if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
+                MarkdownEditor.formatting.updateToolbarStates();
+            }
+            if (MarkdownEditor.history && MarkdownEditor.history.pushHistory) {
+                MarkdownEditor.history.pushHistory();
+            }
+            
+            return;
+        }
+        
+        // TOGGLE ON: Insert horizontal rule
+        const before = value.slice(0, start);
+        const after = value.slice(end);
+
+        // Add proper spacing: blank line before and after if not at document edges
+        const leading = start > 0 && !before.endsWith('\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
+        const trailing = after.length > 0 && !after.startsWith('\n') ? '\n\n' : (after.startsWith('\n') && !after.startsWith('\n\n') ? '\n' : '');
+
+        const hr = '---';
+        const inserted = `${leading}${hr}${trailing}`;
+
+        // Place cursor after the horizontal rule
+        formatting.replaceSelection(inserted, inserted.length - trailing.length);
+    };
+
+    /**
      * Insert a table
      */
     const insertTable = async () => {
@@ -177,7 +257,8 @@
     MarkdownEditor.inserts = {
         insertLink,
         insertImage,
-        insertTable
+        insertTable,
+        insertHorizontalRule
     };
 
     window.MarkdownEditor = MarkdownEditor;

@@ -281,6 +281,9 @@
             case 'blockquote':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyBlockquote();
                 break;
+            case 'hr':
+                if (MarkdownEditor.inserts) MarkdownEditor.inserts.insertHorizontalRule();
+                break;
             case 'h1':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyHeading(1);
                 break;

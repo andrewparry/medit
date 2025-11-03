@@ -183,9 +183,21 @@ const updateToolbarStates = () => {
 - Plain text export downloads raw markdown
 - All exports preserve original filename
 
-**13. Markdown functions and elements that aren’t currently supported by the editor:**
+**13. Markdown functions and elements that aren't currently supported by the editor:**
 
-- 1. Strikethrough: wrapping text with ~~ (e.g., ~~deleted~~) isn’t available.
+- 1. Strikethrough: wrapping text with ~~ (e.g., ~~deleted~~) isn't available. ✅ COMPLETE
+  
+  **Status:** ✅ **RESOLVED** - Strikethrough formatting button added to toolbar
+  
+  **Implementation:**
+  - ✅ Added strikethrough button in toolbar between italic and code buttons
+  - ✅ Button uses "S" icon with proper aria-label and title attributes
+  - ✅ Implemented `applyInlineFormat('~~', '~~', 'deleted text')` for strikethrough formatting
+  - ✅ Added strikethrough detection in `detectFormatting()` function
+  - ✅ Added strikethrough button state updates in `updateToolbarStates()` function
+  - ✅ Preview rendering already supported (marked-lite.js converts ~~text~~ to <del>text</del>)
+  - ✅ Sanitizer already allows `<del>` tag for preview rendering
+
 - 2. Blockquotes: the ability to prepend > to create quoted sections is missing.
 - 3. Horizontal rules: inserting a horizontal line using ---, *** or ___ isn’t implemented.
 - 4. Headings beyond H3: the toolbar only provides H1–H3; higher-level headings (H4–H6) are absent.

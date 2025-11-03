@@ -498,6 +498,7 @@
         const formatting = {
             bold: false,
             italic: false,
+            strikethrough: false,
             code: false,
             h1: false,
             h2: false,
@@ -575,6 +576,40 @@
             });
             
             formatting.italic = isInsideItalic || isAtEndOfItalic || isAfterItalic;
+        }
+
+        // Check for strikethrough (~~text~~)
+        if (hasSelection) {
+            const selectedText = value.slice(start, end);
+            // Check if selection contains strikethrough formatting
+            formatting.strikethrough = /~~[^~]+~~/.test(selectedText);
+        } else {
+            // Find all strikethrough patterns in the text
+            const strikethroughPattern = /~~[^~]+~~/g;
+            const strikethroughMatches = value.match(strikethroughPattern) || [];
+            
+            // Check if cursor is inside any strikethrough pattern
+            let isInsideStrikethrough = false;
+            for (const match of strikethroughMatches) {
+                const matchStart = value.indexOf(match);
+                const matchEnd = matchStart + match.length;
+                if (start >= matchStart && start <= matchEnd) {
+                    isInsideStrikethrough = true;
+                    break;
+                }
+            }
+            
+            // Also check if we're at the end of a complete strikethrough section
+            const beforeCursor = value.slice(0, start);
+            const isAtEndOfStrikethrough = strikethroughMatches.some(match => beforeCursor.endsWith(match));
+            
+            // Also check if cursor is right after a complete strikethrough section
+            const isAfterStrikethrough = strikethroughMatches.some(match => {
+                const matchEnd = value.indexOf(match) + match.length;
+                return start === matchEnd;
+            });
+            
+            formatting.strikethrough = isInsideStrikethrough || isAtEndOfStrikethrough || isAfterStrikethrough;
         }
 
         // Check for inline code (`text`)
@@ -669,6 +704,7 @@
         // Update text formatting buttons
         const boldButton = toolbar.querySelector('[data-format="bold"]');
         const italicButton = toolbar.querySelector('[data-format="italic"]');
+        const strikethroughButton = toolbar.querySelector('[data-format="strikethrough"]');
         const codeButton = toolbar.querySelector('[data-format="code"]');
         
         if (boldButton) {
@@ -678,6 +714,10 @@
         if (italicButton) {
             italicButton.classList.toggle('active', formatting.italic);
             italicButton.setAttribute('aria-pressed', formatting.italic);
+        }
+        if (strikethroughButton) {
+            strikethroughButton.classList.toggle('active', formatting.strikethrough);
+            strikethroughButton.setAttribute('aria-pressed', formatting.strikethrough);
         }
         if (codeButton) {
             codeButton.classList.toggle('active', formatting.code);
@@ -731,8 +771,17 @@
     };
 
     const setSelection = (start, end) => {
+        // Preserve scroll position to prevent document shifting
+        const scrollTop = editor.scrollTop;
+        const scrollLeft = editor.scrollLeft;
         editor.focus();
         editor.setSelectionRange(start, end);
+        // Restore scroll position after browser potentially auto-scrolls
+        // Use requestAnimationFrame to ensure restoration happens after browser's scroll
+        requestAnimationFrame(() => {
+            editor.scrollTop = scrollTop;
+            editor.scrollLeft = scrollLeft;
+        });
     };
 
     const getLineOffsets = (lines) => {
@@ -1727,6 +1776,9 @@
                 break;
             case 'italic':
                 applyInlineFormat('*', '*', 'italic text');
+                break;
+            case 'strikethrough':
+                applyInlineFormat('~~', '~~', 'deleted text');
                 break;
             case 'code':
                 applyInlineFormat('`', '`', 'code');

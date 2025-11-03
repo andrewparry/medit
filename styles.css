@@ -160,6 +160,10 @@ textarea:focus-visible,
   font-weight: 600;
 }
 
+.strikethrough-icon {
+  text-decoration: line-through;
+}
+
 .editor-main {
   display: flex;
   flex-direction: column;

@@ -251,6 +251,7 @@ textarea:focus-visible,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 
@@ -300,6 +301,50 @@ textarea:focus-visible,
 .toolbar-btn.active:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.toolbar-btn-file {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.toolbar-btn-file:hover,
+.toolbar-btn-file:focus-visible {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.toolbar-btn-file:active {
+  transform: scale(0.97);
+}
+
+.toolbar-btn-file:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.toolbar-btn-file.loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+
+.toolbar-btn-file.loading::after {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  top: 50%;
+  left: 50%;
+  margin-left: -0.5rem;
+  margin-top: -0.5rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
 }
 
 .toolbar-separator {

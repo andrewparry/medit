@@ -12,30 +12,6 @@
     <div class="app-container">
         <header class="app-header" role="banner">
             <h1 class="app-title">Markdown Editor</h1>
-            <div class="header-actions">
-                <button id="dark-mode-toggle" class="file-btn" type="button" role="switch" aria-checked="false" aria-label="Toggle dark mode" title="Toggle dark mode">
-                    <span class="btn-icon" aria-hidden="true">🌙</span>
-                    <span class="btn-text">Dark</span>
-                </button>
-                <nav class="file-operations" role="navigation" aria-label="File operations">
-                    <button id="new-file" class="file-btn" type="button" aria-label="Start a new markdown document" title="Start a new markdown document">
-                        <span class="btn-icon" aria-hidden="true">🆕</span>
-                        <span class="btn-text">New</span>
-                    </button>
-                    <button id="open-file" class="file-btn" type="button" aria-label="Open markdown file" title="Open markdown file">
-                        <span class="btn-icon" aria-hidden="true">📁</span>
-                        <span class="btn-text">Open</span>
-                    </button>
-                    <button id="save-file" class="file-btn" type="button" aria-label="Save markdown file" title="Save markdown file">
-                        <span class="btn-icon" aria-hidden="true">💾</span>
-                        <span class="btn-text">Save</span>
-                    </button>
-                    <button id="export-file" class="file-btn" type="button" aria-label="Export file" title="Export file">
-                        <span class="btn-icon" aria-hidden="true">📤</span>
-                        <span class="btn-text">Export</span>
-                    </button>
-                </nav>
-            </div>
         </header>
 
         <main class="editor-main" role="main">
@@ -101,6 +77,26 @@
                         </button>
                         <button id="toggle-find" class="toolbar-btn" type="button" aria-label="Find and replace" title="Find (Ctrl+F)">
                             <span class="btn-icon" aria-hidden="true">🔍</span>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-separator" role="separator" aria-hidden="true"></div>
+
+                    <div class="toolbar-group" role="group" aria-label="File operations">
+                        <button id="dark-mode-toggle" class="toolbar-btn toolbar-btn-file" type="button" role="switch" aria-checked="false" aria-label="Toggle dark mode" title="Toggle dark mode">
+                            <span class="btn-icon" aria-hidden="true">🌙</span>
+                        </button>
+                        <button id="new-file" class="toolbar-btn toolbar-btn-file" type="button" aria-label="Start a new markdown document" title="Start a new markdown document">
+                            <span class="btn-icon" aria-hidden="true">🆕</span>
+                        </button>
+                        <button id="open-file" class="toolbar-btn toolbar-btn-file" type="button" aria-label="Open markdown file" title="Open markdown file">
+                            <span class="btn-icon" aria-hidden="true">📁</span>
+                        </button>
+                        <button id="save-file" class="toolbar-btn toolbar-btn-file" type="button" aria-label="Save markdown file" title="Save markdown file">
+                            <span class="btn-icon" aria-hidden="true">💾</span>
+                        </button>
+                        <button id="export-file" class="toolbar-btn toolbar-btn-file" type="button" aria-label="Export file" title="Export file">
+                            <span class="btn-icon" aria-hidden="true">📤</span>
                         </button>
                     </div>
                 </div>

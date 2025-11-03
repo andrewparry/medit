@@ -160,14 +160,28 @@ const updateToolbarStates = () => {
 
 **Note:** This would be a significant architectural change.
 
-### 12. Export Options
+### 12. Export Options ✅ COMPLETE
 
 **Add:** Export to PDF, HTML, or plain text.
 
+**Status:** ✅ **RESOLVED** - Export options dialog with HTML, PDF, and Plain Text formats implemented
+
 **Implementation:** 
-- HTML: Use existing preview HTML
-- PDF: Use browser print API or library like jsPDF
-- Plain text: Simple text download
+- ✅ Added "Export" button to file operations toolbar
+- ✅ Created `showExportDialog()` with accessible custom dialog
+- ✅ Implemented `exportToHtml()` - exports complete HTML document with Prism.js syntax highlighting and dark mode support
+- ✅ Implemented `exportToPlainText()` - simple text download of raw markdown content
+- ✅ Implemented `exportToPdf()` - uses browser print API to generate PDF from preview HTML
+- ✅ Wired up export button click handler
+- ✅ Added status bar feedback during export operations
+- ✅ Includes error handling with user-friendly alert dialogs
+
+**Features:**
+- Custom export dialog with format selection (HTML, PDF, Plain Text)
+- HTML export includes full document structure with syntax highlighting
+- PDF export uses browser's native print-to-PDF functionality
+- Plain text export downloads raw markdown
+- All exports preserve original filename
 
 **13. Markdown functions and elements that aren’t currently supported by the editor:**
 

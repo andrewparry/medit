@@ -15,6 +15,7 @@
     const newButton = document.getElementById('new-file');
     const openButton = document.getElementById('open-file');
     const saveButton = document.getElementById('save-file');
+    const exportButton = document.getElementById('export-file');
     const fileInput = document.getElementById('file-input');
     const fileNameDisplay = document.getElementById('file-name');
     const wordCountDisplay = document.getElementById('word-count');
@@ -2260,6 +2261,329 @@
         }
     };
 
+    /**
+     * Show an export options dialog with HTML, PDF, and Plain Text options
+     * @returns {Promise<string|null>} - Resolves with export format or null if cancelled
+     */
+    const showExportDialog = () => new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'dialog-overlay';
+
+        const dialog = document.createElement('div');
+        dialog.className = 'dialog-surface';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-labelledby', 'export-dialog-title');
+
+        const titleElement = document.createElement('h2');
+        titleElement.id = 'export-dialog-title';
+        titleElement.className = 'dialog-label';
+        titleElement.textContent = 'Export Document';
+        titleElement.style.marginTop = '0';
+
+        const messageElement = document.createElement('p');
+        messageElement.className = 'dialog-message';
+        messageElement.textContent = 'Choose an export format:';
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.flexDirection = 'column';
+        buttonContainer.style.gap = '0.5rem';
+        buttonContainer.style.marginTop = '0.5rem';
+
+        const formats = [
+            { format: 'html', label: 'HTML', icon: '🌐' },
+            { format: 'pdf', label: 'PDF', icon: '📄' },
+            { format: 'txt', label: 'Plain Text', icon: '📝' }
+        ];
+
+        const cleanup = () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.removeChild(overlay);
+            editor.focus();
+        };
+
+        const handleExport = (format) => {
+            cleanup();
+            resolve(format);
+        };
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                cleanup();
+                resolve(null);
+            }
+        };
+
+        formats.forEach(({ format, label, icon }) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'dialog-btn';
+            button.style.justifyContent = 'flex-start';
+            button.innerHTML = `<span style="margin-right: 0.5rem; font-size: 1.2em;">${icon}</span>${label}`;
+            button.addEventListener('click', () => handleExport(format));
+            buttonContainer.appendChild(button);
+        });
+
+        const cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'dialog-btn';
+        cancelButton.textContent = 'Cancel';
+        cancelButton.style.marginTop = '0.5rem';
+
+        const actions = document.createElement('div');
+        actions.className = 'dialog-actions';
+        actions.style.marginTop = '1rem';
+        actions.appendChild(cancelButton);
+
+        dialog.appendChild(titleElement);
+        dialog.appendChild(messageElement);
+        dialog.appendChild(buttonContainer);
+        dialog.appendChild(actions);
+
+        overlay.appendChild(dialog);
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                cleanup();
+                resolve(null);
+            }
+        });
+
+        cancelButton.addEventListener('click', () => {
+            cleanup();
+            resolve(null);
+        });
+
+        document.body.appendChild(overlay);
+        document.addEventListener('keydown', handleKeyDown);
+
+        // Focus the first export button
+        setTimeout(() => buttonContainer.firstChild?.focus(), 10);
+    });
+
+    /**
+     * Export document as HTML
+     */
+    const exportToHtml = async () => {
+        const filename = fileNameDisplay.textContent.trim().replace(/\.md$/, '');
+        const htmlFilename = filename.endsWith('.html') ? filename : `${filename}.html`;
+
+        // Get the preview HTML content
+        const rawHtml = window.markedLite.parse(editor.value);
+        const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
+
+        // Create a complete HTML document
+        const htmlDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${filename}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            color: #1f2a3d;
+            background-color: #f7f9fc;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        pre {
+            background: rgb(15 23 42 / 0.08);
+            padding: 0.85rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Fira Code", "Cascadia Code", Menlo, monospace;
+            background: rgb(15 23 42 / 0.08);
+            padding: 0.15rem 0.35rem;
+            border-radius: 0.35rem;
+        }
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+        }
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #111827;
+                color: #e5e7eb;
+            }
+            pre {
+                background: rgb(255 255 255 / 0.08);
+            }
+            code {
+                background: rgb(255 255 255 / 0.08);
+            }
+        }
+    </style>
+</head>
+<body>
+${safeHtml}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+<script>
+if (window.Prism) {
+    window.Prism.highlightAll();
+}
+</script>
+</body>
+</html>`;
+
+        const blob = new Blob([htmlDoc], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = htmlFilename;
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+    };
+
+    /**
+     * Export document as Plain Text
+     */
+    const exportToPlainText = async () => {
+        const filename = fileNameDisplay.textContent.trim().replace(/\.md$/, '');
+        const txtFilename = filename.endsWith('.txt') ? filename : `${filename}.txt`;
+
+        const blob = new Blob([editor.value], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = txtFilename;
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+    };
+
+    /**
+     * Export document as PDF using browser print API
+     */
+    const exportToPdf = () => {
+        // Create a new window with the preview HTML
+        const rawHtml = window.markedLite.parse(editor.value);
+        const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alertDialog('Please allow pop-ups to export as PDF.', 'PDF Export');
+            return;
+        }
+
+        printWindow.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export to PDF</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <style>
+        @media print {
+            body { margin: 0; }
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #1f2a3d;
+            padding: 2rem;
+        }
+        pre {
+            background: rgb(15 23 42 / 0.08);
+            padding: 0.85rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "Fira Code", "Cascadia Code", Menlo, monospace;
+            background: rgb(15 23 42 / 0.08);
+            padding: 0.15rem 0.35rem;
+            border-radius: 0.35rem;
+        }
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+${safeHtml}
+</body>
+</html>`);
+
+        printWindow.document.close();
+
+        // Wait for content to load, then trigger print dialog
+        setTimeout(() => {
+            printWindow.print();
+            // Clean up the window after a short delay
+            setTimeout(() => {
+                printWindow.close();
+            }, 1000);
+        }, 250);
+    };
+
+    /**
+     * Main export function - shows dialog and handles export based on selection
+     */
+    const handleExport = async () => {
+        const exportFormat = await showExportDialog();
+
+        if (!exportFormat) {
+            autosaveStatus.textContent = 'Export cancelled';
+            return;
+        }
+
+        try {
+            autosaveStatus.textContent = 'Exporting...';
+            
+            switch (exportFormat) {
+                case 'html':
+                    await exportToHtml();
+                    autosaveStatus.textContent = 'Exported as HTML';
+                    break;
+                case 'pdf':
+                    exportToPdf();
+                    autosaveStatus.textContent = 'Opening PDF export...';
+                    break;
+                case 'txt':
+                    await exportToPlainText();
+                    autosaveStatus.textContent = 'Exported as plain text';
+                    break;
+            }
+        } catch (error) {
+            console.error('Export failed', error);
+            autosaveStatus.textContent = 'Export failed';
+            await alertDialog('An error occurred while exporting the document.', 'Export Error');
+        }
+    };
+
     const resetEditorState = () => {
         editor.value = '';
         updatePreview();
@@ -2941,6 +3265,9 @@
         newButton.addEventListener('click', handleNewDocument);
         openButton.addEventListener('click', loadFile);
         saveButton.addEventListener('click', saveFile);
+        if (exportButton) {
+            exportButton.addEventListener('click', handleExport);
+        }
         darkModeToggle.addEventListener('click', toggleDarkMode);
 
         editor.addEventListener('keydown', handleShortcut);

@@ -108,6 +108,7 @@
             italic: false,
             strikethrough: false,
             code: false,
+            blockquote: false,
             h1: false,
             h2: false,
             h3: false,
@@ -230,6 +231,11 @@
         const lineStart = value.lastIndexOf('\n', start - 1) + 1;
         const lineText = value.slice(lineStart, value.indexOf('\n', start) === -1 ? value.length : value.indexOf('\n', start));
         
+        // Check for blockquote (at start of line)
+        if (lineText.match(/^>\s/)) {
+            formatting.blockquote = true;
+        }
+        
         if (lineText.match(/^#{1}\s/)) {
             formatting.h1 = true;
         } else if (lineText.match(/^#{2}\s/)) {
@@ -305,6 +311,13 @@
         if (codeButton) {
             codeButton.classList.toggle('active', formatting.code);
             codeButton.setAttribute('aria-pressed', formatting.code);
+        }
+
+        // Update blockquote button
+        const blockquoteButton = elements.toolbar.querySelector('[data-format="blockquote"]');
+        if (blockquoteButton) {
+            blockquoteButton.classList.toggle('active', formatting.blockquote);
+            blockquoteButton.setAttribute('aria-pressed', formatting.blockquote);
         }
 
         // Update header buttons
@@ -451,6 +464,143 @@
                 const offsetIntoContent = Math.max(0, offsetAfterList - oldHeadingLength);
                 const newOffsetInLine = listLength + newHeadingLength + offsetIntoContent;
                 return lineStartNew + Math.min(newOffsetInLine, newLine.length);
+            };
+
+            if (!startAdjusted) {
+                if (start < lineStartOriginal) {
+                    newStart = start + cumulativeDelta;
+                } else if (start <= lineStartOriginal + originalLine.length) {
+                    newStart = adjustWithinLine(start);
+                    startAdjusted = true;
+                }
+            }
+
+            if (!endAdjusted) {
+                if (end < lineStartOriginal) {
+                    newEnd = end + cumulativeDelta;
+                } else if (end <= lineStartOriginal + originalLine.length) {
+                    newEnd = adjustWithinLine(end);
+                    endAdjusted = true;
+                }
+            }
+
+            lines[i] = newLine;
+            cumulativeDelta += lineDelta;
+        }
+
+        if (!startAdjusted) {
+            newStart = start + cumulativeDelta;
+        }
+        if (!endAdjusted) {
+            newEnd = end + cumulativeDelta;
+        }
+
+        elements.editor.value = lines.join('\n');
+
+        // ✅ IMMEDIATE scroll lock #1 (after content change)
+        elements.editor.scrollTop = scrollTop;
+        elements.editor.scrollLeft = scrollLeft;
+        
+        // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
+        if (!hadFocus) {
+            elements.editor.focus({ preventScroll: true });
+        }
+        
+        // ✅ Set selection
+        elements.editor.setSelectionRange(newStart, newEnd);
+        
+        // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
+        elements.editor.scrollTop = scrollTop;
+        elements.editor.scrollLeft = scrollLeft;
+        
+        // ✅ TRIPLE RAF for maximum browser compatibility
+        requestAnimationFrame(() => {
+            elements.editor.scrollTop = scrollTop;
+            elements.editor.scrollLeft = scrollLeft;
+            
+            requestAnimationFrame(() => {
+                elements.editor.scrollTop = scrollTop;
+                elements.editor.scrollLeft = scrollLeft;
+                
+                requestAnimationFrame(() => {
+                    elements.editor.scrollTop = scrollTop;
+                    elements.editor.scrollLeft = scrollLeft;
+                });
+            });
+        });
+        
+        if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+            MarkdownEditor.preview.updatePreview();
+        }
+        if (utils.updateCounters) {
+            utils.updateCounters();
+        }
+        if (MarkdownEditor.stateManager) {
+            MarkdownEditor.stateManager.markDirty(elements.editor.value !== state.lastSavedContent);
+        }
+        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+            MarkdownEditor.autosave.scheduleAutosave();
+        }
+    };
+
+    /**
+     * Apply blockquote formatting
+     */
+    const applyBlockquote = () => {
+        if (!elements.editor) return;
+        
+        // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
+        const scrollTop = elements.editor.scrollTop;
+        const scrollLeft = elements.editor.scrollLeft;
+        const hadFocus = document.activeElement === elements.editor;
+        
+        const { start, end, value } = utils.getSelection();
+        const lines = value.split('\n');
+        const lineOffsets = utils.getLineOffsets(lines);
+        const startLineIndex = value.slice(0, start).split('\n').length - 1;
+        const endLineIndex = value.slice(0, end).split('\n').length - 1;
+
+        let cumulativeDelta = 0;
+        let newStart = start;
+        let newEnd = end;
+        let startAdjusted = false;
+        let endAdjusted = false;
+        let allLinesAreBlockquotes = true;
+
+        // First pass: check if all selected lines are blockquotes
+        for (let i = startLineIndex; i <= endLineIndex; i += 1) {
+            const line = lines[i];
+            if (!/^>\s?/.test(line)) {
+                allLinesAreBlockquotes = false;
+                break;
+            }
+        }
+
+        // Second pass: toggle blockquotes
+        for (let i = 0; i < lines.length; i += 1) {
+            const originalLine = lines[i];
+            let newLine = originalLine;
+
+            if (i >= startLineIndex && i <= endLineIndex) {
+                const blockquoteMatch = originalLine.match(/^(>\s?)(.*)$/);
+                
+                if (allLinesAreBlockquotes) {
+                    // Remove blockquote
+                    newLine = blockquoteMatch ? blockquoteMatch[2] : originalLine;
+                } else {
+                    // Add blockquote
+                    newLine = blockquoteMatch ? originalLine : `> ${originalLine}`;
+                }
+            }
+
+            const lineStartOriginal = lineOffsets[i];
+            const lineStartNew = lineStartOriginal + cumulativeDelta;
+            const lineDelta = newLine.length - originalLine.length;
+
+            const adjustWithinLine = (offset) => {
+                const offsetInLine = offset - lineStartOriginal;
+                const newOffsetInLine = Math.min(offsetInLine + lineDelta, newLine.length);
+                return lineStartNew + Math.max(0, newOffsetInLine);
             };
 
             if (!startAdjusted) {
@@ -742,6 +892,7 @@
         updateToolbarStates,
         applyInlineFormat,
         applyHeading,
+        applyBlockquote,
         toggleList,
         applyCodeBlock,
         replaceSelection

@@ -785,6 +785,18 @@ body.theme-dark .preview-content img {
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
 }
 
+.preview-content blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+body.theme-dark .preview-content blockquote {
+  border-left-color: var(--color-primary);
+}
+
 .preview-hidden .preview-pane {
   display: none;
 }

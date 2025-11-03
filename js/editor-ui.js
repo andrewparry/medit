@@ -278,6 +278,9 @@
             case 'code':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyInlineFormat('`', '`', 'code');
                 break;
+            case 'blockquote':
+                if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyBlockquote();
+                break;
             case 'h1':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyHeading(1);
                 break;

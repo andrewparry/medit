@@ -397,6 +397,146 @@ textarea:focus-visible,
   pointer-events: none;
 }
 
+/* Make Prism tokens visible in editor overlay - override transparent color from parent */
+/* Reset ALL font formatting - only allow color changes */
+.editor-highlights .token {
+  color: initial !important;
+  background: transparent !important;
+  display: inline !important;
+  position: static !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  vertical-align: baseline !important;
+  line-height: inherit !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  font-style: inherit !important;
+  font-variant: inherit !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  letter-spacing: inherit !important;
+  word-spacing: inherit !important;
+  text-indent: 0 !important;
+  white-space: inherit !important;
+}
+
+/* Apply Prism theme colors to tokens - ONLY color, no other formatting */
+/* Brighter, more colorful palette */
+.editor-highlights .token.comment,
+.editor-highlights .token.prolog,
+.editor-highlights .token.doctype,
+.editor-highlights .token.cdata {
+  color: #6A9955 !important; /* Bright green */
+}
+
+.editor-highlights .token.punctuation {
+  color: #ABB2BF !important; /* Light gray */
+}
+
+.editor-highlights .token.property,
+.editor-highlights .token.tag,
+.editor-highlights .token.boolean,
+.editor-highlights .token.number,
+.editor-highlights .token.constant,
+.editor-highlights .token.symbol,
+.editor-highlights .token.deleted {
+  color: #D19A66 !important; /* Bright orange */
+}
+
+.editor-highlights .token.selector,
+.editor-highlights .token.attr-name,
+.editor-highlights .token.string,
+.editor-highlights .token.char,
+.editor-highlights .token.builtin,
+.editor-highlights .token.inserted {
+  color: #98C379 !important; /* Bright green */
+}
+
+.editor-highlights .token.operator,
+.editor-highlights .token.entity,
+.editor-highlights .token.url,
+.editor-highlights .language-css .token.string,
+.editor-highlights .style .token.string {
+  color: #56B6C2 !important; /* Cyan */
+}
+
+.editor-highlights .token.atrule,
+.editor-highlights .token.attr-value,
+.editor-highlights .token.keyword {
+  color: #C678DD !important; /* Bright purple */
+}
+
+.editor-highlights .token.function,
+.editor-highlights .token.class-name {
+  color: #61AFEF !important; /* Bright blue */
+}
+
+.editor-highlights .token.regex,
+.editor-highlights .token.important,
+.editor-highlights .token.variable {
+  color: #E06C75 !important; /* Bright red/pink */
+}
+
+/* Dark theme adjustments for editor tokens - ONLY color changes */
+/* Brighter, more colorful palette for dark mode */
+body.theme-dark .editor-highlights .token.comment,
+body.theme-dark .editor-highlights .token.prolog,
+body.theme-dark .editor-highlights .token.doctype,
+body.theme-dark .editor-highlights .token.cdata {
+  color: #5C6370 !important; /* Muted green-gray */
+}
+
+body.theme-dark .editor-highlights .token.punctuation {
+  color: #ABB2BF !important; /* Light gray */
+}
+
+body.theme-dark .editor-highlights .token.property,
+body.theme-dark .editor-highlights .token.tag,
+body.theme-dark .editor-highlights .token.boolean,
+body.theme-dark .editor-highlights .token.number,
+body.theme-dark .editor-highlights .token.constant,
+body.theme-dark .editor-highlights .token.symbol,
+body.theme-dark .editor-highlights .token.deleted {
+  color: #D19A66 !important; /* Bright orange */
+}
+
+body.theme-dark .editor-highlights .token.selector,
+body.theme-dark .editor-highlights .token.attr-name,
+body.theme-dark .editor-highlights .token.string,
+body.theme-dark .editor-highlights .token.char,
+body.theme-dark .editor-highlights .token.builtin,
+body.theme-dark .editor-highlights .token.inserted {
+  color: #98C379 !important; /* Bright green */
+}
+
+body.theme-dark .editor-highlights .token.operator,
+body.theme-dark .editor-highlights .token.entity,
+body.theme-dark .editor-highlights .token.url,
+body.theme-dark .editor-highlights .language-css .token.string,
+body.theme-dark .editor-highlights .style .token.string {
+  color: #56B6C2 !important; /* Cyan */
+}
+
+body.theme-dark .editor-highlights .token.atrule,
+body.theme-dark .editor-highlights .token.attr-value,
+body.theme-dark .editor-highlights .token.keyword {
+  color: #C678DD !important; /* Bright purple */
+}
+
+body.theme-dark .editor-highlights .token.function,
+body.theme-dark .editor-highlights .token.class-name {
+  color: #61AFEF !important; /* Bright blue */
+}
+
+body.theme-dark .editor-highlights .token.regex,
+body.theme-dark .editor-highlights .token.important,
+body.theme-dark .editor-highlights .token.variable {
+  color: #E06C75 !important; /* Bright red/pink */
+}
+
 .editor-content::placeholder {
   color: var(--color-text-muted);
 }
@@ -441,6 +581,32 @@ body.theme-dark .preview-content pre {
 
 body.theme-dark .preview-content code {
   background: rgb(255 255 255 / 0.08);
+}
+
+/* Prism.js syntax highlighting styles */
+.preview-content pre code[class*="language-"],
+.editor-highlights code[class*="language-"] {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-family: var(--font-mono);
+}
+
+/* Ensure Prism tokens inherit font but not color (let Prism theme handle colors) */
+.editor-highlights .token {
+  font-family: var(--font-mono);
+}
+
+/* Override Prism theme colors for better integration with our theme */
+.preview-content pre code,
+.editor-highlights code {
+  font-family: var(--font-mono);
+}
+
+/* Ensure code blocks inside pre maintain Prism styling */
+.preview-content pre code[class*="language-"] {
+  background: transparent;
+  color: inherit;
 }
 
 .preview-content img {

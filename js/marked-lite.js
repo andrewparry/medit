@@ -69,6 +69,7 @@
         const state = { listType: null, listBuffer: [] };
         let inCodeBlock = false;
         let codeFenceBuffer = [];
+        let codeBlockLanguage = '';
 
         for (let index = 0; index < lines.length; index += 1) {
             const line = lines[index];
@@ -79,10 +80,16 @@
                     closeListIfNeeded(state, output);
                     inCodeBlock = true;
                     codeFenceBuffer = [];
+                    // Extract language identifier from opening fence (e.g., ```javascript)
+                    const languageMatch = trimmed.match(/^```(\w+)/);
+                    codeBlockLanguage = languageMatch ? languageMatch[1].toLowerCase() : '';
                 } else {
-                    output.push(`<pre><code>${escapeHtml(codeFenceBuffer.join('\n'))}</code></pre>`);
+                    // Close code block with language class for Prism.js
+                    const langClass = codeBlockLanguage ? ` class="language-${escapeAttribute(codeBlockLanguage)}"` : '';
+                    output.push(`<pre><code${langClass}>${escapeHtml(codeFenceBuffer.join('\n'))}</code></pre>`);
                     inCodeBlock = false;
                     codeFenceBuffer = [];
+                    codeBlockLanguage = '';
                 }
                 continue;
             }
@@ -163,7 +170,9 @@
         }
 
         if (inCodeBlock) {
-            output.push(`<pre><code>${escapeHtml(codeFenceBuffer.join('\n'))}</code></pre>`);
+            // Handle unclosed code block (e.g., at end of document)
+            const langClass = codeBlockLanguage ? ` class="language-${escapeAttribute(codeBlockLanguage)}"` : '';
+            output.push(`<pre><code${langClass}>${escapeHtml(codeFenceBuffer.join('\n'))}</code></pre>`);
         }
         closeListIfNeeded(state, output);
 

@@ -75,6 +75,26 @@
         const rawHtml = window.markedLite.parse(markdown);
         const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
         preview.innerHTML = safeHtml || '<p class="preview-placeholder">Start typing to see your formatted preview.</p>';
+        
+        // Apply Prism.js syntax highlighting to code blocks in preview
+        // Use setTimeout to ensure DOM is updated before highlighting
+        setTimeout(() => {
+            if (window.Prism) {
+                const codeBlocks = preview.querySelectorAll('pre code[class*="language-"]');
+                codeBlocks.forEach((block) => {
+                    try {
+                        // Only highlight if not already highlighted
+                        if (!block.classList.contains('language-none') && !block.parentElement.classList.contains('prism-loaded')) {
+                            window.Prism.highlightElement(block);
+                            block.parentElement.classList.add('prism-loaded');
+                        }
+                    } catch (error) {
+                        // Ignore highlighting errors for unsupported languages
+                        console.warn('Prism highlighting failed for code block:', error);
+                    }
+                });
+            }
+        }, 0);
     };
 
     const normalizeWhitespace = (text) => text.replace(/\s+/g, ' ').trim();
@@ -2483,10 +2503,121 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
 
+    // Apply syntax highlighting to code blocks in editor overlay
+    const updateSyntaxHighlights = () => {
+        if (!editorHighlights || !window.Prism) {
+            if (editorHighlights && !window.Prism) {
+                // Prism not loaded yet, just show escaped text
+                editorHighlights.innerHTML = escapeHtml(editor.value || '');
+                editorHighlights.scrollTop = editor.scrollTop;
+            }
+            return;
+        }
+        
+        const text = editor.value || '';
+        if (!text) {
+            editorHighlights.innerHTML = '';
+            return;
+        }
+
+        // Parse code blocks: find all ```...``` patterns (non-greedy)
+        // Matches: ```lang (optional) followed by code content and closing ```
+        const codeBlockRegex = /(```[\w\s]*\n?[\s\S]*?\n?```)/g;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = codeBlockRegex.exec(text)) !== null) {
+            // Add text before code block
+            if (match.index > lastIndex) {
+                parts.push({
+                    type: 'text',
+                    content: text.slice(lastIndex, match.index)
+                });
+            }
+
+            // Process code block
+            const codeBlock = match[0];
+            const lines = codeBlock.split('\n');
+            
+            if (lines.length >= 3) {
+                // Extract language from first line (```lang or ```lang )
+                const firstLine = lines[0];
+                const languageMatch = firstLine.match(/^```\s*(\w+)/);
+                const language = languageMatch ? languageMatch[1].toLowerCase() : '';
+                
+                // Extract code content (everything between first and last line)
+                const codeContent = lines.slice(1, -1).join('\n');
+                
+                // Highlight code with Prism if language is specified and supported
+                let highlightedCode = escapeHtml(codeContent);
+                if (language && window.Prism) {
+                    // Check if language is loaded, if not wait for autoloader or use plain text
+                    if (window.Prism.languages[language]) {
+                        try {
+                            highlightedCode = window.Prism.highlight(codeContent, window.Prism.languages[language], language);
+                        } catch (error) {
+                            // Fallback to escaped HTML if highlighting fails
+                            highlightedCode = escapeHtml(codeContent);
+                        }
+                    } else {
+                        // Language not loaded yet, try autoloader or show as plain text
+                        // For now, just use escaped HTML - autoloader will handle on next render
+                        highlightedCode = escapeHtml(codeContent);
+                    }
+                }
+                
+                // Reconstruct code block preserving line structure
+                // Fence markers are escaped, code content is highlighted
+                const openingFence = escapeHtml(firstLine);
+                const closingFence = escapeHtml('```');
+                parts.push({
+                    type: 'code',
+                    openingFence: openingFence,
+                    highlightedCode: highlightedCode,
+                    closingFence: closingFence
+                });
+            } else {
+                // Malformed code block, treat as text
+                parts.push({
+                    type: 'text',
+                    content: codeBlock
+                });
+            }
+
+            lastIndex = match.index + match[0].length;
+        }
+
+        // Add remaining text after last code block
+        if (lastIndex < text.length) {
+            parts.push({
+                type: 'text',
+                content: text.slice(lastIndex)
+            });
+        }
+
+        // Build HTML preserving exact structure with line breaks
+        let html = '';
+        parts.forEach((part) => {
+            if (part.type === 'code') {
+                // Render: escaped opening fence + newline + highlighted code + newline + escaped closing fence
+                html += part.openingFence + '\n' + part.highlightedCode + '\n' + part.closingFence;
+            } else {
+                html += escapeHtml(part.content);
+            }
+        });
+
+        editorHighlights.innerHTML = html;
+        
+        // Keep scroll in sync
+        editorHighlights.scrollTop = editor.scrollTop;
+    };
+
     const updateRawHighlights = () => {
         if (!editorHighlights) return;
         if (!findBar || findBar.hidden) {
-            editorHighlights.innerHTML = '';
+            // Show syntax highlighting when find bar is hidden
+            updateSyntaxHighlights();
             return;
         }
         const text = editor.value || '';
@@ -2773,11 +2904,9 @@
             if (findCount) findCount.textContent = '0/0';
             searchState.matches = [];
             searchState.current = -1;
-            if (editorHighlights) editorHighlights.innerHTML = '';
-        } else if (editorHighlights) {
-            // keep existing overlay if not clearing
-            editorHighlights.innerHTML = editorHighlights.innerHTML;
         }
+        // Update highlights - will show syntax highlighting when find bar is hidden
+        updateRawHighlights();
         editor.focus();
         if (toggleFindButton) {
             toggleFindButton.setAttribute('aria-pressed', 'false');
@@ -2933,6 +3062,7 @@
     restoreAutosave();
     updatePreview();
     updateCounters();
+    updateRawHighlights(); // Initialize syntax highlighting in editor
     if (!state.autosaveDisabled) {
         autosaveStatus.textContent = 'Ready';
     }

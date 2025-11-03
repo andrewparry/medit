@@ -486,7 +486,7 @@ body.theme-dark .editor-highlights .token.comment,
 body.theme-dark .editor-highlights .token.prolog,
 body.theme-dark .editor-highlights .token.doctype,
 body.theme-dark .editor-highlights .token.cdata {
-  color: #5C6370 !important; /* Muted green-gray */
+  color: #7C9F6D !important; /* Visible green for better readability */
 }
 
 body.theme-dark .editor-highlights .token.punctuation {
@@ -607,6 +607,120 @@ body.theme-dark .preview-content code {
 .preview-content pre code[class*="language-"] {
   background: transparent;
   color: inherit;
+}
+
+/* Reset preview token formatting - only allow color changes, remove shadows */
+.preview-content .token {
+  background: transparent !important;
+  display: inline !important;
+  position: static !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  vertical-align: baseline !important;
+  line-height: inherit !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  font-style: inherit !important;
+  font-variant: inherit !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  letter-spacing: inherit !important;
+  word-spacing: inherit !important;
+  text-indent: 0 !important;
+  white-space: inherit !important;
+}
+
+/* Dark theme adjustments for preview tokens - ONLY color changes */
+/* Match editor's dark mode color palette */
+/* High specificity to override Prism's default theme */
+body.theme-dark .preview-content pre code[class*="language-"] .token.comment,
+body.theme-dark .preview-content pre code[class*="language-"] .token.prolog,
+body.theme-dark .preview-content pre code[class*="language-"] .token.doctype,
+body.theme-dark .preview-content pre code[class*="language-"] .token.cdata,
+body.theme-dark .preview-content .token.comment,
+body.theme-dark .preview-content .token.prolog,
+body.theme-dark .preview-content .token.doctype,
+body.theme-dark .preview-content .token.cdata {
+  color: #7C9F6D !important; /* Visible green for better readability */
+}
+
+body.theme-dark .preview-content pre code[class*="language-"] .token.punctuation,
+body.theme-dark .preview-content .token.punctuation {
+  color: #ABB2BF !important; /* Light gray */
+}
+
+body.theme-dark .preview-content pre code[class*="language-"] .token.property,
+body.theme-dark .preview-content pre code[class*="language-"] .token.tag,
+body.theme-dark .preview-content pre code[class*="language-"] .token.boolean,
+body.theme-dark .preview-content pre code[class*="language-"] .token.number,
+body.theme-dark .preview-content pre code[class*="language-"] .token.constant,
+body.theme-dark .preview-content pre code[class*="language-"] .token.symbol,
+body.theme-dark .preview-content pre code[class*="language-"] .token.deleted,
+body.theme-dark .preview-content .token.property,
+body.theme-dark .preview-content .token.tag,
+body.theme-dark .preview-content .token.boolean,
+body.theme-dark .preview-content .token.number,
+body.theme-dark .preview-content .token.constant,
+body.theme-dark .preview-content .token.symbol,
+body.theme-dark .preview-content .token.deleted {
+  color: #D19A66 !important; /* Bright orange */
+}
+
+body.theme-dark .preview-content pre code[class*="language-"] .token.selector,
+body.theme-dark .preview-content pre code[class*="language-"] .token.attr-name,
+body.theme-dark .preview-content pre code[class*="language-"] .token.string,
+body.theme-dark .preview-content pre code[class*="language-"] .token.char,
+body.theme-dark .preview-content pre code[class*="language-"] .token.builtin,
+body.theme-dark .preview-content pre code[class*="language-"] .token.inserted,
+body.theme-dark .preview-content .token.selector,
+body.theme-dark .preview-content .token.attr-name,
+body.theme-dark .preview-content .token.string,
+body.theme-dark .preview-content .token.char,
+body.theme-dark .preview-content .token.builtin,
+body.theme-dark .preview-content .token.inserted {
+  color: #98C379 !important; /* Bright green */
+}
+
+body.theme-dark .preview-content pre code[class*="language-"] .token.operator,
+body.theme-dark .preview-content pre code[class*="language-"] .token.entity,
+body.theme-dark .preview-content pre code[class*="language-"] .token.url,
+body.theme-dark .preview-content pre code[class*="language-"].language-css .token.string,
+body.theme-dark .preview-content pre code[class*="language-"].style .token.string,
+body.theme-dark .preview-content .token.operator,
+body.theme-dark .preview-content .token.entity,
+body.theme-dark .preview-content .token.url,
+body.theme-dark .preview-content .language-css .token.string,
+body.theme-dark .preview-content .style .token.string {
+  color: #56B6C2 !important; /* Cyan */
+}
+
+body.theme-dark .preview-content pre code[class*="language-"] .token.atrule,
+body.theme-dark .preview-content pre code[class*="language-"] .token.attr-value,
+body.theme-dark .preview-content pre code[class*="language-"] .token.keyword,
+body.theme-dark .preview-content .token.atrule,
+body.theme-dark .preview-content .token.attr-value,
+body.theme-dark .preview-content .token.keyword {
+  color: #C678DD !important; /* Bright purple */
+}
+
+body.theme-dark .preview-content pre code[class*="language-"] .token.function,
+body.theme-dark .preview-content pre code[class*="language-"] .token.class-name,
+body.theme-dark .preview-content .token.function,
+body.theme-dark .preview-content .token.class-name {
+  color: #61AFEF !important; /* Bright blue */
+}
+
+body.theme-dark .preview-content pre code[class*="language-"] .token.regex,
+body.theme-dark .preview-content pre code[class*="language-"] .token.important,
+body.theme-dark .preview-content pre code[class*="language-"] .token.variable,
+body.theme-dark .preview-content .token.regex,
+body.theme-dark .preview-content .token.important,
+body.theme-dark .preview-content .token.variable {
+  color: #E06C75 !important; /* Bright red/pink */
 }
 
 .preview-content img {

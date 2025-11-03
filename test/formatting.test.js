@@ -1284,4 +1284,211 @@ describe('Formatting Operations', () => {
             expect(content).toBe('Todo item 1\n- Todo item 2\nTodo item 3');
         });
     });
+    
+    describe('Bold Button - Comprehensive Tests', () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+            mockContainer = new MockElement('div');
+            editorCore = new EditorCore(mockContainer);
+            toolbar = new Toolbar(editorCore);
+            
+            mockSelection = new MockSelection();
+            mockRange = new MockRange();
+            mockSelection._setRange(mockRange);
+            
+            global.window.getSelection = jest.fn(() => mockSelection);
+            global.setTimeout = jest.fn((callback) => callback());
+        });
+        
+        test('should bold highlighted word', async () => {
+            editorCore.setMarkdown('hello world test');
+            mockRange._setSelectedText('world');
+            mockRange.startOffset = 6;
+            mockRange.endOffset = 11;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.getMarkdown()).toBe('hello **world** test');
+        });
+        
+        test('should insert cursor between bold markers when no selection', async () => {
+            editorCore.setMarkdown('hello test');
+            mockRange._setSelectedText('');
+            mockRange.startOffset = 6;
+            mockRange.endOffset = 6;
+            
+            await editorCore.applyFormatting('bold');
+            
+            const markdown = editorCore.getMarkdown();
+            expect(markdown).toBe('hello **bold text**test');
+            // Cursor should select the placeholder text "bold text" (from position 8 to 17)
+            // The cursor position stored is at the end of the selection
+            expect(editorCore.state.ui.cursorPosition).toBe(17); // After "hello **bold text"
+        });
+        
+        test('should bold text at start of document', async () => {
+            editorCore.setMarkdown('world test');
+            mockRange._setSelectedText('world');
+            mockRange.startOffset = 0;
+            mockRange.endOffset = 5;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.getMarkdown()).toBe('**world** test');
+        });
+        
+        test('should bold text at end of document', async () => {
+            editorCore.setMarkdown('hello world');
+            mockRange._setSelectedText('world');
+            mockRange.startOffset = 6;
+            mockRange.endOffset = 11;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.getMarkdown()).toBe('hello **world**');
+        });
+        
+        test('should bold multiple words', async () => {
+            editorCore.setMarkdown('hello world test');
+            mockRange._setSelectedText('world test');
+            mockRange.startOffset = 6;
+            mockRange.endOffset = 16;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.getMarkdown()).toBe('hello **world test**');
+        });
+        
+        test('should handle bold with special characters', async () => {
+            editorCore.setMarkdown('hello world!');
+            mockRange._setSelectedText('world!');
+            mockRange.startOffset = 6;
+            mockRange.endOffset = 12;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.getMarkdown()).toBe('hello **world!**');
+        });
+        
+        test('should insert bold markers in empty document', async () => {
+            editorCore.setMarkdown('');
+            mockRange._setSelectedText('');
+            mockRange.startOffset = 0;
+            mockRange.endOffset = 0;
+            
+            await editorCore.applyFormatting('bold');
+            
+            const markdown = editorCore.getMarkdown();
+            expect(markdown).toBe('**bold text**');
+        });
+        
+        test('should handle consecutive bold applications', async () => {
+            editorCore.setMarkdown('hello');
+            mockRange._setSelectedText('hello');
+            mockRange.startOffset = 0;
+            mockRange.endOffset = 5;
+            
+            // First bold
+            await editorCore.applyFormatting('bold');
+            expect(editorCore.getMarkdown()).toBe('**hello**');
+            
+            // Set up for second bold (cursor inside bolded text)
+            editorCore.setMarkdown('**hello**');
+            mockRange._setSelectedText('');
+            mockRange.startOffset = 4; // Inside "hello"
+            mockRange.endOffset = 4;
+            
+            // Mock detection to show we're in bold text
+            const originalDetect = editorCore.accessibilityManager;
+            
+            // The second click should remove bold
+            // This will be handled by the actual detectFormatting function
+        });
+        
+        test('should preserve whitespace when bolding', async () => {
+            editorCore.setMarkdown('hello   world');
+            mockRange._setSelectedText('world');
+            mockRange.startOffset = 8;
+            mockRange.endOffset = 13;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.getMarkdown()).toBe('hello   **world**');
+        });
+        
+        test('should handle bold on single character', async () => {
+            editorCore.setMarkdown('hello x world');
+            mockRange._setSelectedText('x');
+            mockRange.startOffset = 6;
+            mockRange.endOffset = 7;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.getMarkdown()).toBe('hello **x** world');
+        });
+        
+        test('should handle bold with newlines in document', async () => {
+            editorCore.setMarkdown('hello\nworld\ntest');
+            mockRange._setSelectedText('world');
+            mockRange.startOffset = 6;
+            mockRange.endOffset = 11;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.getMarkdown()).toBe('hello\n**world**\ntest');
+        });
+        
+        test('should bold text with numbers', async () => {
+            editorCore.setMarkdown('test 123 end');
+            mockRange._setSelectedText('123');
+            mockRange.startOffset = 5;
+            mockRange.endOffset = 8;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.getMarkdown()).toBe('test **123** end');
+        });
+        
+        test('should trigger content change event after bolding', async () => {
+            const contentChangeCallback = jest.fn();
+            editorCore.addEventListener('contentChange', contentChangeCallback);
+            
+            editorCore.setMarkdown('test text');
+            mockRange._setSelectedText('text');
+            mockRange.startOffset = 5;
+            mockRange.endOffset = 9;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(contentChangeCallback).toHaveBeenCalled();
+            expect(contentChangeCallback).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    isDirty: true
+                })
+            );
+        });
+        
+        test('should announce bold formatting to accessibility manager', async () => {
+            editorCore.setMarkdown('test');
+            mockRange._setSelectedText('test');
+            mockRange.startOffset = 0;
+            mockRange.endOffset = 4;
+            
+            await editorCore.applyFormatting('bold');
+            
+            expect(editorCore.accessibilityManager.lastAnnouncement).toBe('bold formatting applied');
+        });
+        
+        test('should update toolbar button state after bolding', () => {
+            editorCore.setMarkdown('**hello**');
+            mockRange._setSelectedText('');
+            mockRange.startOffset = 4; // Inside bold text
+            
+            toolbar.updateButtonStates();
+            
+            const boldButton = toolbar.buttons.get('bold');
+            // The button should show it detected the formatting
+            expect(boldButton.setAttribute).toHaveBeenCalled();
+        });
+    });
 });

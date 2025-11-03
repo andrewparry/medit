@@ -121,26 +121,34 @@
         // Check for bold (**text** or __text__)
         if (hasSelection) {
             const selectedText = value.slice(start, end);
-            formatting.bold = /(\*\*|__).+?\1/.test(selectedText);
-        } else {
-            const beforeCursor = value.slice(0, start);
-            const boldPattern = /(\*\*|__).+?\1/g;
-            const boldMatches = value.match(boldPattern) || [];
-            const boldItalicPattern = /\*\*\*[^*]+\*\*\*/g;
-            const boldItalicMatches = value.match(boldItalicPattern) || [];
+            // Check if selection is wrapped with bold markers
+            const beforeSelection = value.slice(Math.max(0, start - 3), start);
+            const afterSelection = value.slice(end, Math.min(value.length, end + 3));
             
-            let isInsideBold = false;
-            for (const match of [...boldMatches, ...boldItalicMatches]) {
-                const matchStart = value.indexOf(match);
-                const matchEnd = matchStart + match.length;
+            formatting.bold = (beforeSelection.endsWith('**') && afterSelection.startsWith('**')) ||
+                              (beforeSelection.endsWith('__') && afterSelection.startsWith('__')) ||
+                              (beforeSelection.endsWith('***') && afterSelection.startsWith('***'));
+        } else {
+            // No selection: check if cursor is inside bold text
+            // Pattern for bold: **text**, __text__, or ***text*** (bold+italic)
+            const boldPattern = /(\*\*\*|\*\*|__)((?:(?!\1).)+?)\1/g;
+            const matches = Array.from(value.matchAll(boldPattern));
+            
+            for (const match of matches) {
+                const matchStart = match.index;
+                const marker = match[1];
+                const content = match[2];
+                const matchEnd = matchStart + marker.length + content.length + marker.length;
+                
+                // Check if cursor is anywhere within the bold region (including markers)
                 if (start >= matchStart && start <= matchEnd) {
-                    isInsideBold = true;
-                    break;
+                    // Verify it's actually bold (not just italic with ***)
+                    if (marker === '***' || marker === '**' || marker === '__') {
+                        formatting.bold = true;
+                        break;
+                    }
                 }
             }
-            
-            const isAtEndOfBold = [...boldMatches, ...boldItalicMatches].some(match => beforeCursor.endsWith(match));
-            formatting.bold = isInsideBold || isAtEndOfBold;
         }
 
         // Check for italic (*text* or _text_)
@@ -372,12 +380,171 @@
     const applyInlineFormat = (prefix, suffix, placeholder = '') => {
         const { start, end, value } = utils.getSelection();
         const hasSelection = start !== end;
+        
+        // Determine format type
+        const formatTypeMap = {
+            '****': 'bold',
+            '**': 'italic',
+            '~~~~': 'strikethrough',
+            '``': 'code'
+        };
+        const formatType = formatTypeMap[prefix + suffix];
+        
+        // Check if formatting is already applied using detectFormatting
+        const formatting = detectFormatting();
+        const isAlreadyFormatted = formatting[formatType] || false;
+        
+        if (isAlreadyFormatted) {
+            // REMOVE FORMATTING
+            // Find the boundaries of the formatted text containing the cursor/selection
+            let removed = false;
+            
+            // Build the appropriate pattern for this format type
+            let pattern, markerLength;
+            if (formatType === 'bold') {
+                // Match **text**, __text__, or ***text*** (bold+italic)
+                pattern = /(\*\*\*|\*\*|__)((?:(?!\1).)+?)\1/g;
+                markerLength = 2; // Default to ** length
+            } else if (formatType === 'italic') {
+                // Match *text* or _text_ but not **text** or __text__
+                pattern = /(?<!\*|\w)\*([^*\n]+?)\*(?!\*)|(?<!_|\w)_([^_\n]+?)_(?!_)/g;
+                markerLength = 1;
+            } else if (formatType === 'strikethrough') {
+                pattern = /~~([^~\n]+?)~~/g;
+                markerLength = 2;
+            } else if (formatType === 'code') {
+                pattern = /`([^`\n]+?)`/g;
+                markerLength = 1;
+            } else {
+                // Fallback: just insert formatting
+                const selection = hasSelection ? value.slice(start, end) : placeholder;
+                const inserted = `${prefix}${selection}${suffix}`;
+                replaceSelection(inserted, hasSelection ? inserted.length : {
+                    start: prefix.length,
+                    end: prefix.length + selection.length
+                });
+                return;
+            }
+            
+            // Search through all matches to find the one containing our cursor/selection
+            const matches = Array.from(value.matchAll(pattern));
+            
+            for (const match of matches) {
+                const matchStart = match.index;
+                const matchEnd = matchStart + match[0].length;
+                
+                // Check if cursor or selection is within this match
+                if (start >= matchStart && end <= matchEnd) {
+                    // For bold, handle *** vs ** properly
+                    if (formatType === 'bold') {
+                        const actualMarker = match[1]; // ***, **, or __
+                        markerLength = actualMarker.length;
+                        
+                        // If it's ***, only remove ** (leave single * for italic)
+                        if (actualMarker === '***') {
+                            const innerText = match[2];
+                            const newText = `*${innerText}*`;
+                            
+                            // Calculate new content
+                            const beforeMatch = value.slice(0, matchStart);
+                            const afterMatch = value.slice(matchEnd);
+                            const newContent = beforeMatch + newText + afterMatch;
+                            
+                            // Use replaceSelection for consistency
+                            const lengthDiff = match[0].length - newText.length;
+                            elements.editor.value = newContent;
+                            
+                            // Adjust cursor position
+                            let newStart = start - 2; // Remove ** from ***
+                            let newEnd = end - 2;
+                            
+                            // Make sure cursor stays within bounds
+                            if (newStart < matchStart) newStart = matchStart + 1;
+                            if (newEnd > matchStart + newText.length) newEnd = matchStart + newText.length - 1;
+                            
+                            elements.editor.setSelectionRange(newStart, newEnd);
+                            removed = true;
+                            break;
+                        }
+                    }
+                    
+                    // Standard removal: extract inner text without markers
+                    const innerText = match[2] || match[1];
+                    if (!innerText) continue; // Skip if no inner text found
+                    
+                    // Calculate new selection position relative to match start
+                    const offsetIntoMatch = start - matchStart;
+                    let newStart, newEnd;
+                    
+                    if (offsetIntoMatch <= markerLength) {
+                        // Cursor was in or before opening marker
+                        newStart = matchStart;
+                        newEnd = matchStart;
+                    } else if (offsetIntoMatch >= markerLength + innerText.length) {
+                        // Cursor was in or after closing marker
+                        newStart = matchStart + innerText.length;
+                        newEnd = matchStart + innerText.length;
+                    } else {
+                        // Cursor was in the content
+                        newStart = start - markerLength;
+                        newEnd = end - markerLength;
+                    }
+                    
+                    // Clamp to valid range
+                    newStart = Math.max(matchStart, Math.min(matchStart + innerText.length, newStart));
+                    newEnd = Math.max(matchStart, Math.min(matchStart + innerText.length, newEnd));
+                    
+                    // Use the replaceSelection mechanism but we need to manually set up the replacement
+                    const beforeMatch = value.slice(0, matchStart);
+                    const afterMatch = value.slice(matchEnd);
+                    const newValue = beforeMatch + innerText + afterMatch;
+                    
+                    elements.editor.value = newValue;
+                    elements.editor.setSelectionRange(newStart, newEnd);
+                    removed = true;
+                    break;
+                }
+            }
+            
+            if (removed) {
+                // Trigger updates without using replaceSelection (we already updated content)
+                const scrollTop = elements.editor.scrollTop;
+                const scrollLeft = elements.editor.scrollLeft;
+                
+                requestAnimationFrame(() => {
+                    elements.editor.scrollTop = scrollTop;
+                    elements.editor.scrollLeft = scrollLeft;
+                });
+                
+                if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+                    MarkdownEditor.preview.updatePreview();
+                }
+                if (utils.updateCounters) {
+                    utils.updateCounters();
+                }
+                if (MarkdownEditor.stateManager) {
+                    MarkdownEditor.stateManager.markDirty(elements.editor.value !== state.lastSavedContent);
+                }
+                if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+                    MarkdownEditor.autosave.scheduleAutosave();
+                }
+                if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
+                    MarkdownEditor.formatting.updateToolbarStates();
+                }
+                
+                return;
+            }
+        }
+        
+        // ADD FORMATTING (not already formatted)
         const selection = hasSelection ? value.slice(start, end) : placeholder;
         const inserted = `${prefix}${selection}${suffix}`;
-
+        
         if (hasSelection) {
+            // Replace selection with formatted text, cursor at end
             replaceSelection(inserted, inserted.length);
         } else {
+            // No selection: insert placeholder and select it
             replaceSelection(inserted, {
                 start: prefix.length,
                 end: prefix.length + selection.length

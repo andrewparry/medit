@@ -2293,7 +2293,7 @@
 
         const formats = [
             { format: 'html', label: 'HTML', icon: '🌐' },
-            { format: 'pdf', label: 'PDF', icon: '📄' },
+            { format: 'pdf', label: 'PDF / Print', icon: '📄' },
             { format: 'txt', label: 'Plain Text', icon: '📝' }
         ];
 

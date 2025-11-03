@@ -177,6 +177,25 @@
     </script>
     <script src="js/marked-lite.js" defer></script>
     <script src="js/sanitizer.js" defer></script>
-    <script src="js/editor.js" defer></script>
+    
+    <!-- Core modules (load first) -->
+    <script src="js/editor-core.js" defer></script>
+    <script src="js/editor-state.js" defer></script>
+    <script src="js/editor-utils.js" defer></script>
+    <script src="js/editor-dialogs.js" defer></script>
+    <script src="js/editor-history.js" defer></script>
+
+    <!-- Feature modules -->
+    <script src="js/editor-autosave.js" defer></script>
+    <script src="js/editor-preview.js" defer></script>
+    <script src="js/editor-syntax-highlight.js" defer></script>
+    <script src="js/editor-formatting.js" defer></script>
+    <script src="js/editor-inserts.js" defer></script>
+    <script src="js/editor-find-replace.js" defer></script>
+    <script src="js/editor-file-ops.js" defer></script>
+    <script src="js/editor-ui.js" defer></script>
+
+    <!-- Initialization (load last) -->
+    <script src="js/editor-init.js" defer></script>
 </body>
 </html>

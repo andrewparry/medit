@@ -171,11 +171,17 @@
 
         <footer class="status-bar" role="contentinfo">
             <div class="status-info">
-                <span class="status-item" id="file-name-label">File:</span>
-                <span id="file-name" class="status-item editable-file-name" contenteditable="false" role="textbox" tabindex="0" aria-label="File name">Untitled.md</span>
-                <span id="word-count" class="status-item" aria-live="polite">0 words / 0 characters</span>
-                <span id="char-count" class="status-item sr-only" aria-live="polite">0 characters</span>
-                <span class="status-item" id="autosave-status" aria-live="polite">Draft saved</span>
+                <div class="status-left">
+                    <span class="status-item" id="file-name-label">File:</span>
+                    <span id="file-name" class="status-item editable-file-name" contenteditable="false" role="textbox" tabindex="0" aria-label="File name">Untitled.md</span>
+                </div>
+                <div class="status-center">
+                    <span class="status-item" id="autosave-status" aria-live="polite">Draft saved</span>
+                </div>
+                <div class="status-right">
+                    <span id="word-count" class="status-item" aria-live="polite">0 words / 0 characters</span>
+                    <span id="char-count" class="status-item sr-only" aria-live="polite">0 characters</span>
+                </div>
             </div>
         </footer>
     </div>

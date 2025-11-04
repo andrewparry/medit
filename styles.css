@@ -820,11 +820,31 @@ body.theme-dark .preview-content blockquote {
 
 .status-info {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
   align-items: center;
   font-size: 0.9rem;
   color: var(--color-text-muted);
+}
+
+.status-left,
+.status-center,
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-left {
+  flex: 0 0 auto;
+}
+
+.status-center {
+  flex: 1;
+  justify-content: center;
+}
+
+.status-right {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .status-item {

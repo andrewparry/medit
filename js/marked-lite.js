@@ -149,14 +149,15 @@
         for (let index = 0; index < lines.length; index += 1) {
             const line = lines[index];
             const trimmed = line.trimEnd();
+            const trimmedStart = line.trim(); // For code block detection, we need to check without leading whitespace
 
-            if (/^```/.test(trimmed)) {
+            if (/^```/.test(trimmedStart)) {
                 if (!inCodeBlock) {
                     closeListIfNeeded(state, output);
                     inCodeBlock = true;
                     codeFenceBuffer = [];
                     // Extract language identifier from opening fence (e.g., ```javascript)
-                    const languageMatch = trimmed.match(/^```(\w+)/);
+                    const languageMatch = trimmedStart.match(/^```(\w+)/);
                     codeBlockLanguage = languageMatch ? languageMatch[1].toLowerCase() : '';
                 } else {
                     // Close code block with language class for Prism.js

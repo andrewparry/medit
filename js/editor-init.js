@@ -76,6 +76,65 @@
                     MarkdownEditor.ui.handleShortcut(event);
                 }
             });
+
+            // Paste event handler for automatic link detection
+            elements.editor.addEventListener('paste', (event) => {
+                // Only handle if editor is focused
+                if (document.activeElement !== elements.editor) {
+                    return;
+                }
+
+                // Get clipboard data
+                const clipboardData = event.clipboardData || window.clipboardData;
+                if (!clipboardData) {
+                    return;
+                }
+
+                // Get plain text from clipboard (ignore HTML/images)
+                const pastedText = clipboardData.getData('text/plain');
+                
+                // Check if we have URL detection utilities
+                if (!MarkdownEditor.utils || !MarkdownEditor.utils.isValidUrl) {
+                    return;
+                }
+                
+                if (!MarkdownEditor.formatting || !MarkdownEditor.formatting.replaceSelection) {
+                    return;
+                }
+
+                // Check if the pasted text is a valid URL
+                if (MarkdownEditor.utils.isValidUrl(pastedText)) {
+                    // Prevent default paste behavior
+                    event.preventDefault();
+                    
+                    // Convert URL to markdown link format: [url](url)
+                    const originalUrl = pastedText.trim();
+                    let linkUrl = originalUrl;
+                    
+                    // If URL doesn't have a protocol, add https:// for the href
+                    if (!/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(linkUrl)) {
+                        linkUrl = `https://${linkUrl}`;
+                    }
+                    
+                    // Use original text as display text, full URL as href
+                    const linkMarkdown = `[${originalUrl}](${linkUrl})`;
+                    
+                    // Insert the markdown link using replaceSelection
+                    MarkdownEditor.formatting.replaceSelection(linkMarkdown, linkMarkdown.length);
+                    
+                    // Show brief status message
+                    if (elements.autosaveStatus) {
+                        const originalStatus = elements.autosaveStatus.textContent;
+                        elements.autosaveStatus.textContent = 'Link created';
+                        setTimeout(() => {
+                            if (elements.autosaveStatus) {
+                                elements.autosaveStatus.textContent = originalStatus;
+                            }
+                        }, 2000);
+                    }
+                }
+                // If not a URL, allow default paste behavior
+            });
         }
 
         // Document-level keyboard shortcuts

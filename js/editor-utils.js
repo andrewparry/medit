@@ -160,6 +160,64 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
 
+    /**
+     * Check if a string is a valid URL
+     * Supports http://, https://, ftp://, and common protocols
+     * Also supports URLs without protocol (e.g., www.example.com, example.com)
+     */
+    const isValidUrl = (text) => {
+        if (!text || typeof text !== 'string') {
+            return false;
+        }
+        
+        // Trim whitespace
+        const trimmed = text.trim();
+        if (!trimmed) {
+            return false;
+        }
+        
+        // Check if it contains whitespace (URLs shouldn't have spaces)
+        if (/\s/.test(trimmed)) {
+            return false;
+        }
+        
+        // Pattern for URLs with protocol (http://, https://, ftp://, etc.)
+        const protocolPattern = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
+        
+        // Pattern for URLs without protocol but with domain
+        const domainPattern = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/;
+        
+        // Pattern for URLs starting with www.
+        const wwwPattern = /^www\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(\/.*)?$/;
+        
+        // Pattern for localhost or IP addresses
+        const localhostPattern = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(\/.*)?$/;
+        
+        // Check if it matches any URL pattern
+        if (protocolPattern.test(trimmed)) {
+            try {
+                // Try to construct a URL object to validate
+                new URL(trimmed);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        // Check domain patterns (without protocol)
+        if (domainPattern.test(trimmed) || wwwPattern.test(trimmed) || localhostPattern.test(trimmed)) {
+            // Try to construct URL with https:// prefix
+            try {
+                new URL(`https://${trimmed}`);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        return false;
+    };
+
     // Expose public API
     MarkdownEditor.utils = {
         normalizeWhitespace,
@@ -170,7 +228,8 @@
         setSelection,
         handleFilenameEdit,
         finalizeFilename,
-        escapeHtml
+        escapeHtml,
+        isValidUrl
     };
 
     window.MarkdownEditor = MarkdownEditor;

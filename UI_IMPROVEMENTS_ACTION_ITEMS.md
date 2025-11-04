@@ -296,7 +296,26 @@ const updateToolbarStates = () => {
 - 7. Task/checkbox lists: Markdown checkboxes (- [ ] / - [x]) aren't supported.
 - 8. While underline isn't standard Markdown but is in some dialects.
 - 9. Footnotes: Markdown footnote syntax ([^1]…[^1]:) isn't handled.
-- 10. Automatic link detection: pasting a URL doesn't auto‑convert it to a link.
+- 10. Automatic link detection: pasting a URL doesn't auto‑convert it to a link. ✅ COMPLETE
+  
+  **Status:** ✅ **RESOLVED** - Automatic link detection on paste implemented
+  
+  **Implementation:**
+  - ✅ Added `isValidUrl()` function in editor-utils.js to detect valid URLs
+  - ✅ Supports URLs with protocols (http://, https://, ftp://, etc.)
+  - ✅ Supports URLs without protocols (www.example.com, example.com)
+  - ✅ Supports localhost and IP addresses
+  - ✅ Added paste event handler in editor-init.js to intercept paste events
+  - ✅ Automatically converts pasted URLs to markdown link format: `[url](url)`
+  - ✅ Only processes plain text pastes (ignores HTML/images)
+  - ✅ Shows "Link created" status message when a link is auto-converted
+  - ✅ Non-URL pastes work normally (default paste behavior preserved)
+  
+  **Features:**
+  - Paste any URL (with or without protocol) and it's automatically converted to a markdown link
+  - Works with http://, https://, ftp://, www.example.com, example.com formats
+  - Preserves normal paste behavior for non-URL text
+  - Status bar feedback confirms when a link is created
 - 11. Escaped characters and inline HTML: there's no way to toggle between escaped code and rendered HTML snippets.
 
 ## Low Priority Enhancements

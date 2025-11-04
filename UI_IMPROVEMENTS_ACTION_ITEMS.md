@@ -288,6 +288,9 @@ const updateToolbarStates = () => {
   - Type text mid-list and press Enter → renumbers all subsequent items
   - Edit any list item → all lists are automatically renumbered after 500ms to match preview
   - Click numbered list button on line after `5.` → **automatically uses `6.`** (context-aware!)
+  - Toggle OFF a numbered item → remaining items **instantly renumber** to fill the gap
+  - Tab to indent (demote) an item → **both nested and parent lists renumber**
+  - Shift+Tab to outdent (promote) an item → **both nested and parent lists renumber**
   - **Editor and preview numbering stay in perfect sync** - no more mismatched numbers!
   
 - 7. Task/checkbox lists: Markdown checkboxes (- [ ] / - [x]) aren't supported.

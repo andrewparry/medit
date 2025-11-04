@@ -1076,8 +1076,8 @@
             MarkdownEditor.autosave.scheduleAutosave();
         }
         
-        // If we added ordered list markers, immediately renumber to ensure consistency
-        if (type === 'ol' && !shouldRemove) {
+        // If we modified ordered list markers (added OR removed), immediately renumber to ensure consistency
+        if (type === 'ol') {
             // Use setTimeout to allow the editor to update first
             setTimeout(() => {
                 renumberAllOrderedLists();
@@ -1246,6 +1246,11 @@
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
         }
+        
+        // Trigger immediate renumbering after indent to update all affected lists
+        setTimeout(() => {
+            renumberAllOrderedLists();
+        }, 0);
     };
 
     /**
@@ -1320,6 +1325,9 @@
     /**
      * Renumber ALL ordered lists in the document to match preview rendering
      * This ensures editor numbers match what the preview will show
+     * 
+     * FIX: Now properly handles nested lists under different parents by tracking
+     * parent context. Each nested list resets numbering when under a new parent.
      */
     const renumberAllOrderedLists = () => {
         if (!elements.editor) return;
@@ -1328,43 +1336,107 @@
         const lines = value.split('\n');
         let modified = false;
         
-        // Track list state at each indentation level
-        const listCounters = new Map(); // Map<indent, number>
+        // Track list state at each VISUAL nesting level with parent context
+        // Map structure: Map<level, { counter: number, parentCounter: number }>
+        const listState = new Map();
+        let prevLevel = -1;
         
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const listMatch = line.match(/^(\s*)(\d+)\.\s+(.*)$/);
+            
+            // Convert tabs to 4 spaces for consistent handling (common convention: 1 tab = 4 spaces)
+            const normalizedLine = line.replace(/\t/g, '    ');
+            
+            const listMatch = normalizedLine.match(/^(\s*)(\d+)\.\s+(.*)$/);
             
             if (listMatch) {
-                const indent = listMatch[1].length;
+                const indentSpaces = listMatch[1].length;
                 const currentNumber = parseInt(listMatch[2], 10);
                 const content = listMatch[3];
                 
-                // Get or initialize counter for this indentation level
-                if (!listCounters.has(indent)) {
-                    listCounters.set(indent, 1);
-                    // Clear deeper indentation levels when we start/restart a list
-                    for (const [key] of listCounters) {
-                        if (key > indent) {
-                            listCounters.delete(key);
+                // Calculate nesting level (2 spaces = 1 level, 4 spaces = 2 levels, etc.)
+                const level = Math.floor(indentSpaces / 2);
+                
+                // Normalize indentation to standard 2-space increments
+                const normalizedIndent = '  '.repeat(level);
+                
+                // **FIX: Detect when we need to reset nested list counters**
+                
+                // Case 1: We moved to a shallower level (back to parent or higher)
+                if (prevLevel !== -1 && level < prevLevel) {
+                    // Clear all deeper level counters
+                    for (const [key] of listState) {
+                        if (key > level) {
+                            listState.delete(key);
                         }
                     }
                 }
                 
-                const expectedNumber = listCounters.get(indent);
+                // Case 2: We're at a nested level and the parent level counter changed
+                // This means we're starting a NEW nested list under a DIFFERENT parent
+                if (level > 0 && prevLevel !== -1) {
+                    const parentLevel = level - 1;
+                    
+                    // Check if parent level counter changed since last time we were at this level
+                    if (listState.has(level)) {
+                        const currentState = listState.get(level);
+                        
+                        // If we have a parent level, check its counter
+                        if (listState.has(parentLevel)) {
+                            const parentState = listState.get(parentLevel);
+                            
+                            // If parent counter changed, this is a NEW nested list
+                            if (currentState.parentCounter !== parentState.counter) {
+                                // Reset this level's counter
+                                listState.delete(level);
+                                // Also clear any deeper levels
+                                for (const [key] of listState) {
+                                    if (key > level) {
+                                        listState.delete(key);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 
-                // If number doesn't match expected, renumber it
-                if (currentNumber !== expectedNumber) {
-                    lines[i] = `${listMatch[1]}${expectedNumber}. ${content}`;
+                // Get or initialize counter for this level
+                if (!listState.has(level)) {
+                    // Get parent counter for tracking
+                    const parentLevel = level - 1;
+                    const parentCounter = level > 0 && listState.has(parentLevel) 
+                        ? listState.get(parentLevel).counter 
+                        : 0;
+                    
+                    listState.set(level, { 
+                        counter: 1, 
+                        parentCounter: parentCounter 
+                    });
+                }
+                
+                const expectedNumber = listState.get(level).counter;
+                
+                // If number doesn't match expected OR indentation needs normalizing, update it
+                if (currentNumber !== expectedNumber || listMatch[1] !== normalizedIndent) {
+                    lines[i] = `${normalizedIndent}${expectedNumber}. ${content}`;
                     modified = true;
                 }
                 
                 // Increment counter for next item at this level
-                listCounters.set(indent, expectedNumber + 1);
+                listState.get(level).counter++;
+                
+                // Update parent counter reference after incrementing
+                const parentLevel = level - 1;
+                if (level > 0 && listState.has(parentLevel)) {
+                    listState.get(level).parentCounter = listState.get(parentLevel).counter;
+                }
+                
+                prevLevel = level;
             } else {
                 // Non-list line: reset all counters (list has ended)
-                if (line.trim() !== '') {
-                    listCounters.clear();
+                if (normalizedLine.trim() !== '') {
+                    listState.clear();
+                    prevLevel = -1;
                 }
             }
         }
@@ -1387,6 +1459,8 @@
     /**
      * Handle Enter key in lists for smart continuation
      * Returns true if handled, false otherwise
+     * 
+     * FIX: Improved cursor position detection and content splitting for better reliability
      */
     const handleEnterInList = () => {
         if (!elements.editor) return false;
@@ -1400,7 +1474,11 @@
         const currentLineIndex = value.slice(0, start).split('\n').length - 1;
         const currentLine = lines[currentLineIndex];
         
-        // Check if we're in a list item
+        // Get cursor position within the line
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const cursorPosInLine = start - lineStart;
+        
+        // Check if we're in a list item (IMPROVED REGEX)
         const unorderedMatch = currentLine.match(/^(\s*)([-*+])\s+(.*)$/);
         const orderedMatch = currentLine.match(/^(\s*)(\d+)\.\s+(.*)$/);
         
@@ -1414,12 +1492,13 @@
         const marker = match[2];
         const content = match[3];
         
-        // Get cursor position within the line
-        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
-        const cursorPosInLine = start - lineStart;
+        // FIX: Calculate marker end position more accurately
+        const markerEndPos = indent.length + marker.length + (isOrdered ? 1 : 0) + 1; // +1 for space after marker
+        const isAtEndOfLine = cursorPosInLine >= currentLine.length;
+        const isInOrAfterContent = cursorPosInLine >= markerEndPos;
         
         // If the list item is empty (only marker), exit the list
-        if (content.trim() === '' && cursorPosInLine <= (indent.length + marker.length + 2)) {
+        if (content.trim() === '' && (isAtEndOfLine || cursorPosInLine <= markerEndPos)) {
             // Remove the empty list item and exit list
             const before = value.slice(0, lineStart);
             const after = value.slice(value.indexOf('\n', start) !== -1 ? value.indexOf('\n', start) : value.length);
@@ -1427,6 +1506,7 @@
             elements.editor.value = before + after;
             elements.editor.setSelectionRange(lineStart, lineStart);
             
+            // Trigger updates
             if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
                 MarkdownEditor.preview.updatePreview();
             }
@@ -1443,9 +1523,16 @@
             return true;
         }
         
-        // Split the content at cursor position
-        const contentBeforeCursor = content.slice(0, cursorPosInLine - indent.length - marker.length - 2);
-        const contentAfterCursor = content.slice(cursorPosInLine - indent.length - marker.length - 2);
+        // FIX: Improved content splitting calculation
+        // If cursor is before or at the marker position, all content goes to next line
+        let contentBeforeCursor = '';
+        let contentAfterCursor = content;
+        
+        if (isInOrAfterContent) {
+            const offsetIntoContent = cursorPosInLine - markerEndPos;
+            contentBeforeCursor = content.slice(0, offsetIntoContent);
+            contentAfterCursor = content.slice(offsetIntoContent);
+        }
         
         // Determine the next marker
         let nextMarker;
@@ -1463,7 +1550,9 @@
         const before = value.slice(0, lineStart);
         const after = value.slice(actualLineEnd);
         
-        const newCurrentLine = isOrdered ? `${indent}${marker}. ${contentBeforeCursor}` : `${indent}${marker} ${contentBeforeCursor}`;
+        const newCurrentLine = isOrdered 
+            ? `${indent}${marker}. ${contentBeforeCursor}` 
+            : `${indent}${marker} ${contentBeforeCursor}`;
         const newNextLine = `${indent}${nextMarker} ${contentAfterCursor}`;
         
         const newValue = before + newCurrentLine + '\n' + newNextLine + after;
@@ -1473,14 +1562,14 @@
         const newCursorPos = before.length + newCurrentLine.length + 1 + indent.length + nextMarker.length + 1;
         elements.editor.setSelectionRange(newCursorPos, newCursorPos);
         
-        // If ordered list, renumber subsequent items
+        // FIX: Use renumberAllOrderedLists instead of renumberOrderedList for consistency
         if (isOrdered) {
-            // Use setTimeout to allow the value to be set first
             setTimeout(() => {
-                renumberOrderedList();
+                renumberAllOrderedLists();
             }, 0);
         }
         
+        // Trigger updates
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
         }
@@ -1639,6 +1728,11 @@
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
         }
+        
+        // Trigger immediate renumbering after outdent to update all affected lists
+        setTimeout(() => {
+            renumberAllOrderedLists();
+        }, 0);
     };
 
     // Expose public API

@@ -350,12 +350,26 @@
             // Check if we're in the editor
             if (document.activeElement === elements.editor) {
                 event.preventDefault();
-                if (event.shiftKey) {
-                    // Shift+Tab: Outdent
-                    if (MarkdownEditor.formatting) MarkdownEditor.formatting.outdentListItem();
+                
+                // Check if we're on a list item
+                const { start, value } = MarkdownEditor.utils ? MarkdownEditor.utils.getSelection() : { start: 0, value: '' };
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const lineEnd = value.indexOf('\n', start);
+                const currentLine = value.slice(lineStart, lineEnd === -1 ? value.length : lineEnd);
+                const isListItem = /^\s*([-*+]|\d+\.)\s+/.test(currentLine);
+                
+                if (isListItem) {
+                    // On a list item - use our indent/outdent functions
+                    if (event.shiftKey) {
+                        if (MarkdownEditor.formatting) MarkdownEditor.formatting.outdentListItem();
+                    } else {
+                        if (MarkdownEditor.formatting) MarkdownEditor.formatting.indentListItem();
+                    }
                 } else {
-                    // Tab: Indent
-                    if (MarkdownEditor.formatting) MarkdownEditor.formatting.indentListItem();
+                    // Not on a list item - insert 2 spaces instead of tab
+                    if (!event.shiftKey) {
+                        document.execCommand('insertText', false, '  ');
+                    }
                 }
                 return;
             }

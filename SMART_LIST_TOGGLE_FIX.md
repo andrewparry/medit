@@ -57,16 +57,20 @@ if (type === 'ol' && selectionStartIndex > 0) {
 
 ### Immediate Renumbering
 
-Added immediate renumbering after toggling to ordered list:
+Added immediate renumbering after ANY ordered list toggle (add or remove):
 
 ```javascript
-// If we added ordered list markers, immediately renumber to ensure consistency
-if (type === 'ol' && !shouldRemove) {
+// If we modified ordered list markers (added OR removed), immediately renumber to ensure consistency
+if (type === 'ol') {
     setTimeout(() => {
         renumberAllOrderedLists();
     }, 0);
 }
 ```
+
+This ensures that:
+- When you **add** numbering to lines, subsequent items get renumbered correctly
+- When you **remove** numbering from items, remaining items get renumbered to fill the gap
 
 ## Behavior Examples
 
@@ -139,6 +143,22 @@ New item [cursor between them, click button]
 1. First
 2. New item        ✅ Gets number 2
 3. Third           ✅ Auto-renumbered to 3!
+```
+
+### Case 5: Toggling OFF (Removing Numbering)
+
+**Before:**
+```
+1. First
+2. Second [click button to toggle OFF]
+3. Third
+```
+
+**After (with immediate renumbering):**
+```
+1. First
+Second             ✅ Number removed
+2. Third           ✅ Auto-renumbered from 3 to 2!
 ```
 
 ## Edge Cases Handled

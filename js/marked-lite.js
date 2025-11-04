@@ -146,7 +146,9 @@
             }
 
             // Check for list items (ordered or unordered) with indentation support
-            const listMatch = line.match(/^(\s*)([-*+]|\d+\.)\s+(.*)$/);
+            // Convert tabs to 4 spaces for consistent handling
+            const normalizedLine = line.replace(/\t/g, '    ');
+            const listMatch = normalizedLine.match(/^(\s*)([-*+]|\d+\.)\s+(.*)$/);
             if (listMatch) {
                 const indent = listMatch[1].length;
                 const marker = listMatch[2];
@@ -154,34 +156,42 @@
                 const listType = /^\d+\.$/.test(marker) ? 'ol' : 'ul';
                 const level = Math.floor(indent / 2); // 2 spaces = 1 level
                 
-                // Adjust list stack to match current indentation level
+                // FIX: Completely rewritten list handling logic
+                // The key insight: We should ONLY open a new nested list when going DEEPER,
+                // not when seeing the FIRST item at a level we just jumped to.
+                
+                // Step 1: Close any lists deeper than our target level
                 while (state.listStack.length > level + 1) {
-                    // Close deeper nested lists
                     const closedLevel = state.listStack.pop();
                     state.listBuffer.push(`</li></${closedLevel.type}>`);
                 }
                 
+                // Step 2: Determine if we need to open new lists or continue existing ones
                 if (state.listStack.length === 0) {
-                    // Start a new top-level list
-                    state.listStack.push({ type: listType, indent: indent });
+                    // No lists open - start top-level list
+                    state.listStack.push({ type: listType, level: 0 });
                     state.listBuffer.push(`<${listType}>`);
-                } else if (state.listStack.length === level + 1) {
-                    // Same level - check if list type changed
-                    const currentLevel = state.listStack[state.listStack.length - 1];
-                    if (currentLevel.type !== listType) {
-                        // Close current list and open new one at same level
+                } else if (state.listStack.length < level + 1) {
+                    // Need to go deeper - open intermediate lists
+                    const levelsToOpen = (level + 1) - state.listStack.length;
+                    for (let j = 0; j < levelsToOpen; j++) {
+                        const newLevel = state.listStack.length;
+                        state.listStack.push({ type: listType, level: newLevel });
+                        state.listBuffer.push(`<${listType}>`);
+                    }
+                } else {
+                    // We're at the correct depth - check for type change or continuation
+                    const currentList = state.listStack[state.listStack.length - 1];
+                    if (currentList.type !== listType) {
+                        // List type changed at same level
                         state.listStack.pop();
-                        state.listBuffer.push(`</li></${currentLevel.type}>`);
-                        state.listStack.push({ type: listType, indent: indent });
+                        state.listBuffer.push(`</li></${currentList.type}>`);
+                        state.listStack.push({ type: listType, level: level });
                         state.listBuffer.push(`<${listType}>`);
                     } else {
-                        // Same type and level - close previous item
+                        // Same list, close previous item
                         state.listBuffer.push('</li>');
                     }
-                } else if (state.listStack.length < level + 1) {
-                    // Deeper nesting - open new nested list
-                    state.listStack.push({ type: listType, indent: indent });
-                    state.listBuffer.push(`<${listType}>`);
                 }
                 
                 // Add the list item

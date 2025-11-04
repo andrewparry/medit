@@ -36,10 +36,11 @@
             `<a href="${escapeAttribute(url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`
         );
 
-        // Bold, italic and strikethrough emphasis.
+        // Bold, italic, strikethrough, and underline emphasis.
         result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         result = result.replace(/\*(.+?)\*/g, '<em>$1</em>');
         result = result.replace(/~~(.+?)~~/g, '<del>$1</del>');
+        result = result.replace(/\+\+(.+?)\+\+/g, '<u>$1</u>');
 
         // Restore inline code segments now that formatting is done.
         result = result.replace(/§§CODE(\d+)§§/g, (_, index) => `<code>${escapeHtml(codeSegments[index])}</code>`);
@@ -148,6 +149,58 @@
             // Check for list items (ordered or unordered) with indentation support
             // Convert tabs to 4 spaces for consistent handling
             const normalizedLine = line.replace(/\t/g, '    ');
+            
+            // Check for checkbox syntax first: - [ ] or - [x] or - [X]
+            const checkboxMatch = normalizedLine.match(/^(\s*)([-*+])\s+\[([xX ])\]\s+(.*)$/);
+            if (checkboxMatch) {
+                const indent = checkboxMatch[1].length;
+                const marker = checkboxMatch[2];
+                const checked = checkboxMatch[3].toLowerCase() === 'x';
+                const content = checkboxMatch[4];
+                const listType = 'ul';
+                const level = Math.floor(indent / 2); // 2 spaces = 1 level
+                
+                // Step 1: Close any lists deeper than our target level
+                while (state.listStack.length > level + 1) {
+                    const closedLevel = state.listStack.pop();
+                    state.listBuffer.push(`</li></${closedLevel.type}>`);
+                }
+                
+                // Step 2: Determine if we need to open new lists or continue existing ones
+                if (state.listStack.length === 0) {
+                    // No lists open - start top-level list
+                    state.listStack.push({ type: listType, level: 0 });
+                    state.listBuffer.push(`<${listType}>`);
+                } else if (state.listStack.length < level + 1) {
+                    // Need to go deeper - open intermediate lists
+                    const levelsToOpen = (level + 1) - state.listStack.length;
+                    for (let j = 0; j < levelsToOpen; j++) {
+                        const newLevel = state.listStack.length;
+                        state.listStack.push({ type: listType, level: newLevel });
+                        state.listBuffer.push(`<${listType}>`);
+                    }
+                } else {
+                    // We're at the correct depth - check for type change or continuation
+                    const currentList = state.listStack[state.listStack.length - 1];
+                    if (currentList.type !== listType) {
+                        // List type changed at same level
+                        state.listStack.pop();
+                        state.listBuffer.push(`</li></${currentList.type}>`);
+                        state.listStack.push({ type: listType, level: level });
+                        state.listBuffer.push(`<${listType}>`);
+                    } else {
+                        // Same list, close previous item
+                        state.listBuffer.push('</li>');
+                    }
+                }
+                
+                // Add the list item with checkbox
+                const checkboxAttr = checked ? ' checked' : '';
+                state.listBuffer.push(`<li><input type="checkbox"${checkboxAttr} disabled> ${parseInline(content)}`);
+                continue;
+            }
+            
+            // Check for regular list items (ordered or unordered)
             const listMatch = normalizedLine.match(/^(\s*)([-*+]|\d+\.)\s+(.*)$/);
             if (listMatch) {
                 const indent = listMatch[1].length;

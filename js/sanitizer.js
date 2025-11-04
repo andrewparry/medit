@@ -5,7 +5,7 @@
 (function (global) {
     const ALLOWED_TAGS = new Set([
         'a', 'blockquote', 'br', 'code', 'del', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'hr', 'img', 'li', 'ol', 'p', 'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul'
+        'hr', 'img', 'input', 'li', 'ol', 'p', 'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul', 'u'
     ]);
 
     const URI_ATTRS = new Set(['href', 'src']);
@@ -38,7 +38,7 @@
                     node.removeAttribute(attr.name);
                     return;
                 }
-            } else if (!['alt', 'title', 'loading', 'rel', 'target', 'class'].includes(name)) {
+            } else if (!['alt', 'title', 'loading', 'rel', 'target', 'class', 'type', 'checked', 'disabled'].includes(name)) {
                 node.removeAttribute(attr.name);
                 return;
             }

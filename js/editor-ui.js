@@ -272,6 +272,9 @@
             case 'italic':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyInlineFormat('*', '*', 'italic text');
                 break;
+            case 'underline':
+                if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyInlineFormat('++', '++', 'underlined text');
+                break;
             case 'strikethrough':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyInlineFormat('~~', '~~', 'deleted text');
                 break;
@@ -307,6 +310,9 @@
                 break;
             case 'ol':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.toggleList('ol');
+                break;
+            case 'checkbox':
+                if (MarkdownEditor.formatting) MarkdownEditor.formatting.toggleCheckboxList();
                 break;
             case 'codeBlock':
                 if (MarkdownEditor.formatting) MarkdownEditor.formatting.applyCodeBlock();

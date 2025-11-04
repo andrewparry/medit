@@ -121,7 +121,8 @@
             ol: false,
             checkbox: false,
             codeBlock: false,
-            table: false
+            table: false,
+            footnote: false
         };
 
         // Check for bold (**text** or __text__)
@@ -334,6 +335,23 @@
             }
         }
 
+        // Check for footnote reference [^identifier]
+        const footnotePattern = /\[\^([^\]]+)\]/g;
+        const footnoteMatches = Array.from(value.matchAll(footnotePattern));
+        
+        for (const match of footnoteMatches) {
+            const matchStart = match.index;
+            const matchEnd = matchStart + match[0].length;
+            
+            // Check if cursor or selection is within or touches the footnote reference
+            if ((start >= matchStart && start <= matchEnd) || 
+                (end >= matchStart && end <= matchEnd) ||
+                (start <= matchStart && end >= matchEnd)) {
+                formatting.footnote = true;
+                break;
+            }
+        }
+
         return formatting;
     };
 
@@ -450,6 +468,13 @@
         if (tableButton) {
             tableButton.classList.toggle('active', formatting.table);
             tableButton.setAttribute('aria-pressed', formatting.table);
+        }
+
+        // Update footnote button
+        const footnoteButton = elements.toolbar.querySelector('[data-format="footnote"]');
+        if (footnoteButton) {
+            footnoteButton.classList.toggle('active', formatting.footnote);
+            footnoteButton.setAttribute('aria-pressed', formatting.footnote);
         }
     };
 

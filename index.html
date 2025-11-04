@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown WYSIWYG Editor</title>
+    <link rel="icon" type="image/png" href="images/medit_icon.png">
+    <title>Markdown Editor</title>
     <!-- Prism.js syntax highlighting - loaded first so our styles can override -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -11,7 +12,7 @@
 <body class="theme-light">
     <div class="app-container">
         <header class="app-header" role="banner">
-            <h1 class="app-title">Markdown Editor</h1>
+            <h1 class="app-title"><span style="color: black;">M</span><span style="color: gray;">arkdown</span> <span style="color: black;">Edit</span><span style="color: gray;">or</span></h1>
         </header>
 
         <main class="editor-main" role="main">
@@ -124,6 +125,9 @@
                         </button>
                         <button id="export-file" class="toolbar-btn toolbar-btn-file" type="button" aria-label="Export file" title="Export file">
                             <span class="btn-icon" aria-hidden="true">📤</span>
+                        </button>
+                        <button id="help-button" class="toolbar-btn toolbar-btn-file" type="button" aria-label="Show help and keyboard shortcuts" title="Show help (?)">
+                            <span class="btn-icon" aria-hidden="true">?</span>
                         </button>
                     </div>
                 </div>

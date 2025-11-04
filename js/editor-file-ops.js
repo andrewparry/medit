@@ -414,9 +414,23 @@ if (window.Prism) {
     <title>Export to PDF</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
     <style>
+        /* Preserve colors when printing */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+        
         @media print {
             body { margin: 0; }
+            /* Ensure syntax highlighting colors are preserved */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
         }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             line-height: 1.6;
@@ -447,17 +461,36 @@ if (window.Prism) {
 </head>
 <body>
 ${safeHtml}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script>
+if (window.Prism) {
+    window.Prism.highlightAll();
+}
+</script>
 </body>
 </html>`);
 
         printWindow.document.close();
 
+        // Wait for scripts to load and highlight code before printing
         setTimeout(() => {
-            printWindow.print();
+            if (printWindow.Prism) {
+                printWindow.Prism.highlightAll();
+            }
+            // Additional delay to ensure highlighting is applied
             setTimeout(() => {
-                printWindow.close();
-            }, 1000);
-        }, 250);
+                printWindow.print();
+                setTimeout(() => {
+                    printWindow.close();
+                }, 1000);
+            }, 100);
+        }, 500);
     };
 
     /**

@@ -173,12 +173,151 @@
     };
 
     /**
-     * Insert a footnote
+     * Insert a footnote (or remove if cursor is on a footnote reference)
      */
     const insertFootnote = async () => {
         if (!elements.editor) return;
         
+        // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
+        const scrollTop = elements.editor.scrollTop;
+        const scrollLeft = elements.editor.scrollLeft;
+        const hadFocus = document.activeElement === elements.editor;
+        
         const { start, end, value } = utils.getSelection();
+        
+        // Check if cursor is on a footnote reference [^identifier]
+        const footnotePattern = /\[\^([^\]]+)\]/g;
+        const footnoteMatches = Array.from(value.matchAll(footnotePattern));
+        
+        let footnoteToRemove = null;
+        for (const match of footnoteMatches) {
+            const matchStart = match.index;
+            const matchEnd = matchStart + match[0].length;
+            
+            // Check if cursor or selection is within or touches the footnote reference
+            if ((start >= matchStart && start <= matchEnd) || 
+                (end >= matchStart && end <= matchEnd) ||
+                (start <= matchStart && end >= matchEnd)) {
+                footnoteToRemove = {
+                    identifier: match[1],
+                    matchStart: matchStart,
+                    matchEnd: matchEnd,
+                    fullMatch: match[0]
+                };
+                break;
+            }
+        }
+        
+        // TOGGLE OFF: Remove footnote reference and definition (if no other references exist)
+        if (footnoteToRemove) {
+            const identifier = footnoteToRemove.identifier;
+            
+            // Remove the reference
+            const before = value.slice(0, footnoteToRemove.matchStart);
+            const after = value.slice(footnoteToRemove.matchEnd);
+            let newValue = before + after;
+            
+            // Check if there are any other references to this footnote
+            const escapedIdentifier = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const refPattern = new RegExp(`\\[\\^${escapedIdentifier}\\]`, 'g');
+            const remainingRefs = newValue.match(refPattern);
+            
+            // Only remove definition if no other references exist
+            if (!remainingRefs || remainingRefs.length === 0) {
+                // Find and remove the definition: [^identifier]: text
+                // Search line by line for more reliable matching
+                const lines = newValue.split('\n');
+                let defLineIndex = -1;
+                
+                // Find the definition line
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    // Match definition pattern: [^identifier]: text (with optional leading whitespace)
+                    const defMatch = line.match(/^\s*\[\^([^\]]+)\]:\s*(.*)$/);
+                    if (defMatch && defMatch[1] === identifier) {
+                        defLineIndex = i;
+                        break;
+                    }
+                }
+                
+                if (defLineIndex >= 0) {
+                    // Remove the definition line
+                    lines.splice(defLineIndex, 1);
+                    
+                    // Clean up extra blank lines that might have been around the definition
+                    // Remove blank line after definition if present
+                    if (defLineIndex < lines.length && lines[defLineIndex].trim() === '') {
+                        lines.splice(defLineIndex, 1);
+                    }
+                    // Remove blank line before definition if present (and we're not at start)
+                    if (defLineIndex > 0 && lines[defLineIndex - 1].trim() === '') {
+                        lines.splice(defLineIndex - 1, 1);
+                    }
+                    
+                    newValue = lines.join('\n');
+                }
+            }
+            
+            // Update editor
+            elements.editor.value = newValue;
+            
+            // Calculate new cursor position (after removed reference)
+            const newCursorPos = Math.min(footnoteToRemove.matchStart, newValue.length);
+            elements.editor.setSelectionRange(newCursorPos, newCursorPos);
+            
+            // ✅ IMMEDIATE scroll lock #1 (after content change)
+            elements.editor.scrollTop = scrollTop;
+            elements.editor.scrollLeft = scrollLeft;
+            
+            // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
+            if (!hadFocus) {
+                elements.editor.focus({ preventScroll: true });
+            }
+            
+            // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
+            elements.editor.scrollTop = scrollTop;
+            elements.editor.scrollLeft = scrollLeft;
+            
+            // ✅ TRIPLE RAF for maximum browser compatibility
+            requestAnimationFrame(() => {
+                elements.editor.scrollTop = scrollTop;
+                elements.editor.scrollLeft = scrollLeft;
+                
+                requestAnimationFrame(() => {
+                    elements.editor.scrollTop = scrollTop;
+                    elements.editor.scrollLeft = scrollLeft;
+                    
+                    requestAnimationFrame(() => {
+                        elements.editor.scrollTop = scrollTop;
+                        elements.editor.scrollLeft = scrollLeft;
+                    });
+                });
+            });
+            
+            // Trigger updates
+            if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+                MarkdownEditor.preview.updatePreview();
+            }
+            if (utils.updateCounters) {
+                utils.updateCounters();
+            }
+            if (MarkdownEditor.stateManager) {
+                MarkdownEditor.stateManager.markDirty(elements.editor.value !== MarkdownEditor.state.lastSavedContent);
+            }
+            if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+                MarkdownEditor.autosave.scheduleAutosave();
+            }
+            if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
+                MarkdownEditor.formatting.updateToolbarStates();
+            }
+            if (MarkdownEditor.history && MarkdownEditor.history.pushHistory) {
+                MarkdownEditor.history.pushHistory();
+            }
+            
+            return;
+        }
+        
+        // TOGGLE ON: Insert new footnote
         const selectedText = value.slice(start, end);
 
         // Prompt for footnote identifier and text
@@ -220,7 +359,8 @@
         const footnoteRef = `[^${identifier}]`;
         
         // Check if footnote definition already exists
-        const footnoteDefPattern = new RegExp(`^\\[\\^${identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]:\\s*`, 'm');
+        const escapedIdentifier = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const footnoteDefPattern = new RegExp(`^\\[\\^${escapedIdentifier}\\]:\\s*`, 'm');
         const hasDefinition = footnoteDefPattern.test(value);
         
         // Insert reference

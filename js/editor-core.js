@@ -57,7 +57,8 @@
         replaceOneBtn: null,
         replaceAllBtn: null,
         toggleFindButton: null,
-        toggleHtmlButton: null
+        toggleHtmlButton: null,
+        helpButton: null
     };
 
     // Initialize DOM references
@@ -96,6 +97,7 @@
         els.replaceAllBtn = document.getElementById('replace-all');
         els.toggleFindButton = document.getElementById('toggle-find');
         els.toggleHtmlButton = document.getElementById('toggle-html');
+        els.helpButton = document.getElementById('help-button');
 
         // Check if critical elements exist
         if (!els.editor || !els.preview) {

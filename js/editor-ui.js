@@ -550,6 +550,245 @@
         document.documentElement.style.setProperty('--toolbar-height', `${Math.max(0, Math.round(h))}px`);
     };
 
+    /**
+     * Open cheat sheet window with all commands and shortcuts
+     */
+    const openCheatSheet = () => {
+        // Use Blob URL approach for cleaner HTML
+        const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Editor - Keyboard Shortcuts & Commands</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #1f2a3d;
+            background: #f7f9fc;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 0.65rem;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+            padding: 2rem;
+        }
+        h1 { color: #2563eb; margin-bottom: 0.5rem; font-size: 2rem; }
+        .subtitle { color: #5c6a82; margin-bottom: 2rem; font-size: 0.95rem; }
+        .section { margin-bottom: 2.5rem; }
+        .section-title {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: #1f2a3d;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .command-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .command-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
+        .command-name { font-weight: 500; color: #1f2a3d; }
+        .command-shortcut {
+            font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+            font-size: 0.85rem;
+            background: #e5e7eb;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            color: #374151;
+            font-weight: 600;
+        }
+        .command-item:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+        .note {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+        }
+        .note strong { color: #1e40af; }
+        .example-box {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.75rem;
+            font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        .example-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        @media (max-width: 768px) {
+            .command-grid { grid-template-columns: 1fr; }
+            body { padding: 1rem; }
+            .container { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Markdown Editor - Cheat Sheet</h1>
+        <p class="subtitle">All keyboard shortcuts and commands</p>
+
+        <div class="section">
+            <h2 class="section-title">Text Formatting</h2>
+            <div class="command-grid">
+                <div class="command-item"><span class="command-name">Bold</span><span class="command-shortcut">Ctrl/Cmd + B</span></div>
+                <div class="command-item"><span class="command-name">Italic</span><span class="command-shortcut">Ctrl/Cmd + I</span></div>
+                <div class="command-item"><span class="command-name">Underline</span><span class="command-shortcut">Toolbar</span></div>
+                <div class="command-item"><span class="command-name">Strikethrough</span><span class="command-shortcut">Toolbar</span></div>
+                <div class="command-item"><span class="command-name">Inline Code</span><span class="command-shortcut">Ctrl/Cmd + \`</span></div>
+                <div class="command-item"><span class="command-name">Blockquote</span><span class="command-shortcut">Toolbar</span></div>
+                <div class="command-item"><span class="command-name">Horizontal Rule</span><span class="command-shortcut">Toolbar</span></div>
+            </div>
+            <div class="example-box">
+                <div class="example-label">Example Markdown:</div>
+**bold text**<br>*italic text*<br>++underlined text++<br>~~strikethrough text~~<br>\`inline code\`<br>&gt; Blockquote text<br>---
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Headings</h2>
+            <div class="command-grid">
+                <div class="command-item"><span class="command-name">Heading 1</span><span class="command-shortcut">Ctrl/Cmd + 1</span></div>
+                <div class="command-item"><span class="command-name">Heading 2</span><span class="command-shortcut">Ctrl/Cmd + 2</span></div>
+                <div class="command-item"><span class="command-name">Heading 3</span><span class="command-shortcut">Ctrl/Cmd + 3</span></div>
+                <div class="command-item"><span class="command-name">Heading 4</span><span class="command-shortcut">Ctrl/Cmd + 4</span></div>
+                <div class="command-item"><span class="command-name">Heading 5</span><span class="command-shortcut">Ctrl/Cmd + 5</span></div>
+                <div class="command-item"><span class="command-name">Heading 6</span><span class="command-shortcut">Ctrl/Cmd + 6</span></div>
+            </div>
+            <div class="example-box">
+                <div class="example-label">Example Markdown:</div>
+# Heading 1<br>## Heading 2<br>### Heading 3<br>#### Heading 4<br>##### Heading 5<br>###### Heading 6
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Lists & Code</h2>
+            <div class="command-grid">
+                <div class="command-item"><span class="command-name">Bullet List</span><span class="command-shortcut">Ctrl/Cmd + Shift + 8</span></div>
+                <div class="command-item"><span class="command-name">Numbered List</span><span class="command-shortcut">Ctrl/Cmd + Shift + 7</span></div>
+                <div class="command-item"><span class="command-name">Task List</span><span class="command-shortcut">Toolbar</span></div>
+                <div class="command-item"><span class="command-name">Code Block</span><span class="command-shortcut">Ctrl/Cmd + Shift + C</span></div>
+                <div class="command-item"><span class="command-name">Indent List Item</span><span class="command-shortcut">Tab</span></div>
+                <div class="command-item"><span class="command-name">Outdent List Item</span><span class="command-shortcut">Shift + Tab</span></div>
+            </div>
+            <div class="example-box">
+                <div class="example-label">Example Markdown:</div>
+- Bullet item 1<br>- Bullet item 2<br>  - Nested bullet item<br><br>1. Numbered item 1<br>2. Numbered item 2<br>   1. Nested numbered item<br><br>- [ ] Task item 1<br>- [x] Task item 2 (completed)<br><br>\`\`\`javascript<br>function hello() {<br>  console.log("Hello");<br>}<br>\`\`\`
+            </div>
+            <div class="note"><strong>Tip:</strong> Press Enter in a list to continue the list. Press Enter twice to exit the list.</div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Inserts</h2>
+            <div class="command-grid">
+                <div class="command-item"><span class="command-name">Insert Link</span><span class="command-shortcut">Ctrl/Cmd + K</span></div>
+                <div class="command-item"><span class="command-name">Insert Image</span><span class="command-shortcut">Toolbar</span></div>
+                <div class="command-item"><span class="command-name">Insert Table</span><span class="command-shortcut">Toolbar</span></div>
+                <div class="command-item"><span class="command-name">Insert Footnote</span><span class="command-shortcut">Toolbar</span></div>
+            </div>
+            <div class="example-box">
+                <div class="example-label">Example Markdown:</div>
+[Link text](https://example.com)<br>![Alt text](https://example.com/image.png)<br><br>| Header 1 | Header 2 |<br>|----------|----------|<br>| Cell 1   | Cell 2   |<br>| Cell 3   | Cell 4   |<br><br>Here is a footnote reference[^1].<br><br>[^1]: This is the footnote content.
+            </div>
+            <div class="note"><strong>Tip:</strong> Pasting a URL automatically converts it to a markdown link.</div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">View & Navigation</h2>
+            <div class="command-grid">
+                <div class="command-item"><span class="command-name">Toggle Preview</span><span class="command-shortcut">Ctrl/Cmd + Shift + P</span></div>
+                <div class="command-item"><span class="command-name">Toggle HTML Rendering</span><span class="command-shortcut">Ctrl/Cmd + Shift + H</span></div>
+                <div class="command-item"><span class="command-name">Find & Replace</span><span class="command-shortcut">Ctrl/Cmd + F</span></div>
+                <div class="command-item"><span class="command-name">Find Next</span><span class="command-shortcut">Enter (in find bar)</span></div>
+                <div class="command-item"><span class="command-name">Find Previous</span><span class="command-shortcut">Shift + Enter</span></div>
+                <div class="command-item"><span class="command-name">Close Find</span><span class="command-shortcut">Escape</span></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">File Operations</h2>
+            <div class="command-grid">
+                <div class="command-item"><span class="command-name">New File</span><span class="command-shortcut">Toolbar</span></div>
+                <div class="command-item"><span class="command-name">Open File</span><span class="command-shortcut">Ctrl/Cmd + O</span></div>
+                <div class="command-item"><span class="command-name">Save File</span><span class="command-shortcut">Ctrl/Cmd + S</span></div>
+                <div class="command-item"><span class="command-name">Export and Print</span><span class="command-shortcut">Toolbar</span></div>
+                <div class="command-item"><span class="command-name">Toggle Dark Mode</span><span class="command-shortcut">Toolbar</span></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Edit Operations</h2>
+            <div class="command-grid">
+                <div class="command-item"><span class="command-name">Undo</span><span class="command-shortcut">Ctrl/Cmd + Z</span></div>
+                <div class="command-item"><span class="command-name">Redo</span><span class="command-shortcut">Ctrl/Cmd + Y</span></div>
+                <div class="command-item"><span class="command-name">Redo (Alternative)</span><span class="command-shortcut">Ctrl/Cmd + Shift + Z</span></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Find & Replace</h2>
+            <div class="command-grid">
+                <div class="command-item"><span class="command-name">Replace One</span><span class="command-shortcut">Ctrl/Cmd + Enter</span></div>
+                <div class="command-item"><span class="command-name">Replace All</span><span class="command-shortcut">Toolbar</span></div>
+            </div>
+            <div class="note"><strong>Find Options:</strong> Case sensitive, Regular expressions, Whole words only</div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Tips & Notes</h2>
+            <div class="note">
+                <strong>Auto-save:</strong> Your work is automatically saved to browser storage every 1.5 seconds.<br><br>
+                <strong>Filename Editing:</strong> Click on the filename in the status bar to rename it.<br><br>
+                <strong>Preview Split:</strong> Drag the resize handle between editor and preview to adjust the split ratio.<br><br>
+                <strong>Syntax Highlighting:</strong> Code blocks automatically detect and highlight programming languages.
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, 'cheatsheet', 'width=900,height=800,scrollbars=yes,resizable=yes');
+        
+        if (win) {
+            win.focus();
+            // Clean up the URL after a delay
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } else {
+            // Fallback if popup is blocked
+            alert('Please allow popups to view the cheat sheet.');
+        }
+    };
+
     // Expose public API
     MarkdownEditor.ui = {
         applyTheme,
@@ -560,7 +799,8 @@
         handleFormatting,
         handleToolbarClick,
         handleShortcut,
-        recomputeFindBarOffset
+        recomputeFindBarOffset,
+        openCheatSheet
     };
 
     window.MarkdownEditor = MarkdownEditor;

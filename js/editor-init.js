@@ -173,6 +173,11 @@
             elements.toggleHtmlButton.addEventListener('click', MarkdownEditor.ui.toggleHtmlRendering);
         }
 
+        // Help button
+        if (elements.helpButton && MarkdownEditor.ui) {
+            elements.helpButton.addEventListener('click', MarkdownEditor.ui.openCheatSheet);
+        }
+
         // Filename editing
         if (elements.fileNameDisplay && MarkdownEditor.utils) {
             elements.fileNameDisplay.addEventListener('click', MarkdownEditor.utils.handleFilenameEdit);

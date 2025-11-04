@@ -14,7 +14,7 @@
 
     const escapeAttribute = (value) => escapeHtml(value).replace(/\(/g, '&#40;').replace(/\)/g, '&#41;');
 
-    const parseInline = (input, footnoteRefs = null) => {
+    const parseInline = (input, footnoteRefs = null, renderHtml = false) => {
         const codeSegments = [];
 
         // Temporarily replace inline code so subsequent replacements ignore their content.
@@ -32,8 +32,35 @@
             });
         }
 
-        // Escape any raw HTML to avoid injection before adding formatting tags.
+        // Handle HTML tags: if renderHtml is true, preserve safe HTML tags; otherwise escape everything
+        const htmlTags = [];
+        if (renderHtml) {
+            // Store HTML tags before processing (only safe tags that sanitizer allows)
+            // Match HTML tags: <tag>...</tag> or <tag />
+            // Use a placeholder that won't be escaped (no <, >, &, ", ')
+            const htmlTagRegex = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:\s+[a-zA-Z-]+(?:=(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*(\/?)>/g;
+            result = result.replace(htmlTagRegex, (match, closing, tagName, attrs, selfClosing) => {
+                const tag = tagName.toLowerCase();
+                // Only preserve tags that are in the sanitizer's allowed list
+                const allowedTags = ['a', 'blockquote', 'br', 'code', 'del', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                    'hr', 'img', 'input', 'li', 'ol', 'p', 'pre', 'span', 'strong', 'sup', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul', 'u'];
+                if (allowedTags.includes(tag)) {
+                    const index = htmlTags.push(match) - 1;
+                    // Use a placeholder that won't be escaped by escapeHtml
+                    return `___HTML_TAG_${index}___`;
+                }
+                // Escape dangerous tags
+                return escapeHtml(match);
+            });
+        }
+
+        // Escape any remaining raw HTML to avoid injection before adding formatting tags.
         result = escapeHtml(result);
+
+        // Restore preserved HTML tags if renderHtml is true
+        if (renderHtml && htmlTags.length > 0) {
+            result = result.replace(/___HTML_TAG_(\d+)___/g, (_, index) => htmlTags[parseInt(index, 10)]);
+        }
 
         // Images must be parsed before links to avoid double wrapping.
         result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) =>
@@ -102,7 +129,8 @@
         .split('|')
         .map((cell) => cell.trim());
 
-    const parse = (markdown) => {
+    const parse = (markdown, options = {}) => {
+        const renderHtml = options.renderHtml || false;
         const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
         const output = [];
         const state = { 
@@ -155,7 +183,7 @@
             const nextLine = lines[index + 1] ? lines[index + 1].trim() : '';
             if (/^\s*\|.+\|\s*$/.test(trimmed) && isTableDivider(nextLine)) {
                 closeListIfNeeded(state, output);
-                const headerCells = splitTableRow(trimmed).map(cell => parseInline(cell, footnoteRefs));
+                const headerCells = splitTableRow(trimmed).map(cell => parseInline(cell, footnoteRefs, renderHtml));
                 index += 1; // Skip divider line
                 const bodyRows = [];
                 for (let bodyIndex = index + 1; bodyIndex < lines.length; bodyIndex += 1) {
@@ -163,7 +191,7 @@
                     if (!/^\s*\|.+\|\s*$/.test(potentialRow)) {
                         break;
                     }
-                    bodyRows.push(splitTableRow(potentialRow).map(cell => parseInline(cell, footnoteRefs)));
+                    bodyRows.push(splitTableRow(potentialRow).map(cell => parseInline(cell, footnoteRefs, renderHtml)));
                     index = bodyIndex;
                 }
 
@@ -179,7 +207,7 @@
             if (headingMatch) {
                 closeListIfNeeded(state, output);
                 const level = Math.min(headingMatch[1].length, ALLOWED_HEADINGS);
-                output.push(`<h${level}>${parseInline(headingMatch[2].trim(), footnoteRefs)}</h${level}>`);
+                output.push(`<h${level}>${parseInline(headingMatch[2].trim(), footnoteRefs, renderHtml)}</h${level}>`);
                 continue;
             }
 
@@ -233,7 +261,7 @@
                 
                 // Add the list item with checkbox
                 const checkboxAttr = checked ? ' checked' : '';
-                state.listBuffer.push(`<li><input type="checkbox"${checkboxAttr} disabled> ${parseInline(content, footnoteRefs)}`);
+                state.listBuffer.push(`<li><input type="checkbox"${checkboxAttr} disabled> ${parseInline(content, footnoteRefs, renderHtml)}`);
                 continue;
             }
             
@@ -285,7 +313,7 @@
                 }
                 
                 // Add the list item
-                state.listBuffer.push(`<li>${parseInline(content, footnoteRefs)}`);
+                state.listBuffer.push(`<li>${parseInline(content, footnoteRefs, renderHtml)}`);
                 continue;
             }
 
@@ -320,7 +348,7 @@
             const quoteMatch = trimmed.match(/^>\s?(.*)$/);
             if (quoteMatch) {
                 closeListIfNeeded(state, output);
-                output.push(`<blockquote>${parseInline(quoteMatch[1], footnoteRefs)}</blockquote>`);
+                output.push(`<blockquote>${parseInline(quoteMatch[1], footnoteRefs, renderHtml)}</blockquote>`);
                 continue;
             }
 
@@ -333,7 +361,7 @@
             }
 
             closeListIfNeeded(state, output);
-            output.push(`<p>${parseInline(trimmed, footnoteRefs)}</p>`);
+            output.push(`<p>${parseInline(trimmed, footnoteRefs, renderHtml)}</p>`);
         }
 
         if (inCodeBlock) {
@@ -355,7 +383,7 @@
             
             for (const [identifier, def] of sortedFootnotes) {
                 const safeId = escapeAttribute(identifier);
-                const footnoteText = parseInline(def.text, footnoteRefs);
+                const footnoteText = parseInline(def.text, footnoteRefs, renderHtml);
                 output.push(`<li id="fn-${safeId}">${footnoteText} <a href="#fnref-${safeId}" class="footnote-backref">↩</a></li>`);
             }
             

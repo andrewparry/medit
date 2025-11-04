@@ -279,7 +279,8 @@
         const filename = elements.fileNameDisplay.textContent.trim().replace(/\.md$/, '');
         const htmlFilename = filename.endsWith('.html') ? filename : `${filename}.html`;
 
-        const rawHtml = window.markedLite.parse(elements.editor.value);
+        const renderHtml = state && state.renderHtml || false;
+        const rawHtml = window.markedLite.parse(elements.editor.value, { renderHtml });
         const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
 
         const htmlDoc = `<!DOCTYPE html>
@@ -395,7 +396,8 @@ if (window.Prism) {
     const exportToPdf = () => {
         if (!elements.editor) return;
         
-        const rawHtml = window.markedLite.parse(elements.editor.value);
+        const renderHtml = state && state.renderHtml || false;
+        const rawHtml = window.markedLite.parse(elements.editor.value, { renderHtml });
         const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
 
         const printWindow = window.open('', '_blank');

@@ -15,7 +15,8 @@
         if (!elements.editor || !elements.preview) return;
         
         const markdown = elements.editor.value;
-        const rawHtml = window.markedLite.parse(markdown);
+        const renderHtml = state.renderHtml || false;
+        const rawHtml = window.markedLite.parse(markdown, { renderHtml });
         const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
         elements.preview.innerHTML = safeHtml || '<p class="preview-placeholder">Start typing to see your formatted preview.</p>';
         

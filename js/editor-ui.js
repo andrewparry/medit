@@ -42,6 +42,46 @@
     };
 
     /**
+     * Toggle HTML rendering mode
+     */
+    const toggleHtmlRendering = () => {
+        if (!elements.toggleHtmlButton || !state) return;
+        
+        state.renderHtml = !state.renderHtml;
+        const isEnabled = state.renderHtml;
+        
+        // Update button state
+        elements.toggleHtmlButton.setAttribute('aria-pressed', isEnabled);
+        elements.toggleHtmlButton.title = isEnabled 
+            ? 'Disable HTML rendering (Ctrl+Shift+H)' 
+            : 'Enable HTML rendering (Ctrl+Shift+H)';
+        
+        // Update status message
+        if (elements.autosaveStatus) {
+            elements.autosaveStatus.textContent = isEnabled ? 'HTML rendering enabled' : 'HTML rendering disabled';
+            setTimeout(() => {
+                if (elements.autosaveStatus && !MarkdownEditor.state.dirty) {
+                    elements.autosaveStatus.textContent = 'Draft saved';
+                }
+            }, 2000);
+        }
+        
+        // Persist preference
+        if (window.localStorage) {
+            try {
+                localStorage.setItem('markdown-editor-render-html', isEnabled ? 'true' : 'false');
+            } catch (error) {
+                console.error('Failed to persist HTML rendering preference', error);
+            }
+        }
+        
+        // Update preview with new rendering mode
+        if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+            MarkdownEditor.preview.updatePreview();
+        }
+    };
+
+    /**
      * Initialize theme
      */
     const initializeTheme = () => {
@@ -422,6 +462,10 @@
                     event.preventDefault();
                     if (MarkdownEditor.preview) MarkdownEditor.preview.togglePreview();
                     return;
+                case 'h':
+                    event.preventDefault();
+                    if (MarkdownEditor.ui) MarkdownEditor.ui.toggleHtmlRendering();
+                    return;
                 default:
                     break;
             }
@@ -510,6 +554,7 @@
     MarkdownEditor.ui = {
         applyTheme,
         toggleDarkMode,
+        toggleHtmlRendering,
         initializeTheme,
         initializeResize,
         handleFormatting,

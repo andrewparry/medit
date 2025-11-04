@@ -6,7 +6,7 @@
     'use strict';
 
     const MarkdownEditor = window.MarkdownEditor || {};
-    const { elements } = MarkdownEditor;
+    const { elements, state } = MarkdownEditor;
 
     /**
      * Handle input in editor
@@ -166,6 +166,11 @@
         // Dark mode toggle
         if (elements.darkModeToggle && MarkdownEditor.ui) {
             elements.darkModeToggle.addEventListener('click', MarkdownEditor.ui.toggleDarkMode);
+        }
+
+        // HTML rendering toggle
+        if (elements.toggleHtmlButton && MarkdownEditor.ui) {
+            elements.toggleHtmlButton.addEventListener('click', MarkdownEditor.ui.toggleHtmlRendering);
         }
 
         // Filename editing
@@ -328,6 +333,22 @@
         }
         if (MarkdownEditor.preview) {
             MarkdownEditor.preview.initializePreviewState();
+        }
+        
+        // Initialize HTML rendering preference
+        if (window.localStorage && state) {
+            try {
+                const stored = localStorage.getItem('markdown-editor-render-html');
+                if (stored === 'true') {
+                    state.renderHtml = true;
+                    if (elements.toggleHtmlButton) {
+                        elements.toggleHtmlButton.setAttribute('aria-pressed', 'true');
+                        elements.toggleHtmlButton.title = 'Disable HTML rendering (Ctrl+Shift+H)';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to restore HTML rendering preference', error);
+            }
         }
         if (MarkdownEditor.autosave) {
             MarkdownEditor.autosave.checkAutosaveStatus();

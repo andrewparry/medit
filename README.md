@@ -366,7 +366,23 @@ We welcome contributions! Please follow these guidelines:
 
 ## License
 
-This project is open source. See the LICENSE file for details.
+This project is open source and licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+### Third-Party Libraries
+
+This project uses the following open source libraries:
+
+- **Prism.js** (v1.29.0) - MIT License
+  - Used for syntax highlighting in code blocks
+  - Loaded from CDN in production
+  
+- **Jest** (v29.7.0) - MIT License
+  - Used for testing (development only)
+  
+- **jsdom** (v22.1.0) - MIT License
+  - Used for DOM testing (development only)
+
+All third-party libraries are open source and MIT licensed, compatible with this project's license. For complete license information and attribution details, see the [NOTICE](NOTICE) file.
 
 ## Changelog
 

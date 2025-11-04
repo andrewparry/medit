@@ -1,0 +1,126 @@
+Markdown Editor - Third-Party Licenses
+========================================
+
+This project uses the following open source libraries and components:
+
+PRODUCTION DEPENDENCIES
+------------------------
+
+Prism.js (v1.29.0)
+  License: MIT License
+  Copyright (c) 2012-2021 Lea Verou
+  Repository: https://github.com/PrismJS/prism
+  Usage: Syntax highlighting for code blocks in markdown preview
+  Components Used:
+    - prism-core.min.js
+    - prism-javascript.min.js
+    - prism-python.min.js
+    - prism-java.min.js
+    - prism-c.min.js
+    - prism-cpp.min.js
+    - prism-css.min.js
+    - prism-markup.min.js
+    - prism-json.min.js
+    - prism-bash.min.js
+    - prism-sql.min.js
+    - prism-autoloader.min.js
+    - prism.min.css (theme)
+  License Text:
+    MIT License
+
+    Copyright (c) 2012-2021 Lea Verou
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+
+DEVELOPMENT DEPENDENCIES
+------------------------
+
+Jest (v29.7.0)
+  License: MIT License
+  Copyright (c) Meta Platforms, Inc. and affiliates
+  Repository: https://github.com/facebook/jest
+  Usage: JavaScript testing framework for unit and integration tests
+  License Text:
+    MIT License
+
+    Copyright (c) Meta Platforms, Inc. and affiliates.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+
+jsdom (v22.1.0)
+  License: MIT License
+  Copyright (c) 2010-2021, jsdom contributors
+  Repository: https://github.com/jsdom/jsdom
+  Usage: DOM implementation for Node.js, used for testing browser-based code
+  License Text:
+    MIT License
+
+    Copyright (c) 2010-2021, jsdom contributors
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+
+SUMMARY
+-------
+
+All third-party libraries used in this project are:
+- Open source
+- Licensed under the MIT License
+- Compatible with this project's MIT License
+
+The production application (runnable in browsers) uses only Prism.js for syntax
+highlighting. Jest and jsdom are development dependencies used only for testing
+and are not included in the production build.
+
+For more information about this project's license, see the LICENSE file.
+

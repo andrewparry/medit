@@ -173,6 +173,96 @@
     };
 
     /**
+     * Insert a footnote
+     */
+    const insertFootnote = async () => {
+        if (!elements.editor) return;
+        
+        const { start, end, value } = utils.getSelection();
+        const selectedText = value.slice(start, end);
+
+        // Prompt for footnote identifier and text
+        const result = await dialogs.multiPromptDialog([
+            {
+                label: 'Footnote identifier (e.g., 1, note1, etc.)',
+                defaultValue: selectedText || '1',
+                inputType: 'text',
+                key: 'identifier',
+                required: true
+            },
+            {
+                label: 'Footnote text',
+                defaultValue: '',
+                inputType: 'text',
+                key: 'text',
+                required: true
+            }
+        ], 'Insert Footnote');
+
+        if (!result) {
+            return;
+        }
+
+        const identifier = result.identifier.trim();
+        const footnoteText = result.text.trim();
+
+        if (!identifier) {
+            await dialogs.alertDialog('Footnote identifier cannot be empty.', 'Insert Footnote');
+            return;
+        }
+
+        if (!footnoteText) {
+            await dialogs.alertDialog('Footnote text cannot be empty.', 'Insert Footnote');
+            return;
+        }
+
+        // Insert footnote reference at cursor
+        const footnoteRef = `[^${identifier}]`;
+        
+        // Check if footnote definition already exists
+        const footnoteDefPattern = new RegExp(`^\\[\\^${identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]:\\s*`, 'm');
+        const hasDefinition = footnoteDefPattern.test(value);
+        
+        // Insert reference
+        formatting.replaceSelection(footnoteRef, footnoteRef.length);
+        
+        // If definition doesn't exist, add it at the end of the document
+        if (!hasDefinition) {
+            // Wait a bit for the reference to be inserted
+            setTimeout(() => {
+                const currentValue = elements.editor.value;
+                const footnoteDef = `\n\n[^${identifier}]: ${footnoteText}`;
+                const newValue = currentValue + footnoteDef;
+                elements.editor.value = newValue;
+                
+                // Position cursor back at the reference location
+                const refPos = start + footnoteRef.length;
+                elements.editor.setSelectionRange(refPos, refPos);
+                elements.editor.focus({ preventScroll: true });
+                
+                // Trigger updates
+                if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+                    MarkdownEditor.preview.updatePreview();
+                }
+                if (utils.updateCounters) {
+                    utils.updateCounters();
+                }
+                if (MarkdownEditor.stateManager) {
+                    MarkdownEditor.stateManager.markDirty(elements.editor.value !== MarkdownEditor.state.lastSavedContent);
+                }
+                if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+                    MarkdownEditor.autosave.scheduleAutosave();
+                }
+            }, 0);
+        } else {
+            // Definition exists, just update preview
+            if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+                MarkdownEditor.preview.updatePreview();
+            }
+        }
+    };
+
+    /**
      * Insert a table
      */
     const insertTable = async () => {
@@ -258,7 +348,8 @@
         insertLink,
         insertImage,
         insertTable,
-        insertHorizontalRule
+        insertHorizontalRule,
+        insertFootnote
     };
 
     window.MarkdownEditor = MarkdownEditor;

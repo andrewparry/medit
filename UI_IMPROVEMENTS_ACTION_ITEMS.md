@@ -295,7 +295,30 @@ const updateToolbarStates = () => {
   
 - 7. Task/checkbox lists: Markdown checkboxes (- [ ] / - [x]) aren't supported.
 - 8. While underline isn't standard Markdown but is in some dialects.
-- 9. Footnotes: Markdown footnote syntax ([^1]…[^1]:) isn't handled.
+- 9. Footnotes: Markdown footnote syntax ([^1]…[^1]:) isn't handled. ✅ COMPLETE
+  
+  **Status:** ✅ **RESOLVED** - Full footnote support with reference and definition handling
+  
+  **Implementation:**
+  - ✅ Added footnote parsing in marked-lite.js to detect `[^identifier]` references
+  - ✅ Added footnote definition parsing for `[^identifier]: text` syntax
+  - ✅ Footnotes render as `<sup><a>` links in preview with proper IDs
+  - ✅ Footnote definitions render at the end of document in ordered list format
+  - ✅ Added `insertFootnote()` function in editor-inserts.js with dialog for identifier and text
+  - ✅ Function automatically inserts reference at cursor and definition at end of document
+  - ✅ Added footnote button to toolbar (`[^]` icon)
+  - ✅ Added footnote case handler in editor-ui.js
+  - ✅ Updated sanitizer.js to allow `sup` tag and `id` attributes for footnotes
+  - ✅ Internal footnote links (anchors) don't open in new tab
+  
+  **Features:**
+  - Click footnote button to insert footnote reference and definition
+  - Dialog prompts for footnote identifier and text
+  - Multiple footnotes with same identifier reuse the same definition
+  - Footnotes are numbered automatically in order of appearance
+  - Click footnote reference in preview to jump to definition
+  - Click ↩ in definition to return to reference
+  - Supports both numeric (`[^1]`) and named (`[^note]`) identifiers
 - 10. Automatic link detection: pasting a URL doesn't auto‑convert it to a link. ✅ COMPLETE
   
   **Status:** ✅ **RESOLVED** - Automatic link detection on paste implemented

@@ -326,6 +326,9 @@
             case 'table':
                 if (MarkdownEditor.inserts) MarkdownEditor.inserts.insertTable();
                 break;
+            case 'footnote':
+                if (MarkdownEditor.inserts) MarkdownEditor.inserts.insertFootnote();
+                break;
             default:
                 break;
         }

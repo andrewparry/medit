@@ -4,8 +4,8 @@
  */
 (function (global) {
     const ALLOWED_TAGS = new Set([
-        'a', 'blockquote', 'br', 'code', 'del', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'hr', 'img', 'input', 'li', 'ol', 'p', 'pre', 'span', 'strong', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul', 'u'
+        'a', 'blockquote', 'br', 'code', 'del', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'hr', 'img', 'input', 'li', 'ol', 'p', 'pre', 'span', 'strong', 'sup', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul', 'u'
     ]);
 
     const URI_ATTRS = new Set(['href', 'src']);
@@ -38,15 +38,19 @@
                     node.removeAttribute(attr.name);
                     return;
                 }
-            } else if (!['alt', 'title', 'loading', 'rel', 'target', 'class', 'type', 'checked', 'disabled'].includes(name)) {
+            } else if (!['alt', 'title', 'loading', 'rel', 'target', 'class', 'type', 'checked', 'disabled', 'id', 'href'].includes(name)) {
                 node.removeAttribute(attr.name);
                 return;
             }
         });
 
         if (tagName === 'a') {
-            node.setAttribute('rel', 'noopener noreferrer');
-            node.setAttribute('target', '_blank');
+            const href = node.getAttribute('href') || '';
+            // Only add target="_blank" for external links (not internal anchors)
+            if (href && !href.startsWith('#')) {
+                node.setAttribute('rel', 'noopener noreferrer');
+                node.setAttribute('target', '_blank');
+            }
         }
 
         node.childNodes.forEach(sanitizeNode);

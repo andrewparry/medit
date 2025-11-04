@@ -14,7 +14,7 @@
   --transition: 180ms ease-in-out;
   --font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   --font-mono: "Fira Code", "Cascadia Code", Menlo, monospace;
-  --header-height: 64px;
+  --header-height: 0px;
   --toolbar-height: 52px;
 }
 
@@ -83,6 +83,7 @@ textarea:focus-visible,
   position: sticky;
   top: 0;
   z-index: 20;
+  margin-bottom: 0;
 }
 
 .app-title {
@@ -176,13 +177,13 @@ textarea:focus-visible,
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   position: sticky;
-  top: var(--header-height);
-  z-index: 10;
+  top: 0;
+  z-index: 20;
 }
 
 .find-bar {
   position: sticky;
-  top: calc(var(--header-height) + var(--toolbar-height) - 1px);
+  top: var(--toolbar-height);
   z-index: 9;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
@@ -253,6 +254,18 @@ textarea:focus-visible,
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.toolbar-icon-wrapper {
+  display: flex;
+  align-items: center;
+  padding-right: 0.5rem;
+}
+
+.toolbar-icon {
+  height: 2rem;
+  width: auto;
+  object-fit: contain;
 }
 
 .toolbar-group {
@@ -985,9 +998,9 @@ body.theme-dark #autosave-status {
     flex-direction: column;
   }
 
-  /* Header may wrap more; give a larger sticky offset */
+  /* No header, keep header-height at 0 */
   :root {
-    --header-height: 96px;
+    --header-height: 0px;
   }
 
   .preview-pane {

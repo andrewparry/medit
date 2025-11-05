@@ -20,7 +20,7 @@
             }
             return;
         }
-        
+
         const text = elements.editor.value || '';
         if (!text) {
             elements.editorHighlights.innerHTML = '';
@@ -45,16 +45,16 @@
             // Process code block
             const codeBlock = match[0];
             const lines = codeBlock.split('\n');
-            
+
             if (lines.length >= 3) {
                 // Extract language from first line
                 const firstLine = lines[0];
                 const languageMatch = firstLine.match(/^```\s*(\w+)/);
                 const language = languageMatch ? languageMatch[1].toLowerCase() : '';
-                
+
                 // Extract code content
                 const codeContent = lines.slice(1, -1).join('\n');
-                
+
                 // Highlight code with Prism if language is specified and supported
                 let highlightedCode = utils.escapeHtml(codeContent);
                 if (language && window.Prism) {
@@ -68,7 +68,7 @@
                         highlightedCode = utils.escapeHtml(codeContent);
                     }
                 }
-                
+
                 // Reconstruct code block preserving line structure
                 const openingFence = utils.escapeHtml(firstLine);
                 const closingFence = utils.escapeHtml('```');
@@ -101,14 +101,14 @@
         let html = '';
         parts.forEach((part) => {
             if (part.type === 'code') {
-                html += part.openingFence + '\n' + part.highlightedCode + '\n' + part.closingFence;
+                html += `${part.openingFence  }\n${  part.highlightedCode  }\n${  part.closingFence}`;
             } else {
                 html += utils.escapeHtml(part.content);
             }
         });
 
         elements.editorHighlights.innerHTML = html;
-        
+
         // Keep scroll in sync
         elements.editorHighlights.scrollTop = elements.editor.scrollTop;
     };
@@ -117,15 +117,17 @@
      * Update raw highlights (for find/replace or syntax highlighting)
      */
     const updateRawHighlights = () => {
-        if (!elements.editorHighlights) return;
-        
+        if (!elements.editorHighlights) {
+            return;
+        }
+
         // Check if find bar is active
         if (!elements.findBar || elements.findBar.hidden) {
             // Show syntax highlighting when find bar is hidden
             updateSyntaxHighlights();
             return;
         }
-        
+
         // If find bar is active, delegate to find/replace module
         if (MarkdownEditor.findReplace && MarkdownEditor.findReplace.updateRawHighlightsForFind) {
             MarkdownEditor.findReplace.updateRawHighlightsForFind();

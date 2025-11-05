@@ -69,7 +69,7 @@ describe('End-to-End Integration Tests', () => {
 
         window = dom.window;
         document = window.document;
-        
+
         // Set up global objects
         global.window = window;
         global.document = document;
@@ -84,7 +84,7 @@ describe('End-to-End Integration Tests', () => {
         // Mock File System Access API
         global.window.showOpenFilePicker = jest.fn();
         global.window.showSaveFilePicker = jest.fn();
-        
+
         // Mock URL.createObjectURL
         global.URL = {
             createObjectURL: jest.fn(() => 'blob:mock-url'),
@@ -92,15 +92,17 @@ describe('End-to-End Integration Tests', () => {
         };
 
         container = document.querySelector('.app-container');
-        
+
         // Set up mock editor core integration
         global.mockEditorCore = createMockEditorCore();
-        
+
         // Mock focus behavior for JSDOM
         let activeElement = document.body;
         Object.defineProperty(document, 'activeElement', {
             get: () => activeElement,
-            set: (element) => { activeElement = element; },
+            set: (element) => {
+                activeElement = element;
+            },
             configurable: true
         });
     });
@@ -127,7 +129,7 @@ describe('End-to-End Integration Tests', () => {
             // Step 3: Apply formatting through toolbar
             const boldButton = document.querySelector('[data-format="bold"]');
             expect(boldButton).toBeTruthy();
-            
+
             // Simulate text selection and formatting
             simulateTextSelection(editor, 'bold');
             simulateClick(boldButton);
@@ -135,18 +137,18 @@ describe('End-to-End Integration Tests', () => {
             // Step 4: Toggle preview
             const previewButton = document.getElementById('toggle-preview');
             simulateClick(previewButton);
-            
+
             const preview = document.getElementById('preview');
             expect(preview).toBeTruthy();
 
             // Step 5: Save file - simulate the save action
             const saveButton = document.getElementById('save-file');
-            
+
             // Add event listener to simulate editor core integration
             saveButton.addEventListener('click', () => {
                 global.mockEditorCore.saveFile('test.md');
             });
-            
+
             simulateClick(saveButton);
 
             // Verify save workflow initiated
@@ -160,12 +162,12 @@ describe('End-to-End Integration Tests', () => {
 
             // Step 1: Open file
             const openButton = document.getElementById('open-file');
-            
+
             // Add event listener to simulate editor core integration
             openButton.addEventListener('click', () => {
                 global.mockEditorCore.loadFile();
             });
-            
+
             simulateClick(openButton);
 
             // Verify file loading initiated
@@ -177,12 +179,12 @@ describe('End-to-End Integration Tests', () => {
 
             // Step 3: Save changes
             const saveButton = document.getElementById('save-file');
-            
+
             // Add event listener to simulate editor core integration
             saveButton.addEventListener('click', () => {
                 global.mockEditorCore.saveFile();
             });
-            
+
             simulateClick(saveButton);
 
             expect(global.mockEditorCore.saveFile).toHaveBeenCalled();
@@ -190,7 +192,7 @@ describe('End-to-End Integration Tests', () => {
 
         test('should handle formatting workflow with multiple operations', () => {
             const editor = document.getElementById('editor');
-            
+
             // Add initial content
             simulateTyping(editor, 'Sample text for formatting');
 
@@ -217,7 +219,7 @@ describe('End-to-End Integration Tests', () => {
     describe('Performance with Large Documents', () => {
         test('should handle large document loading without performance degradation', () => {
             const startTime = performance.now();
-            
+
             // Create large document content (10,000 lines)
             const largeContent = Array(10000)
                 .fill(0)
@@ -225,12 +227,12 @@ describe('End-to-End Integration Tests', () => {
                 .join('\n');
 
             const editor = document.getElementById('editor');
-            
+
             // Simulate loading large content
             editor.textContent = largeContent;
-            
+
             const loadTime = performance.now() - startTime;
-            
+
             // Performance assertion - should load within reasonable time (< 1000ms)
             expect(loadTime).toBeLessThan(1000);
             expect(editor.textContent.length).toBeGreaterThan(500000);
@@ -238,19 +240,19 @@ describe('End-to-End Integration Tests', () => {
 
         test('should handle rapid typing in large documents', () => {
             const editor = document.getElementById('editor');
-            
+
             // Pre-populate with large content
             const baseContent = Array(5000).fill('Sample line content. ').join('\n');
             editor.textContent = baseContent;
 
             const startTime = performance.now();
-            
+
             // Simulate rapid typing (100 characters)
             const rapidText = 'A'.repeat(100);
             simulateTyping(editor, rapidText);
-            
+
             const typingTime = performance.now() - startTime;
-            
+
             // Should handle rapid typing efficiently (< 100ms)
             expect(typingTime).toBeLessThan(100);
             expect(editor.textContent).toContain(rapidText);
@@ -259,7 +261,7 @@ describe('End-to-End Integration Tests', () => {
         test('should handle preview updates with large content efficiently', () => {
             const editor = document.getElementById('editor');
             const preview = document.getElementById('preview');
-            
+
             // Large markdown content with various formatting
             const largeMarkdown = Array(1000)
                 .fill(0)
@@ -276,15 +278,15 @@ describe('End-to-End Integration Tests', () => {
                 .join('\n\n');
 
             const startTime = performance.now();
-            
+
             // Simulate content update and preview rendering
             editor.textContent = largeMarkdown;
-            
+
             // Simulate preview update (would be handled by actual preview logic)
             preview.innerHTML = largeMarkdown.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            
+
             const updateTime = performance.now() - startTime;
-            
+
             // Preview should update efficiently (< 500ms for large content)
             expect(updateTime).toBeLessThan(500);
             expect(preview.innerHTML.length).toBeGreaterThan(0);
@@ -292,29 +294,29 @@ describe('End-to-End Integration Tests', () => {
 
         test('should maintain memory efficiency with large documents', () => {
             const editor = document.getElementById('editor');
-            
+
             // Test memory usage with multiple large document operations
             const initialMemory = process.memoryUsage().heapUsed;
-            
+
             // Perform multiple operations with large content
             for (let i = 0; i < 10; i++) {
                 const content = Array(1000).fill(`Large content iteration ${i}`).join('\n');
                 editor.textContent = content;
-                
+
                 // Simulate cleanup
                 if (i % 3 === 0) {
                     editor.textContent = '';
                 }
             }
-            
+
             // Force garbage collection if available
             if (global.gc) {
                 global.gc();
             }
-            
+
             const finalMemory = process.memoryUsage().heapUsed;
             const memoryIncrease = finalMemory - initialMemory;
-            
+
             // Memory increase should be reasonable (< 50MB)
             expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
         });
@@ -326,7 +328,7 @@ describe('End-to-End Integration Tests', () => {
             const banner = document.querySelector('[role="banner"]');
             const main = document.querySelector('[role="main"]');
             const contentinfo = document.querySelector('[role="contentinfo"]');
-            
+
             expect(banner).toBeTruthy();
             expect(main).toBeTruthy();
             expect(contentinfo).toBeTruthy();
@@ -356,7 +358,7 @@ describe('End-to-End Integration Tests', () => {
             // Test file operation buttons
             const openButton = document.getElementById('open-file');
             const saveButton = document.getElementById('save-file');
-            
+
             expect(openButton.getAttribute('aria-label')).toBe('Open markdown file');
             expect(saveButton.getAttribute('aria-label')).toBe('Save markdown file');
 
@@ -364,7 +366,7 @@ describe('End-to-End Integration Tests', () => {
             const boldButton = document.querySelector('[data-format="bold"]');
             const italicButton = document.querySelector('[data-format="italic"]');
             const h1Button = document.querySelector('[data-format="h1"]');
-            
+
             expect(boldButton.getAttribute('aria-label')).toBe('Bold');
             expect(italicButton.getAttribute('aria-label')).toBe('Italic');
             expect(h1Button.getAttribute('aria-label')).toBe('Header 1');
@@ -376,7 +378,7 @@ describe('End-to-End Integration Tests', () => {
 
         test('should have proper editor accessibility attributes', () => {
             const editor = document.getElementById('editor');
-            
+
             expect(editor.getAttribute('role')).toBe('textbox');
             expect(editor.getAttribute('aria-multiline')).toBe('true');
             expect(editor.getAttribute('aria-label')).toBe('Markdown content editor');
@@ -385,9 +387,9 @@ describe('End-to-End Integration Tests', () => {
 
         test('should have proper live region for preview updates', () => {
             const preview = document.getElementById('preview');
-            
+
             expect(preview.getAttribute('aria-live')).toBe('polite');
-            
+
             // Test that preview updates would be announced to screen readers
             preview.textContent = 'Updated content';
             expect(preview.textContent).toBe('Updated content');
@@ -398,7 +400,7 @@ describe('End-to-End Integration Tests', () => {
             const interactiveElements = document.querySelectorAll(
                 'button, [contenteditable="true"], input'
             );
-            
+
             interactiveElements.forEach(element => {
                 // Elements should be focusable (not have tabindex="-1" unless intentional)
                 const tabIndex = element.getAttribute('tabindex');
@@ -416,7 +418,7 @@ describe('End-to-End Integration Tests', () => {
             const h1 = document.querySelector('h1');
             expect(h1).toBeTruthy();
             expect(h1.textContent).toBe('Markdown Editor');
-            
+
             // Verify no heading level skipping (would need to check actual content)
             const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
             expect(headings.length).toBeGreaterThan(0);
@@ -433,23 +435,23 @@ describe('End-to-End Integration Tests', () => {
         test('should handle focus management properly', () => {
             const editor = document.getElementById('editor');
             const boldButton = document.querySelector('[data-format="bold"]');
-            
+
             // Simulate focus events with manual activeElement management
             const focusEvent = new window.FocusEvent('focus');
-            
+
             // Add focus event listeners to simulate browser behavior
             editor.addEventListener('focus', () => {
                 document.activeElement = editor;
             });
-            
+
             boldButton.addEventListener('focus', () => {
                 document.activeElement = boldButton;
             });
-            
+
             // Test focus on editor
             editor.dispatchEvent(focusEvent);
             expect(document.activeElement).toBe(editor);
-            
+
             // Test focus on button
             boldButton.dispatchEvent(focusEvent);
             expect(document.activeElement).toBe(boldButton);
@@ -482,17 +484,17 @@ describe('End-to-End Integration Tests', () => {
             // Test with API available
             window.showOpenFilePicker = jest.fn();
             window.showSaveFilePicker = jest.fn();
-            
+
             expect(typeof window.showOpenFilePicker).toBe('function');
             expect(typeof window.showSaveFilePicker).toBe('function');
 
             // Test without API (fallback scenario)
             delete window.showOpenFilePicker;
             delete window.showSaveFilePicker;
-            
+
             expect(window.showOpenFilePicker).toBeUndefined();
             expect(window.showSaveFilePicker).toBeUndefined();
-            
+
             // Fallback elements should still be available
             const fileInput = document.getElementById('file-input');
             expect(fileInput).toBeTruthy();
@@ -510,10 +512,10 @@ describe('End-to-End Integration Tests', () => {
             // Simulate localStorage unavailable
             const originalLocalStorage = global.localStorage;
             global.localStorage = undefined;
-            
+
             // Application should handle gracefully
             expect(global.localStorage).toBeUndefined();
-            
+
             // Restore
             global.localStorage = originalLocalStorage;
         });
@@ -533,7 +535,7 @@ describe('End-to-End Integration Tests', () => {
 
     function simulateTyping(element, text) {
         element.textContent += text;
-        
+
         // Simulate input event
         const inputEvent = new window.InputEvent('input', {
             bubbles: true,

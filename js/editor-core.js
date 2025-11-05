@@ -64,7 +64,7 @@
     // Initialize DOM references
     MarkdownEditor.initElements = () => {
         const els = MarkdownEditor.elements;
-        
+
         els.editor = document.getElementById('editor');
         els.preview = document.getElementById('preview');
         els.editorHighlights = document.getElementById('editor-highlights');

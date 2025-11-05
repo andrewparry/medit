@@ -113,7 +113,7 @@
             const level = state.listStack.pop();
             state.listBuffer.push(`</${level.type}>`);
         }
-        
+
         if (state.listBuffer.length > 0) {
             output.push(state.listBuffer.join(''));
             state.listBuffer = [];
@@ -133,14 +133,14 @@
         const renderHtml = options.renderHtml || false;
         const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
         const output = [];
-        const state = { 
+        const state = {
             listStack: [],  // Stack of { type: 'ul'|'ol', indent: number }
             listBuffer: []  // Buffer for building nested list HTML
         };
         let inCodeBlock = false;
         let codeFenceBuffer = [];
         let codeBlockLanguage = '';
-        
+
         // Footnotes: map identifier -> { number, text }
         const footnoteDefs = new Map();
         const footnoteRefs = new Map(); // identifier -> number (assigned in order of first reference appearance)
@@ -215,7 +215,7 @@
             // Check for list items (ordered or unordered) with indentation support
             // Convert tabs to 4 spaces for consistent handling
             const normalizedLine = line.replace(/\t/g, '    ');
-            
+
             // Check for checkbox syntax first: - [ ] or - [x] or - [X]
             const checkboxMatch = normalizedLine.match(/^(\s*)([-*+])\s+\[([xX ])\]\s+(.*)$/);
             if (checkboxMatch) {
@@ -225,13 +225,13 @@
                 const content = checkboxMatch[4];
                 const listType = 'ul';
                 const level = Math.floor(indent / 2); // 2 spaces = 1 level
-                
+
                 // Step 1: Close any lists deeper than our target level
                 while (state.listStack.length > level + 1) {
                     const closedLevel = state.listStack.pop();
                     state.listBuffer.push(`</li></${closedLevel.type}>`);
                 }
-                
+
                 // Step 2: Determine if we need to open new lists or continue existing ones
                 if (state.listStack.length === 0) {
                     // No lists open - start top-level list
@@ -259,13 +259,13 @@
                         state.listBuffer.push('</li>');
                     }
                 }
-                
+
                 // Add the list item with checkbox
                 const checkboxAttr = checked ? ' checked' : '';
                 state.listBuffer.push(`<li><input type="checkbox"${checkboxAttr} disabled> ${parseInline(content, footnoteRefs, renderHtml)}`);
                 continue;
             }
-            
+
             // Check for regular list items (ordered or unordered)
             const listMatch = normalizedLine.match(/^(\s*)([-*+]|\d+\.)\s+(.*)$/);
             if (listMatch) {
@@ -274,17 +274,17 @@
                 const content = listMatch[3];
                 const listType = /^\d+\.$/.test(marker) ? 'ol' : 'ul';
                 const level = Math.floor(indent / 2); // 2 spaces = 1 level
-                
+
                 // FIX: Completely rewritten list handling logic
                 // The key insight: We should ONLY open a new nested list when going DEEPER,
                 // not when seeing the FIRST item at a level we just jumped to.
-                
+
                 // Step 1: Close any lists deeper than our target level
                 while (state.listStack.length > level + 1) {
                     const closedLevel = state.listStack.pop();
                     state.listBuffer.push(`</li></${closedLevel.type}>`);
                 }
-                
+
                 // Step 2: Determine if we need to open new lists or continue existing ones
                 if (state.listStack.length === 0) {
                     // No lists open - start top-level list
@@ -312,7 +312,7 @@
                         state.listBuffer.push('</li>');
                     }
                 }
-                
+
                 // Add the list item
                 state.listBuffer.push(`<li>${parseInline(content, footnoteRefs, renderHtml)}`);
                 continue;
@@ -324,7 +324,7 @@
                 closeListIfNeeded(state, output);
                 const identifier = footnoteDefMatch[1];
                 const footnoteText = footnoteDefMatch[2];
-                
+
                 // Assign number to this footnote
                 // Standard markdown: numbers are assigned in order of first reference appearance
                 // If this identifier was referenced before, it should already be in footnoteRefs (possibly with null)
@@ -337,7 +337,7 @@
                     footnoteRefs.set(identifier, footnoteCounter++);
                 }
                 // If identifier already has a number, keep it (definition was encountered after reference)
-                
+
                 // Store the definition
                 footnoteDefs.set(identifier, {
                     number: footnoteRefs.get(identifier),
@@ -377,17 +377,17 @@
             output.push('<div class="footnotes">');
             output.push('<hr>');
             output.push('<ol>');
-            
+
             // Sort footnotes by their number for consistent ordering
             const sortedFootnotes = Array.from(footnoteDefs.entries())
                 .sort((a, b) => a[1].number - b[1].number);
-            
+
             for (const [identifier, def] of sortedFootnotes) {
                 const safeId = escapeAttribute(identifier);
                 const footnoteText = parseInline(def.text, footnoteRefs, renderHtml);
                 output.push(`<li id="fn-${safeId}">${footnoteText} <a href="#fnref-${safeId}" class="footnote-backref">↩</a></li>`);
             }
-            
+
             output.push('</ol>');
             output.push('</div>');
         }

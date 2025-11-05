@@ -340,7 +340,7 @@ describe('Custom Accessible Dialogs', () => {
             const form = body.querySelector('form');
             const input = form.querySelector('input');
             input.value = 'test value';
-            
+
             const submitEvent = new window.Event('submit', { bubbles: true, cancelable: true });
             form.dispatchEvent(submitEvent);
 
@@ -368,7 +368,7 @@ describe('Custom Accessible Dialogs', () => {
             const form = body.querySelector('form');
             const input = form.querySelector('input');
             input.value = '';
-            
+
             const submitEvent = new window.Event('submit', { bubbles: true, cancelable: true });
             form.dispatchEvent(submitEvent);
 
@@ -382,7 +382,7 @@ describe('Custom Accessible Dialogs', () => {
 
             const form = body.querySelector('form');
             const input = form.querySelector('input');
-            
+
             expect(input.type).toBe('url');
 
             const cancelButton = form.querySelectorAll('button')[0];
@@ -397,7 +397,7 @@ describe('Custom Accessible Dialogs', () => {
             const form = body.querySelector('form');
             const input = form.querySelector('input');
             input.value = '  test  ';
-            
+
             const submitEvent = new window.Event('submit', { bubbles: true, cancelable: true });
             form.dispatchEvent(submitEvent);
 
@@ -482,7 +482,7 @@ describe('Custom Accessible Dialogs', () => {
 
             const dialog = body.querySelector('.dialog-surface');
             expect(dialog.getAttribute('aria-labelledby')).toBeTruthy();
-            
+
             const titleId = dialog.getAttribute('aria-labelledby');
             const titleElement = document.getElementById(titleId);
             expect(titleElement).not.toBeNull();

@@ -1,16 +1,57 @@
 {
   "name": "markdown-wysiwyg-editor",
   "version": "1.0.0",
-  "description": "A browser-based markdown WYSIWYG editor",
-  "main": "js/editor.js",
+  "description": "A browser-based markdown WYSIWYG editor with real-time preview, local file management, and offline functionality",
+  "main": "index.html",
+  "keywords": [
+    "markdown",
+    "editor",
+    "wysiwyg",
+    "browser-based",
+    "offline",
+    "markdown-editor",
+    "text-editor",
+    "javascript",
+    "html5"
+  ],
+  "author": "Andrew Parry",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andrewparry/medit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andrewparry/medit/issues"
+  },
+  "homepage": "https://github.com/andrewparry/medit#readme",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "lint": "eslint \"js/**/*.js\" \"test/**/*.js\" --ignore-path .gitignore",
+    "lint:fix": "eslint \"js/**/*.js\" \"test/**/*.js\" --fix --ignore-path .gitignore",
+    "format": "prettier --write \"**/*.{js,json,md,css,html}\"",
+    "format:check": "prettier --check \"**/*.{js,json,md,css,html}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix --ignore-path .gitignore",
+      "prettier --write"
+    ],
+    "*.{json,md,css,html}": [
+      "prettier --write --ignore-path .gitignore"
+    ]
   },
   "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.27.1",
+    "eslint": "^8.57.0",
+    "husky": "^9.1.7",
     "jest": "^29.0.0",
-    "jsdom": "^22.0.0"
+    "jsdom": "^22.0.0",
+    "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2"
   },
   "jest": {
     "testEnvironment": "node",

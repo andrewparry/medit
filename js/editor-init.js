@@ -92,12 +92,12 @@
 
                 // Get plain text from clipboard (ignore HTML/images)
                 const pastedText = clipboardData.getData('text/plain');
-                
+
                 // Check if we have URL detection utilities
                 if (!MarkdownEditor.utils || !MarkdownEditor.utils.isValidUrl) {
                     return;
                 }
-                
+
                 if (!MarkdownEditor.formatting || !MarkdownEditor.formatting.replaceSelection) {
                     return;
                 }
@@ -106,22 +106,22 @@
                 if (MarkdownEditor.utils.isValidUrl(pastedText)) {
                     // Prevent default paste behavior
                     event.preventDefault();
-                    
+
                     // Convert URL to markdown link format: [url](url)
                     const originalUrl = pastedText.trim();
                     let linkUrl = originalUrl;
-                    
+
                     // If URL doesn't have a protocol, add https:// for the href
                     if (!/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(linkUrl)) {
                         linkUrl = `https://${linkUrl}`;
                     }
-                    
+
                     // Use original text as display text, full URL as href
                     const linkMarkdown = `[${originalUrl}](${linkUrl})`;
-                    
+
                     // Insert the markdown link using replaceSelection
                     MarkdownEditor.formatting.replaceSelection(linkMarkdown, linkMarkdown.length);
-                    
+
                     // Show brief status message
                     if (elements.autosaveStatus) {
                         const originalStatus = elements.autosaveStatus.textContent;
@@ -279,7 +279,9 @@
                 });
                 elements.findInput.addEventListener('blur', () => {
                     const q = elements.findInput.value.trim();
-                    if (!q) return;
+                    if (!q) {
+                        return;
+                    }
                     MarkdownEditor.searchState.lastIndex = 0;
                     MarkdownEditor.searchState.freshQuery = true;
                     if (MarkdownEditor.syntaxHighlight) {
@@ -288,7 +290,7 @@
                     MarkdownEditor.findReplace.findInEditor(1);
                 });
             }
-            
+
             // Find options
             [elements.findCase, elements.findRegex, elements.findWhole].forEach((el) => {
                 if (el) {
@@ -339,7 +341,7 @@
         if (MarkdownEditor.preview) {
             MarkdownEditor.preview.initializePreviewState();
         }
-        
+
         // Initialize HTML rendering preference
         if (window.localStorage && state) {
             try {

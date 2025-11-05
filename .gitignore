@@ -1,0 +1,34 @@
+# Development tools
+.kiro/
+.vscode/
+
+# Dependencies
+node_modules/
+
+# Testing
+coverage/
+
+# Build artifacts
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+*.swp
+*.swo
+*~
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local

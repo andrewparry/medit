@@ -96,44 +96,46 @@
      * Insert a horizontal rule (or remove it if cursor is on one - toggle behavior)
      */
     const insertHorizontalRule = () => {
-        if (!elements.editor) return;
+        if (!elements.editor) {
+            return;
+        }
 
         const { start, end, value } = utils.getSelection();
-        
+
         // Find the current line
         const lineStart = value.lastIndexOf('\n', start - 1) + 1;
         const lineEnd = value.indexOf('\n', start);
         const actualLineEnd = lineEnd === -1 ? value.length : lineEnd;
         const lineText = value.slice(lineStart, actualLineEnd);
-        
+
         // Check if cursor is on a horizontal rule line (---, ***, or ___)
         const hrPattern = /^(\*\s*\*\s*\*[\s*]*|_\s*_\s*_[\s_]*|-\s*-\s*-[\s-]*)$/;
         if (hrPattern.test(lineText.trim())) {
             // TOGGLE OFF: Remove the horizontal rule line
             const before = value.slice(0, lineStart);
             const after = value.slice(actualLineEnd);
-            
+
             // Remove the line and any extra blank lines around it
             let newBefore = before;
             let newAfter = after;
-            
+
             // Remove trailing newline from before if it ends with double newline
             if (newBefore.endsWith('\n\n')) {
                 newBefore = newBefore.slice(0, -1);
             }
-            
+
             // Remove leading newline from after if present
             if (newAfter.startsWith('\n')) {
                 newAfter = newAfter.slice(1);
             }
-            
+
             elements.editor.value = newBefore + newAfter;
-            
+
             // Position cursor where the HR was
             const newCursorPos = newBefore.length;
             elements.editor.setSelectionRange(newCursorPos, newCursorPos);
             elements.editor.focus({ preventScroll: true });
-            
+
             // Trigger updates
             if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
                 MarkdownEditor.preview.updatePreview();
@@ -153,10 +155,10 @@
             if (MarkdownEditor.history && MarkdownEditor.history.pushHistory) {
                 MarkdownEditor.history.pushHistory();
             }
-            
+
             return;
         }
-        
+
         // TOGGLE ON: Insert horizontal rule
         const before = value.slice(0, start);
         const after = value.slice(end);
@@ -176,26 +178,28 @@
      * Insert a footnote (or remove if cursor is on a footnote reference)
      */
     const insertFootnote = async () => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
         const hadFocus = document.activeElement === elements.editor;
-        
+
         const { start, end, value } = utils.getSelection();
-        
+
         // Check if cursor is on a footnote reference [^identifier]
         const footnotePattern = /\[\^([^\]]+)\]/g;
         const footnoteMatches = Array.from(value.matchAll(footnotePattern));
-        
+
         let footnoteToRemove = null;
         for (const match of footnoteMatches) {
             const matchStart = match.index;
             const matchEnd = matchStart + match[0].length;
-            
+
             // Check if cursor or selection is within or touches the footnote reference
-            if ((start >= matchStart && start <= matchEnd) || 
+            if ((start >= matchStart && start <= matchEnd) ||
                 (end >= matchStart && end <= matchEnd) ||
                 (start <= matchStart && end >= matchEnd)) {
                 footnoteToRemove = {
@@ -207,28 +211,28 @@
                 break;
             }
         }
-        
+
         // TOGGLE OFF: Remove footnote reference and definition (if no other references exist)
         if (footnoteToRemove) {
             const identifier = footnoteToRemove.identifier;
-            
+
             // Remove the reference
             const before = value.slice(0, footnoteToRemove.matchStart);
             const after = value.slice(footnoteToRemove.matchEnd);
             let newValue = before + after;
-            
+
             // Check if there are any other references to this footnote
             const escapedIdentifier = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const refPattern = new RegExp(`\\[\\^${escapedIdentifier}\\]`, 'g');
             const remainingRefs = newValue.match(refPattern);
-            
+
             // Only remove definition if no other references exist
             if (!remainingRefs || remainingRefs.length === 0) {
                 // Find and remove the definition: [^identifier]: text
                 // Search line by line for more reliable matching
                 const lines = newValue.split('\n');
                 let defLineIndex = -1;
-                
+
                 // Find the definition line
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i];
@@ -239,11 +243,11 @@
                         break;
                     }
                 }
-                
+
                 if (defLineIndex >= 0) {
                     // Remove the definition line
                     lines.splice(defLineIndex, 1);
-                    
+
                     // Clean up extra blank lines that might have been around the definition
                     // Remove blank line after definition if present
                     if (defLineIndex < lines.length && lines[defLineIndex].trim() === '') {
@@ -253,47 +257,47 @@
                     if (defLineIndex > 0 && lines[defLineIndex - 1].trim() === '') {
                         lines.splice(defLineIndex - 1, 1);
                     }
-                    
+
                     newValue = lines.join('\n');
                 }
             }
-            
+
             // Update editor
             elements.editor.value = newValue;
-            
+
             // Calculate new cursor position (after removed reference)
             const newCursorPos = Math.min(footnoteToRemove.matchStart, newValue.length);
             elements.editor.setSelectionRange(newCursorPos, newCursorPos);
-            
+
             // ✅ IMMEDIATE scroll lock #1 (after content change)
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
             if (!hadFocus) {
                 elements.editor.focus({ preventScroll: true });
             }
-            
+
             // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             // ✅ TRIPLE RAF for maximum browser compatibility
             requestAnimationFrame(() => {
                 elements.editor.scrollTop = scrollTop;
                 elements.editor.scrollLeft = scrollLeft;
-                
+
                 requestAnimationFrame(() => {
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
-                    
+
                     requestAnimationFrame(() => {
                         elements.editor.scrollTop = scrollTop;
                         elements.editor.scrollLeft = scrollLeft;
                     });
                 });
             });
-            
+
             // Trigger updates
             if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
                 MarkdownEditor.preview.updatePreview();
@@ -313,10 +317,10 @@
             if (MarkdownEditor.history && MarkdownEditor.history.pushHistory) {
                 MarkdownEditor.history.pushHistory();
             }
-            
+
             return;
         }
-        
+
         // TOGGLE ON: Insert new footnote
         const selectedText = value.slice(start, end);
 
@@ -357,15 +361,15 @@
 
         // Insert footnote reference at cursor
         const footnoteRef = `[^${identifier}]`;
-        
+
         // Check if footnote definition already exists
         const escapedIdentifier = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const footnoteDefPattern = new RegExp(`^\\[\\^${escapedIdentifier}\\]:\\s*`, 'm');
         const hasDefinition = footnoteDefPattern.test(value);
-        
+
         // Insert reference
         formatting.replaceSelection(footnoteRef, footnoteRef.length);
-        
+
         // If definition doesn't exist, add it at the end of the document
         if (!hasDefinition) {
             // Wait a bit for the reference to be inserted
@@ -374,12 +378,12 @@
                 const footnoteDef = `\n\n[^${identifier}]: ${footnoteText}`;
                 const newValue = currentValue + footnoteDef;
                 elements.editor.value = newValue;
-                
+
                 // Position cursor back at the reference location
                 const refPos = start + footnoteRef.length;
                 elements.editor.setSelectionRange(refPos, refPos);
                 elements.editor.focus({ preventScroll: true });
-                
+
                 // Trigger updates
                 if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
                     MarkdownEditor.preview.updatePreview();
@@ -406,8 +410,10 @@
      * Insert a table
      */
     const insertTable = async () => {
-        if (!elements.editor || !elements.autosaveStatus) return;
-        
+        if (!elements.editor || !elements.autosaveStatus) {
+            return;
+        }
+
         const { start, end, value } = utils.getSelection();
         const before = value.slice(0, start);
         const after = value.slice(end);
@@ -437,8 +443,8 @@
             return Number.isFinite(n) ? n : def;
         };
 
-        let cols = Math.max(1, Math.min(12, toInt(result.cols, 2)));
-        let rows = Math.max(1, Math.min(50, toInt(result.rows, 2)));
+        const cols = Math.max(1, Math.min(12, toInt(result.cols, 2)));
+        const rows = Math.max(1, Math.min(50, toInt(result.rows, 2)));
         const headerYes = String(result.header || 'yes').trim().toLowerCase();
         const includeHeader = headerYes === 'y' || headerYes === 'yes' || headerYes === 'true' || headerYes === '1';
 

@@ -1,6 +1,14 @@
 # Markdown Editor
 
+[![CI Status](https://github.com/andrewparry/medit/workflows/CI/badge.svg)](https://github.com/andrewparry/medit/actions)
+[![Lint Status](https://github.com/andrewparry/medit/workflows/Lint/badge.svg)](https://github.com/andrewparry/medit/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![GitHub release](https://img.shields.io/github/release/andrewparry/medit.svg)](https://github.com/andrewparry/medit/releases)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 A fully functional browser-based markdown WYSIWYG (What You See Is What You Get) editor that allows users to create, edit, and save markdown files locally. The editor provides a seamless editing experience with real-time preview capabilities and local file management.
+
+**✨ [Try it online](https://andrewparry.github.io/medit/) ✨**
 
 ## Features
 
@@ -44,19 +52,20 @@ A fully functional browser-based markdown WYSIWYG (What You See Is What You Get)
 - **HTML Rendering**: Toggle HTML rendering in preview (Ctrl+Shift+H)
 - **CommonMark compatible output**: Standard markdown syntax throughout
 
-## Installation
+## 🚀 Quick Start
 
-### Prerequisites
+### Try Online
 
-- A modern web browser (Chrome, Firefox, Safari, Edge)
-- No server or additional software required
+The easiest way to start using the editor is to [try the online demo](https://andrewparry.github.io/medit/) - no installation required!
 
-### Quick Start
+### Local Installation
+
+**Prerequisites:** A modern web browser (Chrome, Firefox, Safari, or Edge)
 
 1. **Clone or download the repository:**
    ```bash
-   git clone <repository-url>
-   cd mdedit
+   git clone https://github.com/andrewparry/medit.git
+   cd medit
    ```
 
 2. **Open the editor:**
@@ -335,34 +344,43 @@ Files are saved in standard markdown format (.md) and are compatible with any ma
 - **Firefox**: File System Access API not supported, uses fallback methods
 - **Mobile browsers**: Touch interactions may differ from desktop experience
 
-## Contributing
+## 🤝 Contributing
 
-We welcome contributions! Please follow these guidelines:
+We welcome contributions! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
 
-### Development Workflow
+### How to Contribute
 
-1. Run existing tests to ensure they pass: `npm test`
-2. Create a feature branch for your changes
-3. Make your changes following the existing code style
-4. Add tests for new functionality
-5. Ensure all tests pass: `npm test`
-6. Update documentation as needed (README, DEVELOPER_GUIDE.md)
-7. Submit a pull request with a clear description of changes
+1. **Fork the repository** and create your branch from `main`
+2. **Make your changes** following our coding standards
+3. **Add tests** for any new functionality
+4. **Ensure all tests pass**: `npm test`
+5. **Submit a pull request** with a clear description
 
-### Code Style
+For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-- Use 4 spaces for indentation
-- Use single quotes for strings
-- Add JSDoc comments for functions
-- Keep functions small and focused
-- Follow the existing modular architecture pattern
+### Development Setup
 
-### Testing
+```bash
+# Clone your fork
+git clone https://github.com/YOUR-USERNAME/medit.git
+cd medit
 
-- Write tests for new features in the `test/` directory
-- Use descriptive test names
-- Ensure edge cases are covered
-- Run tests before submitting: `npm test`
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Run linting
+npm run lint
+```
+
+### Code Quality
+
+- ESLint for code linting: `npm run lint`
+- Prettier for formatting: `npm run format`
+- Pre-commit hooks ensure code quality
+- 340 comprehensive tests with high coverage
 
 ## License
 
@@ -403,7 +421,29 @@ For issues, questions, or contributions:
 - Check the browser console for error messages
 - Review recent fixes and improvements in the project documentation files
 
-## Related Documentation
+## 📚 Documentation
 
-- [Developer Guide](DEVELOPER_GUIDE.md) - Detailed implementation guide for developers
-- [Testing Instructions](TESTING_INSTRUCTIONS.md) - Manual testing scenarios and checklists
+- **[README](README.md)** - Project overview and quick start (you are here)
+- **[CONTRIBUTING](CONTRIBUTING.md)** - Contribution guidelines and development setup
+- **[DEVELOPER_GUIDE](DEVELOPER_GUIDE.md)** - Detailed implementation guide for developers
+- **[TESTING_INSTRUCTIONS](TESTING_INSTRUCTIONS.md)** - Manual testing scenarios and checklists
+- **[CHANGELOG](CHANGELOG.md)** - Version history and changes
+- **[CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)** - Community guidelines
+- **[SECURITY](SECURITY.md)** - Security policy and reporting vulnerabilities
+
+## 🌟 Star History
+
+If you find this project useful, please consider giving it a star on GitHub!
+
+[![Star History Chart](https://api.star-history.com/svg?repos=andrewparry/medit&type=Date)](https://star-history.com/#andrewparry/medit&Date)
+
+## 🙏 Acknowledgments
+
+- **[Prism.js](https://prismjs.com/)** - Syntax highlighting
+- **Contributors** - Thank you to everyone who has contributed to this project!
+
+## 📞 Support & Community
+
+- **Issues**: [Report bugs or request features](https://github.com/andrewparry/medit/issues)
+- **Discussions**: [Ask questions and share ideas](https://github.com/andrewparry/medit/discussions)
+- **Security**: [Report security vulnerabilities](SECURITY.md)

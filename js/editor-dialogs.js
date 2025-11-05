@@ -48,7 +48,9 @@
         const cleanup = () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.removeChild(overlay);
-            if (elements.editor) elements.editor.focus();
+            if (elements.editor) {
+                elements.editor.focus();
+            }
         };
 
         const handleKeyDown = (event) => {
@@ -121,7 +123,9 @@
         const cleanup = () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.removeChild(overlay);
-            if (elements.editor) elements.editor.focus();
+            if (elements.editor) {
+                elements.editor.focus();
+            }
         };
 
         const handleChoice = (confirmed) => {
@@ -216,7 +220,9 @@
         const cleanup = () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.removeChild(overlay);
-            if (elements.editor) elements.editor.focus();
+            if (elements.editor) {
+                elements.editor.focus();
+            }
         };
 
         const handleSubmit = (value) => {
@@ -352,7 +358,9 @@
         const cleanup = () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.removeChild(overlay);
-            if (elements.editor) elements.editor.focus();
+            if (elements.editor) {
+                elements.editor.focus();
+            }
         };
 
         const handleSubmit = () => {
@@ -521,7 +529,7 @@
      */
     const showQuotaExceededDialog = () => new Promise((resolve) => {
         const state = MarkdownEditor.state;
-        
+
         if (state.quotaExceededShown) {
             resolve('ignored');
             return;
@@ -555,7 +563,9 @@
         const cleanup = () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.removeChild(overlay);
-            if (elements.editor) elements.editor.focus();
+            if (elements.editor) {
+                elements.editor.focus();
+            }
         };
 
         const handleChoice = (choice) => {
@@ -646,7 +656,9 @@
         const cleanup = () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.removeChild(overlay);
-            if (elements.editor) elements.editor.focus();
+            if (elements.editor) {
+                elements.editor.focus();
+            }
         };
 
         const handleExport = (format) => {

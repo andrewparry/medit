@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+.husky/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Minified files
+*.min.js
+*.min.css
+
+# Package files
+package-lock.json
+
+# Cache
+.cache/
+
+# Generated files
+TRANSFORMATION_COMPLETE.md
+

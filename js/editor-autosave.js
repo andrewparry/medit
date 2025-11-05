@@ -27,16 +27,16 @@
                 state.quotaExceededShown = false;
             } catch (error) {
                 console.error('Autosave failed', error);
-                
+
                 // Check if it's a quota exceeded error
                 if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED' || error.code === 22) {
                     if (elements.autosaveStatus) {
                         elements.autosaveStatus.textContent = 'Storage full - autosave unavailable';
                     }
-                    
+
                     // Show dialog with options
                     const choice = await MarkdownEditor.dialogs.showQuotaExceededDialog();
-                    
+
                     switch (choice) {
                         case 'clear':
                             if (clearAllAutosaveData()) {

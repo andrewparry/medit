@@ -20,7 +20,7 @@
         if (!markdown || typeof markdown !== 'string') {
             return '';
         }
-        
+
         return markdown
             .replace(/```[\s\S]*?```/g, ' ')
             .replace(/`[^`]*`/g, ' ')
@@ -45,8 +45,10 @@
      * Update word and character counters
      */
     const updateCounters = () => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         const content = elements.editor.value || '';
         const plain = stripMarkdown(content);
         const normalized = normalizeWhitespace(plain);
@@ -81,7 +83,9 @@
      * Get current selection from editor
      */
     const getSelection = () => {
-        if (!elements.editor) return { start: 0, end: 0, value: '' };
+        if (!elements.editor) {
+            return { start: 0, end: 0, value: '' };
+        }
         return {
             start: elements.editor.selectionStart,
             end: elements.editor.selectionEnd,
@@ -93,25 +97,27 @@
      * Set selection range in editor
      */
     const setSelection = (start, end) => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // Preserve scroll position to prevent document shifting
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
-        
+
         // Set selection
         elements.editor.focus();
         elements.editor.setSelectionRange(start, end);
-        
+
         // Immediately restore scroll position
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // Ensure scroll stays in place after browser processing
         requestAnimationFrame(() => {
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             // Double-check in next frame for Firefox
             requestAnimationFrame(() => {
                 elements.editor.scrollTop = scrollTop;
@@ -124,8 +130,10 @@
      * Handle filename editing
      */
     const handleFilenameEdit = () => {
-        if (!elements.fileNameDisplay) return;
-        
+        if (!elements.fileNameDisplay) {
+            return;
+        }
+
         elements.fileNameDisplay.contentEditable = 'true';
         elements.fileNameDisplay.dataset.originalName = elements.fileNameDisplay.textContent.trim();
         elements.fileNameDisplay.focus();
@@ -140,12 +148,14 @@
      * Finalize filename editing
      */
     const finalizeFilename = () => {
-        if (!elements.fileNameDisplay) return;
-        
+        if (!elements.fileNameDisplay) {
+            return;
+        }
+
         elements.fileNameDisplay.textContent = elements.fileNameDisplay.textContent.trim() || 'Untitled.md';
         elements.fileNameDisplay.contentEditable = 'false';
         delete elements.fileNameDisplay.dataset.originalName;
-        
+
         // Trigger autosave if available
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
@@ -169,30 +179,30 @@
         if (!text || typeof text !== 'string') {
             return false;
         }
-        
+
         // Trim whitespace
         const trimmed = text.trim();
         if (!trimmed) {
             return false;
         }
-        
+
         // Check if it contains whitespace (URLs shouldn't have spaces)
         if (/\s/.test(trimmed)) {
             return false;
         }
-        
+
         // Pattern for URLs with protocol (http://, https://, ftp://, etc.)
         const protocolPattern = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
-        
+
         // Pattern for URLs without protocol but with domain
         const domainPattern = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/;
-        
+
         // Pattern for URLs starting with www.
         const wwwPattern = /^www\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(\/.*)?$/;
-        
+
         // Pattern for localhost or IP addresses
         const localhostPattern = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(\/.*)?$/;
-        
+
         // Check if it matches any URL pattern
         if (protocolPattern.test(trimmed)) {
             try {
@@ -203,7 +213,7 @@
                 return false;
             }
         }
-        
+
         // Check domain patterns (without protocol)
         if (domainPattern.test(trimmed) || wwwPattern.test(trimmed) || localhostPattern.test(trimmed)) {
             // Try to construct URL with https:// prefix
@@ -214,7 +224,7 @@
                 return false;
             }
         }
-        
+
         return false;
     };
 

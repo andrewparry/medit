@@ -1,0 +1,9 @@
+blank_issues_enabled: true
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/andrewparry/medit/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: Documentation
+    url: https://github.com/andrewparry/medit#readme
+    about: Read the documentation and user guides
+

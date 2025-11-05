@@ -12,7 +12,7 @@ async function measureExecutionTime(fn) {
     const startTime = performance.now();
     const result = await fn();
     const endTime = performance.now();
-    
+
     return {
         result,
         duration: endTime - startTime
@@ -35,24 +35,24 @@ function generateLargeMarkdownContent(lines = 1000, options = {}) {
     } = options;
 
     const contentTypes = [];
-    
+
     if (includeHeaders) {
         contentTypes.push((i) => `# Header ${i}\n## Subheader ${i}\n### Sub-subheader ${i}`);
     }
-    
+
     if (includeLists) {
         contentTypes.push((i) => `- List item ${i}\n  - Nested item ${i}.1\n  - Nested item ${i}.2`);
         contentTypes.push((i) => `1. Numbered item ${i}\n2. Numbered item ${i + 1}\n3. Numbered item ${i + 2}`);
     }
-    
+
     if (includeLinks) {
         contentTypes.push((i) => `This is a paragraph with a [link ${i}](http://example.com/${i}) in it.`);
     }
-    
+
     if (includeCode) {
         contentTypes.push((i) => `Here is some \`inline code ${i}\` and a code block:\n\n\`\`\`javascript\nfunction test${i}() {\n  return ${i};\n}\n\`\`\``);
     }
-    
+
     if (includeImages) {
         contentTypes.push((i) => `![Image ${i}](http://example.com/image${i}.jpg "Image ${i} description")`);
     }
@@ -66,7 +66,7 @@ function generateLargeMarkdownContent(lines = 1000, options = {}) {
     for (let i = 0; i < lines; i++) {
         const typeIndex = i % contentTypes.length;
         content.push(contentTypes[typeIndex](i));
-        
+
         // Add some spacing
         if (i % 10 === 9) {
             content.push('');
@@ -85,10 +85,10 @@ function generateLargeMarkdownContent(lines = 1000, options = {}) {
  */
 async function simulateRapidInput(element, text, delay = 1) {
     const startTime = performance.now();
-    
+
     for (let i = 0; i < text.length; i++) {
         element.textContent += text[i];
-        
+
         // Simulate input event
         const inputEvent = new InputEvent('input', {
             bubbles: true,
@@ -97,12 +97,12 @@ async function simulateRapidInput(element, text, delay = 1) {
             data: text[i]
         });
         element.dispatchEvent(inputEvent);
-        
+
         if (delay > 0) {
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
-    
+
     return performance.now() - startTime;
 }
 
@@ -114,7 +114,7 @@ function getMemoryUsage() {
     if (typeof process !== 'undefined' && process.memoryUsage) {
         return process.memoryUsage();
     }
-    
+
     // Browser environment fallback
     if (performance.memory) {
         return {
@@ -123,7 +123,7 @@ function getMemoryUsage() {
             heapLimit: performance.memory.jsHeapSizeLimit
         };
     }
-    
+
     return {
         heapUsed: 0,
         heapTotal: 0,
@@ -155,7 +155,7 @@ async function runBenchmark(name, fn, options = {}) {
 
     for (let i = 0; i < iterations; i++) {
         const iterationStart = performance.now();
-        
+
         // Check if we've exceeded max duration
         if (iterationStart - startTime > maxDuration) {
             break;
@@ -164,9 +164,9 @@ async function runBenchmark(name, fn, options = {}) {
         const memoryBefore = getMemoryUsage();
         await fn();
         const memoryAfter = getMemoryUsage();
-        
+
         const iterationEnd = performance.now();
-        
+
         results.push({
             iteration: i + 1,
             duration: iterationEnd - iterationStart,

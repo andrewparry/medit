@@ -12,29 +12,31 @@
      * Replace the current textarea selection while optionally restoring a custom selection range
      */
     const replaceSelection = (text, selectionRange) => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // ✅ CRITICAL: Capture scroll BEFORE any operations
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
         const hadFocus = document.activeElement === elements.editor;
-        
+
         // Capture pre-change snapshot
         if (history && history.pushHistory) {
             history.pushHistory();
         }
-        
+
         const { start, end, value } = utils.getSelection();
         const before = value.slice(0, start);
         const after = value.slice(end);
-        
+
         // ✅ Modify content
         elements.editor.value = `${before}${text}${after}`;
-        
+
         // ✅ IMMEDIATE scroll lock #1 (after content change)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         let newStart;
         let newEnd;
 
@@ -51,30 +53,30 @@
         if (!hadFocus) {
             elements.editor.focus({ preventScroll: true });
         }
-        
+
         // ✅ Set selection
         elements.editor.setSelectionRange(newStart, newEnd);
-        
+
         // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ TRIPLE RAF for maximum browser compatibility
         requestAnimationFrame(() => {
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             requestAnimationFrame(() => {
                 elements.editor.scrollTop = scrollTop;
                 elements.editor.scrollLeft = scrollLeft;
-                
+
                 requestAnimationFrame(() => {
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
                 });
             });
         });
-        
+
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
         }
@@ -87,7 +89,7 @@
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
         }
-        
+
         // Capture post-change snapshot
         if (history && history.pushHistory) {
             history.pushHistory();
@@ -98,11 +100,13 @@
      * Detect formatting at cursor position
      */
     const detectFormatting = () => {
-        if (!elements.editor) return {};
-        
+        if (!elements.editor) {
+            return {};
+        }
+
         const { start, end, value } = utils.getSelection();
         const hasSelection = start !== end;
-        
+
         const formatting = {
             bold: false,
             italic: false,
@@ -131,7 +135,7 @@
             // Check if selection is wrapped with bold markers
             const beforeSelection = value.slice(Math.max(0, start - 3), start);
             const afterSelection = value.slice(end, Math.min(value.length, end + 3));
-            
+
             formatting.bold = (beforeSelection.endsWith('**') && afterSelection.startsWith('**')) ||
                               (beforeSelection.endsWith('__') && afterSelection.startsWith('__')) ||
                               (beforeSelection.endsWith('***') && afterSelection.startsWith('***'));
@@ -140,13 +144,13 @@
             // Pattern for bold: **text**, __text__, or ***text*** (bold+italic)
             const boldPattern = /(\*\*\*|\*\*|__)((?:(?!\1).)+?)\1/g;
             const matches = Array.from(value.matchAll(boldPattern));
-            
+
             for (const match of matches) {
                 const matchStart = match.index;
                 const marker = match[1];
                 const content = match[2];
                 const matchEnd = matchStart + marker.length + content.length + marker.length;
-                
+
                 // Check if cursor is anywhere within the bold region (including markers)
                 if (start >= matchStart && start <= matchEnd) {
                     // Verify it's actually bold (not just italic with ***)
@@ -165,7 +169,7 @@
         } else {
             const italicPattern = /(?<!\*)\*[^*]+\*(?!\*)|(?<!_)_[^_]+_(?!_)/g;
             const italicMatches = value.match(italicPattern) || [];
-            
+
             let isInsideItalic = false;
             for (const match of italicMatches) {
                 const matchStart = value.indexOf(match);
@@ -175,14 +179,14 @@
                     break;
                 }
             }
-            
+
             const beforeCursor = value.slice(0, start);
             const isAtEndOfItalic = italicMatches.some(match => beforeCursor.endsWith(match));
             const isAfterItalic = italicMatches.some(match => {
                 const matchEnd = value.indexOf(match) + match.length;
                 return start === matchEnd;
             });
-            
+
             formatting.italic = isInsideItalic || isAtEndOfItalic || isAfterItalic;
         }
 
@@ -193,7 +197,7 @@
         } else {
             const underlinePattern = /\+\+[^+\n]+\+\+/g;
             const underlineMatches = value.match(underlinePattern) || [];
-            
+
             let isInsideUnderline = false;
             for (const match of underlineMatches) {
                 const matchStart = value.indexOf(match);
@@ -203,14 +207,14 @@
                     break;
                 }
             }
-            
+
             const beforeCursor = value.slice(0, start);
             const isAtEndOfUnderline = underlineMatches.some(match => beforeCursor.endsWith(match));
             const isAfterUnderline = underlineMatches.some(match => {
                 const matchEnd = value.indexOf(match) + match.length;
                 return start === matchEnd;
             });
-            
+
             formatting.underline = isInsideUnderline || isAtEndOfUnderline || isAfterUnderline;
         }
 
@@ -221,7 +225,7 @@
         } else {
             const strikethroughPattern = /~~[^~]+~~/g;
             const strikethroughMatches = value.match(strikethroughPattern) || [];
-            
+
             let isInsideStrikethrough = false;
             for (const match of strikethroughMatches) {
                 const matchStart = value.indexOf(match);
@@ -231,14 +235,14 @@
                     break;
                 }
             }
-            
+
             const beforeCursor = value.slice(0, start);
             const isAtEndOfStrikethrough = strikethroughMatches.some(match => beforeCursor.endsWith(match));
             const isAfterStrikethrough = strikethroughMatches.some(match => {
                 const matchEnd = value.indexOf(match) + match.length;
                 return start === matchEnd;
             });
-            
+
             formatting.strikethrough = isInsideStrikethrough || isAtEndOfStrikethrough || isAfterStrikethrough;
         }
 
@@ -249,7 +253,7 @@
         } else {
             const codePattern = /`[^`]+`/g;
             const codeMatches = value.match(codePattern) || [];
-            
+
             let isInsideCode = false;
             for (const match of codeMatches) {
                 const matchStart = value.indexOf(match);
@@ -259,31 +263,31 @@
                     break;
                 }
             }
-            
+
             const beforeCursor = value.slice(0, start);
             const isAtEndOfCode = codeMatches.some(match => beforeCursor.endsWith(match));
             const isAfterCode = codeMatches.some(match => {
                 const matchEnd = value.indexOf(match) + match.length;
                 return start === matchEnd;
             });
-            
+
             formatting.code = isInsideCode || isAtEndOfCode || isAfterCode;
         }
 
         // Check for headers (at start of line)
         const lineStart = value.lastIndexOf('\n', start - 1) + 1;
         const lineText = value.slice(lineStart, value.indexOf('\n', start) === -1 ? value.length : value.indexOf('\n', start));
-        
+
         // Check for blockquote (at start of line)
         if (lineText.match(/^>\s/)) {
             formatting.blockquote = true;
         }
-        
+
         // Check for horizontal rule (---, ***, or ___)
         if (lineText.match(/^(\*\s*\*\s*\*[\s*]*|_\s*_\s*_[\s_]*|-\s*-\s*-[\s-]*)$/)) {
             formatting.hr = true;
         }
-        
+
         if (lineText.match(/^#{1}\s/)) {
             formatting.h1 = true;
         } else if (lineText.match(/^#{2}\s/)) {
@@ -338,13 +342,13 @@
         // Check for footnote reference [^identifier]
         const footnotePattern = /\[\^([^\]]+)\]/g;
         const footnoteMatches = Array.from(value.matchAll(footnotePattern));
-        
+
         for (const match of footnoteMatches) {
             const matchStart = match.index;
             const matchEnd = matchStart + match[0].length;
-            
+
             // Check if cursor or selection is within or touches the footnote reference
-            if ((start >= matchStart && start <= matchEnd) || 
+            if ((start >= matchStart && start <= matchEnd) ||
                 (end >= matchStart && end <= matchEnd) ||
                 (start <= matchStart && end >= matchEnd)) {
                 formatting.footnote = true;
@@ -359,17 +363,19 @@
      * Update toolbar button states based on detected formatting
      */
     const updateToolbarStates = () => {
-        if (!elements.toolbar) return;
-        
+        if (!elements.toolbar) {
+            return;
+        }
+
         const formatting = detectFormatting();
-        
+
         // Update text formatting buttons
         const boldButton = elements.toolbar.querySelector('[data-format="bold"]');
         const italicButton = elements.toolbar.querySelector('[data-format="italic"]');
         const underlineButton = elements.toolbar.querySelector('[data-format="underline"]');
         const strikethroughButton = elements.toolbar.querySelector('[data-format="strikethrough"]');
         const codeButton = elements.toolbar.querySelector('[data-format="code"]');
-        
+
         if (boldButton) {
             boldButton.classList.toggle('active', formatting.bold);
             boldButton.setAttribute('aria-pressed', formatting.bold);
@@ -412,7 +418,7 @@
         const h4Button = elements.toolbar.querySelector('[data-format="h4"]');
         const h5Button = elements.toolbar.querySelector('[data-format="h5"]');
         const h6Button = elements.toolbar.querySelector('[data-format="h6"]');
-        
+
         if (h1Button) {
             h1Button.classList.toggle('active', formatting.h1);
             h1Button.setAttribute('aria-pressed', formatting.h1);
@@ -442,7 +448,7 @@
         const ulButton = elements.toolbar.querySelector('[data-format="ul"]');
         const olButton = elements.toolbar.querySelector('[data-format="ol"]');
         const checkboxButton = elements.toolbar.querySelector('[data-format="checkbox"]');
-        
+
         if (ulButton) {
             ulButton.classList.toggle('active', formatting.ul);
             ulButton.setAttribute('aria-pressed', formatting.ul);
@@ -484,7 +490,7 @@
     const applyInlineFormat = (prefix, suffix, placeholder = '') => {
         const { start, end, value } = utils.getSelection();
         const hasSelection = start !== end;
-        
+
         // Determine format type
         const formatTypeMap = {
             '****': 'bold',
@@ -494,16 +500,16 @@
             '``': 'code'
         };
         const formatType = formatTypeMap[prefix + suffix];
-        
+
         // Check if formatting is already applied using detectFormatting
         const formatting = detectFormatting();
         const isAlreadyFormatted = formatting[formatType] || false;
-        
+
         if (isAlreadyFormatted) {
             // REMOVE FORMATTING
             // Find the boundaries of the formatted text containing the cursor/selection
             let removed = false;
-            
+
             // Build the appropriate pattern for this format type
             let pattern, markerLength;
             if (formatType === 'bold') {
@@ -533,87 +539,89 @@
                 });
                 return;
             }
-            
+
             // Search through all matches to find the one containing our cursor/selection
             const matches = Array.from(value.matchAll(pattern));
-            
+
             for (const match of matches) {
                 const matchStart = match.index;
                 const matchEnd = matchStart + match[0].length;
-                
+
                 // Check if cursor or selection is within this match
                 if (start >= matchStart && end <= matchEnd) {
                     // Store original positions for restoration
                     const originalStart = start;
                     const originalEnd = end;
-                    
+
                     // Capture scroll position before changes
                     const scrollTop = elements.editor.scrollTop;
                     const scrollLeft = elements.editor.scrollLeft;
                     const hadFocus = document.activeElement === elements.editor;
-                    
+
                     // Capture pre-change snapshot
                     if (history && history.pushHistory) {
                         history.pushHistory();
                     }
-                    
+
                     // For bold, handle *** vs ** properly
                     if (formatType === 'bold') {
                         const actualMarker = match[1]; // ***, **, or __
                         markerLength = actualMarker.length;
-                        
+
                         // If it's ***, only remove ** (leave single * for italic)
                         if (actualMarker === '***') {
                             const innerText = match[2];
                             const newText = `*${innerText}*`;
-                            
+
                             // Calculate new content
                             const beforeMatch = value.slice(0, matchStart);
                             const afterMatch = value.slice(matchEnd);
                             const newContent = beforeMatch + newText + afterMatch;
-                            
+
                             elements.editor.value = newContent;
-                            
+
                             // Restore scroll immediately
                             elements.editor.scrollTop = scrollTop;
                             elements.editor.scrollLeft = scrollLeft;
-                            
+
                             // Calculate restored cursor position
                             // Original ***text*** becomes *text*
                             // We removed 2 characters (one **), so adjust positions
                             let restoredStart = originalStart - 2;
                             let restoredEnd = originalEnd - 2;
-                            
+
                             // Clamp to valid range within the new text
                             const contentStart = matchStart;
                             const contentEnd = matchStart + newText.length;
                             restoredStart = Math.max(contentStart, Math.min(contentEnd, restoredStart));
                             restoredEnd = Math.max(contentStart, Math.min(contentEnd, restoredEnd));
-                            
+
                             // Focus if needed
                             if (!hadFocus) {
                                 elements.editor.focus({ preventScroll: true });
                             }
-                            
+
                             elements.editor.setSelectionRange(restoredStart, restoredEnd);
-                            
+
                             // Restore scroll again after selection change
                             elements.editor.scrollTop = scrollTop;
                             elements.editor.scrollLeft = scrollLeft;
-                            
+
                             removed = true;
                             break;
                         }
                     }
-                    
+
                     // Standard removal: extract inner text without markers
                     const innerText = match[2] || match[1];
-                    if (!innerText) continue; // Skip if no inner text found
-                    
+                    if (!innerText) {
+                        continue;
+                    } // Skip if no inner text found
+
                     // Calculate restored positions for both start and end separately
                     const calculateRestoredPosition = (originalPos) => {
                         const offsetIntoMatch = originalPos - matchStart;
-                        
+
                         if (offsetIntoMatch <= markerLength) {
                             // Position was in or before opening marker - place at start of content
                             return matchStart;
@@ -625,62 +633,62 @@
                             return originalPos - markerLength;
                         }
                     };
-                    
-                    let restoredStart = calculateRestoredPosition(originalStart);
+
+                    const restoredStart = calculateRestoredPosition(originalStart);
                     let restoredEnd = calculateRestoredPosition(originalEnd);
-                    
+
                     // Ensure start <= end
                     if (restoredStart > restoredEnd) {
                         restoredEnd = restoredStart;
                     }
-                    
+
                     // Build new content
                     const beforeMatch = value.slice(0, matchStart);
                     const afterMatch = value.slice(matchEnd);
                     const newValue = beforeMatch + innerText + afterMatch;
-                    
+
                     elements.editor.value = newValue;
-                    
+
                     // Restore scroll immediately
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
-                    
+
                     // Focus if needed
                     if (!hadFocus) {
                         elements.editor.focus({ preventScroll: true });
                     }
-                    
+
                     elements.editor.setSelectionRange(restoredStart, restoredEnd);
-                    
+
                     // Restore scroll again after selection change
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
-                    
+
                     removed = true;
                     break;
                 }
             }
-            
+
             if (removed) {
                 // Final scroll lock with triple RAF for maximum browser compatibility
                 const finalScrollTop = elements.editor.scrollTop;
                 const finalScrollLeft = elements.editor.scrollLeft;
-                
+
                 requestAnimationFrame(() => {
                     elements.editor.scrollTop = finalScrollTop;
                     elements.editor.scrollLeft = finalScrollLeft;
-                    
+
                     requestAnimationFrame(() => {
                         elements.editor.scrollTop = finalScrollTop;
                         elements.editor.scrollLeft = finalScrollLeft;
-                        
+
                         requestAnimationFrame(() => {
                             elements.editor.scrollTop = finalScrollTop;
                             elements.editor.scrollLeft = finalScrollLeft;
                         });
                     });
                 });
-                
+
                 if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
                     MarkdownEditor.preview.updatePreview();
                 }
@@ -693,24 +701,24 @@
                 if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
                     MarkdownEditor.autosave.scheduleAutosave();
                 }
-                
+
                 // Capture post-change snapshot
                 if (history && history.pushHistory) {
                     history.pushHistory();
                 }
-                
+
                 if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
                     MarkdownEditor.formatting.updateToolbarStates();
                 }
-                
+
                 return;
             }
         }
-        
+
         // ADD FORMATTING (not already formatted)
         const selection = hasSelection ? value.slice(start, end) : placeholder;
         const inserted = `${prefix}${selection}${suffix}`;
-        
+
         if (hasSelection) {
             // Replace selection with formatted text, cursor at end
             replaceSelection(inserted, inserted.length);
@@ -727,13 +735,15 @@
      * Apply heading formatting
      */
     const applyHeading = (level) => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
         const hadFocus = document.activeElement === elements.editor;
-        
+
         const { start, end, value } = utils.getSelection();
         const lines = value.split('\n');
         const lineOffsets = utils.getLineOffsets(lines);
@@ -838,35 +848,35 @@
         // ✅ IMMEDIATE scroll lock #1 (after content change)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
         if (!hadFocus) {
             elements.editor.focus({ preventScroll: true });
         }
-        
+
         // ✅ Set selection
         elements.editor.setSelectionRange(newStart, newEnd);
-        
+
         // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ TRIPLE RAF for maximum browser compatibility
         requestAnimationFrame(() => {
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             requestAnimationFrame(() => {
                 elements.editor.scrollTop = scrollTop;
                 elements.editor.scrollLeft = scrollLeft;
-                
+
                 requestAnimationFrame(() => {
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
                 });
             });
         });
-        
+
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
         }
@@ -885,13 +895,15 @@
      * Apply blockquote formatting
      */
     const applyBlockquote = () => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
         const hadFocus = document.activeElement === elements.editor;
-        
+
         const { start, end, value } = utils.getSelection();
         const lines = value.split('\n');
         const lineOffsets = utils.getLineOffsets(lines);
@@ -921,7 +933,7 @@
 
             if (i >= startLineIndex && i <= endLineIndex) {
                 const blockquoteMatch = originalLine.match(/^(>\s?)(.*)$/);
-                
+
                 if (allLinesAreBlockquotes) {
                     // Remove blockquote
                     newLine = blockquoteMatch ? blockquoteMatch[2] : originalLine;
@@ -975,35 +987,35 @@
         // ✅ IMMEDIATE scroll lock #1 (after content change)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
         if (!hadFocus) {
             elements.editor.focus({ preventScroll: true });
         }
-        
+
         // ✅ Set selection
         elements.editor.setSelectionRange(newStart, newEnd);
-        
+
         // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ TRIPLE RAF for maximum browser compatibility
         requestAnimationFrame(() => {
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             requestAnimationFrame(() => {
                 elements.editor.scrollTop = scrollTop;
                 elements.editor.scrollLeft = scrollLeft;
-                
+
                 requestAnimationFrame(() => {
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
                 });
             });
         });
-        
+
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
         }
@@ -1022,13 +1034,15 @@
      * Toggle bullet/numbered list markers
      */
     const toggleList = (type) => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
         const hadFocus = document.activeElement === elements.editor;
-        
+
         const { start, end, value } = utils.getSelection();
         const lines = value.split('\n');
         const lineOffsets = utils.getLineOffsets(lines);
@@ -1037,28 +1051,28 @@
 
         // Smart marker detection for ordered lists
         let markerText = type === 'ol' ? '1. ' : '- ';
-        
+
         // For ordered lists, check if we're continuing an existing list
         if (type === 'ol' && selectionStartIndex > 0) {
             // Look at the previous line
             const prevLine = lines[selectionStartIndex - 1];
             const prevMatch = prevLine.match(/^(\s*)(\d+)\.\s+/);
-            
+
             if (prevMatch) {
                 // We're continuing a list - use the next number
                 const prevNumber = parseInt(prevMatch[2], 10);
                 const prevIndent = prevMatch[1];
-                
+
                 // Check if current line has same indentation
                 const currentLine = lines[selectionStartIndex];
                 const currentIndent = currentLine.match(/^(\s*)/)[1];
-                
+
                 if (currentIndent === prevIndent) {
                     markerText = `${prevNumber + 1}. `;
                 }
             }
         }
-        
+
         const isTargetLine = (line) => {
             const trimmed = line.replace(/^\s*/, '');
             if (type === 'ol') {
@@ -1164,39 +1178,39 @@
         }
 
         elements.editor.value = lines.join('\n');
-        
+
         // ✅ IMMEDIATE scroll lock #1 (after content change)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
         if (!hadFocus) {
             elements.editor.focus({ preventScroll: true });
         }
-        
+
         // ✅ Set selection
         elements.editor.setSelectionRange(newStart, newEnd);
-        
+
         // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ TRIPLE RAF for maximum browser compatibility
         requestAnimationFrame(() => {
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             requestAnimationFrame(() => {
                 elements.editor.scrollTop = scrollTop;
                 elements.editor.scrollLeft = scrollLeft;
-                
+
                 requestAnimationFrame(() => {
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
                 });
             });
         });
-        
+
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
         }
@@ -1209,7 +1223,7 @@
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
         }
-        
+
         // If we modified ordered list markers (added OR removed), immediately renumber to ensure consistency
         if (type === 'ol') {
             // Use setTimeout to allow the editor to update first
@@ -1223,13 +1237,15 @@
      * Toggle checkbox list markers
      */
     const toggleCheckboxList = () => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
         const hadFocus = document.activeElement === elements.editor;
-        
+
         const { start, end, value } = utils.getSelection();
         const lines = value.split('\n');
         const lineOffsets = utils.getLineOffsets(lines);
@@ -1238,24 +1254,24 @@
 
         // Smart marker detection for checkboxes - check if continuing an existing checkbox list
         let markerText = '- [ ] ';
-        
+
         if (selectionStartIndex > 0) {
             // Look at the previous line
             const prevLine = lines[selectionStartIndex - 1];
             const prevMatch = prevLine.match(/^(\s*)([-*+])\s+\[([xX ])\]\s+/);
-            
+
             if (prevMatch) {
                 // We're continuing a checkbox list - use same marker
                 const prevIndent = prevMatch[1];
                 const currentLine = lines[selectionStartIndex];
                 const currentIndent = currentLine.match(/^(\s*)/)[1];
-                
+
                 if (currentIndent === prevIndent) {
                     markerText = `${prevMatch[2]} [ ] `;
                 }
             }
         }
-        
+
         const isTargetLine = (line) => {
             const trimmed = line.replace(/^\s*/, '');
             return /^[-*+]\s+\[([xX ])\]\s+/.test(trimmed);
@@ -1290,7 +1306,7 @@
                 remainder = remainder.slice(indent.length);
 
                 const checkboxMatch = remainder.match(/^([-*+])\s+\[([xX ])\]\s+/);
-                
+
                 if (checkboxMatch) {
                     oldMarkerLength = checkboxMatch[0].length;
                     remainder = remainder.slice(oldMarkerLength);
@@ -1354,39 +1370,39 @@
         }
 
         elements.editor.value = lines.join('\n');
-        
+
         // ✅ IMMEDIATE scroll lock #1 (after content change)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
         if (!hadFocus) {
             elements.editor.focus({ preventScroll: true });
         }
-        
+
         // ✅ Set selection
         elements.editor.setSelectionRange(newStart, newEnd);
-        
+
         // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ TRIPLE RAF for maximum browser compatibility
         requestAnimationFrame(() => {
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             requestAnimationFrame(() => {
                 elements.editor.scrollTop = scrollTop;
                 elements.editor.scrollLeft = scrollLeft;
-                
+
                 requestAnimationFrame(() => {
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
                 });
             });
         });
-        
+
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
         }
@@ -1405,12 +1421,14 @@
      * Apply code block formatting
      */
     const applyCodeBlock = () => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // Preserve scroll position
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
-        
+
         const { start, end, value } = utils.getSelection();
         const before = value.slice(0, start);
         const after = value.slice(end);
@@ -1429,7 +1447,7 @@
         } else {
             replaceSelection(inserted, prefix.length);
         }
-        
+
         // Extra scroll lock for code blocks (they tend to shift more)
         requestAnimationFrame(() => {
             elements.editor.scrollTop = scrollTop;
@@ -1441,13 +1459,15 @@
      * Indent list items (add 2 spaces of indentation)
      */
     const indentListItem = () => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
         const hadFocus = document.activeElement === elements.editor;
-        
+
         const { start, end, value } = utils.getSelection();
         const lines = value.split('\n');
         const lineOffsets = utils.getLineOffsets(lines);
@@ -1521,35 +1541,35 @@
         // ✅ IMMEDIATE scroll lock #1 (after content change)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
         if (!hadFocus) {
             elements.editor.focus({ preventScroll: true });
         }
-        
+
         // ✅ Set selection
         elements.editor.setSelectionRange(newStart, newEnd);
-        
+
         // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ TRIPLE RAF for maximum browser compatibility
         requestAnimationFrame(() => {
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             requestAnimationFrame(() => {
                 elements.editor.scrollTop = scrollTop;
                 elements.editor.scrollLeft = scrollLeft;
-                
+
                 requestAnimationFrame(() => {
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
                 });
             });
         });
-        
+
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
         }
@@ -1562,7 +1582,7 @@
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
         }
-        
+
         // Trigger immediate renumbering after indent to update all affected lists
         setTimeout(() => {
             renumberAllOrderedLists();
@@ -1573,23 +1593,27 @@
      * Renumber ordered list items starting from a given line
      */
     const renumberOrderedList = () => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         const { start, value } = utils.getSelection();
         const lines = value.split('\n');
         const currentLineIndex = value.slice(0, start).split('\n').length - 1;
         const currentLine = lines[currentLineIndex];
-        
+
         // Check if current line is part of an ordered list
         const listMatch = currentLine.match(/^(\s*)\d+\.\s+/);
-        if (!listMatch) return;
-        
+        if (!listMatch) {
+            return;
+        }
+
         const indent = listMatch[1];
-        
+
         // Find the start and end of the current list block with same indentation
         let listStart = currentLineIndex;
         let listEnd = currentLineIndex;
-        
+
         // Find start of list
         for (let i = currentLineIndex - 1; i >= 0; i--) {
             const line = lines[i];
@@ -1599,7 +1623,7 @@
             }
             listStart = i;
         }
-        
+
         // Find end of list
         for (let i = currentLineIndex + 1; i < lines.length; i++) {
             const line = lines[i];
@@ -1609,7 +1633,7 @@
             }
             listEnd = i;
         }
-        
+
         // Renumber the list
         let number = 1;
         for (let i = listStart; i <= listEnd; i++) {
@@ -1620,10 +1644,10 @@
                 number++;
             }
         }
-        
+
         elements.editor.value = lines.join('\n');
         elements.editor.setSelectionRange(start, start);
-        
+
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
         }
@@ -1641,43 +1665,45 @@
     /**
      * Renumber ALL ordered lists in the document to match preview rendering
      * This ensures editor numbers match what the preview will show
-     * 
+     *
      * FIX: Now properly handles nested lists under different parents by tracking
      * parent context. Each nested list resets numbering when under a new parent.
      */
     const renumberAllOrderedLists = () => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         const { start, end, value } = utils.getSelection();
         const lines = value.split('\n');
         let modified = false;
-        
+
         // Track list state at each VISUAL nesting level with parent context
         // Map structure: Map<level, { counter: number, parentCounter: number }>
         const listState = new Map();
         let prevLevel = -1;
-        
+
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            
+
             // Convert tabs to 4 spaces for consistent handling (common convention: 1 tab = 4 spaces)
             const normalizedLine = line.replace(/\t/g, '    ');
-            
+
             const listMatch = normalizedLine.match(/^(\s*)(\d+)\.\s+(.*)$/);
-            
+
             if (listMatch) {
                 const indentSpaces = listMatch[1].length;
                 const currentNumber = parseInt(listMatch[2], 10);
                 const content = listMatch[3];
-                
+
                 // Calculate nesting level (2 spaces = 1 level, 4 spaces = 2 levels, etc.)
                 const level = Math.floor(indentSpaces / 2);
-                
+
                 // Normalize indentation to standard 2-space increments
                 const normalizedIndent = '  '.repeat(level);
-                
+
                 // **FIX: Detect when we need to reset nested list counters**
-                
+
                 // Case 1: We moved to a shallower level (back to parent or higher)
                 if (prevLevel !== -1 && level < prevLevel) {
                     // Clear all deeper level counters
@@ -1687,20 +1713,20 @@
                         }
                     }
                 }
-                
+
                 // Case 2: We're at a nested level and the parent level counter changed
                 // This means we're starting a NEW nested list under a DIFFERENT parent
                 if (level > 0 && prevLevel !== -1) {
                     const parentLevel = level - 1;
-                    
+
                     // Check if parent level counter changed since last time we were at this level
                     if (listState.has(level)) {
                         const currentState = listState.get(level);
-                        
+
                         // If we have a parent level, check its counter
                         if (listState.has(parentLevel)) {
                             const parentState = listState.get(parentLevel);
-                            
+
                             // If parent counter changed, this is a NEW nested list
                             if (currentState.parentCounter !== parentState.counter) {
                                 // Reset this level's counter
@@ -1715,38 +1741,38 @@
                         }
                     }
                 }
-                
+
                 // Get or initialize counter for this level
                 if (!listState.has(level)) {
                     // Get parent counter for tracking
                     const parentLevel = level - 1;
-                    const parentCounter = level > 0 && listState.has(parentLevel) 
-                        ? listState.get(parentLevel).counter 
+                    const parentCounter = level > 0 && listState.has(parentLevel)
+                        ? listState.get(parentLevel).counter
                         : 0;
-                    
-                    listState.set(level, { 
-                        counter: 1, 
-                        parentCounter: parentCounter 
+
+                    listState.set(level, {
+                        counter: 1,
+                        parentCounter: parentCounter
                     });
                 }
-                
+
                 const expectedNumber = listState.get(level).counter;
-                
+
                 // If number doesn't match expected OR indentation needs normalizing, update it
                 if (currentNumber !== expectedNumber || listMatch[1] !== normalizedIndent) {
                     lines[i] = `${normalizedIndent}${expectedNumber}. ${content}`;
                     modified = true;
                 }
-                
+
                 // Increment counter for next item at this level
                 listState.get(level).counter++;
-                
+
                 // Update parent counter reference after incrementing
                 const parentLevel = level - 1;
                 if (level > 0 && listState.has(parentLevel)) {
                     listState.get(level).parentCounter = listState.get(parentLevel).counter;
                 }
-                
+
                 prevLevel = level;
             } else {
                 // Non-list line: reset all counters (list has ended)
@@ -1756,7 +1782,7 @@
                 }
             }
         }
-        
+
         if (modified) {
             elements.editor.value = lines.join('\n');
             elements.editor.setSelectionRange(start, end);
@@ -1775,42 +1801,46 @@
     /**
      * Handle Enter key in lists for smart continuation
      * Returns true if handled, false otherwise
-     * 
+     *
      * FIX: Improved cursor position detection and content splitting for better reliability
      */
     const handleEnterInList = () => {
-        if (!elements.editor) return false;
-        
+        if (!elements.editor) {
+            return false;
+        }
+
         const { start, end, value } = utils.getSelection();
-        
+
         // Only handle single cursor (no selection)
-        if (start !== end) return false;
-        
+        if (start !== end) {
+            return false;
+        }
+
         const lines = value.split('\n');
         const currentLineIndex = value.slice(0, start).split('\n').length - 1;
         const currentLine = lines[currentLineIndex];
-        
+
         // Get cursor position within the line
         const lineStart = value.lastIndexOf('\n', start - 1) + 1;
         const cursorPosInLine = start - lineStart;
-        
+
         // Check if we're in a list item (IMPROVED REGEX)
         // Check for checkbox first: - [ ] or - [x]
         const checkboxMatch = currentLine.match(/^(\s*)([-*+])\s+\[([xX ])\]\s+(.*)$/);
         const unorderedMatch = currentLine.match(/^(\s*)([-*+])\s+(.*)$/);
         const orderedMatch = currentLine.match(/^(\s*)(\d+)\.\s+(.*)$/);
-        
+
         if (!checkboxMatch && !unorderedMatch && !orderedMatch) {
             return false; // Not in a list
         }
-        
+
         const isCheckbox = !!checkboxMatch;
         const isOrdered = !!orderedMatch;
         const match = isCheckbox ? checkboxMatch : (isOrdered ? orderedMatch : unorderedMatch);
         const indent = match[1];
         const marker = match[2];
         const content = isCheckbox ? match[4] : match[3];
-        
+
         // FIX: Calculate marker end position more accurately
         let markerEndPos;
         if (isCheckbox) {
@@ -1820,16 +1850,16 @@
         }
         const isAtEndOfLine = cursorPosInLine >= currentLine.length;
         const isInOrAfterContent = cursorPosInLine >= markerEndPos;
-        
+
         // If the list item is empty (only marker), exit the list
         if (content.trim() === '' && (isAtEndOfLine || cursorPosInLine <= markerEndPos)) {
             // Remove the empty list item and exit list
             const before = value.slice(0, lineStart);
             const after = value.slice(value.indexOf('\n', start) !== -1 ? value.indexOf('\n', start) : value.length);
-            
+
             elements.editor.value = before + after;
             elements.editor.setSelectionRange(lineStart, lineStart);
-            
+
             // Trigger updates
             if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
                 MarkdownEditor.preview.updatePreview();
@@ -1843,21 +1873,21 @@
             if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
                 MarkdownEditor.autosave.scheduleAutosave();
             }
-            
+
             return true;
         }
-        
+
         // FIX: Improved content splitting calculation
         // If cursor is before or at the marker position, all content goes to next line
         let contentBeforeCursor = '';
         let contentAfterCursor = content;
-        
+
         if (isInOrAfterContent) {
             const offsetIntoContent = cursorPosInLine - markerEndPos;
             contentBeforeCursor = content.slice(0, offsetIntoContent);
             contentAfterCursor = content.slice(offsetIntoContent);
         }
-        
+
         // Determine the next marker
         let nextMarker;
         if (isCheckbox) {
@@ -1868,14 +1898,14 @@
         } else {
             nextMarker = `${marker}`;
         }
-        
+
         // Build the new content
         const lineEnd = value.indexOf('\n', start);
         const actualLineEnd = lineEnd === -1 ? value.length : lineEnd;
-        
+
         const before = value.slice(0, lineStart);
         const after = value.slice(actualLineEnd);
-        
+
         let newCurrentLine;
         let newNextLine;
         if (isCheckbox) {
@@ -1888,10 +1918,10 @@
             newCurrentLine = `${indent}${marker} ${contentBeforeCursor}`;
             newNextLine = `${indent}${nextMarker} ${contentAfterCursor}`;
         }
-        
-        const newValue = before + newCurrentLine + '\n' + newNextLine + after;
+
+        const newValue = `${before + newCurrentLine  }\n${  newNextLine  }${after}`;
         elements.editor.value = newValue;
-        
+
         // Position cursor at start of content on new line
         let newCursorPos;
         if (isCheckbox) {
@@ -1902,14 +1932,14 @@
             newCursorPos = before.length + newCurrentLine.length + 1 + indent.length + nextMarker.length + 1;
         }
         elements.editor.setSelectionRange(newCursorPos, newCursorPos);
-        
+
         // FIX: Use renumberAllOrderedLists instead of renumberOrderedList for consistency
         if (isOrdered) {
             setTimeout(() => {
                 renumberAllOrderedLists();
             }, 0);
         }
-        
+
         // Trigger updates
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
@@ -1923,7 +1953,7 @@
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
         }
-        
+
         return true;
     };
 
@@ -1931,13 +1961,15 @@
      * Outdent list items (remove up to 2 spaces of indentation)
      */
     const outdentListItem = () => {
-        if (!elements.editor) return;
-        
+        if (!elements.editor) {
+            return;
+        }
+
         // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
         const scrollTop = elements.editor.scrollTop;
         const scrollLeft = elements.editor.scrollLeft;
         const hadFocus = document.activeElement === elements.editor;
-        
+
         const { start, end, value } = utils.getSelection();
         const lines = value.split('\n');
         const lineOffsets = utils.getLineOffsets(lines);
@@ -2028,35 +2060,35 @@
         // ✅ IMMEDIATE scroll lock #1 (after content change)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
         if (!hadFocus) {
             elements.editor.focus({ preventScroll: true });
         }
-        
+
         // ✅ Set selection
         elements.editor.setSelectionRange(newStart, newEnd);
-        
+
         // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
         elements.editor.scrollTop = scrollTop;
         elements.editor.scrollLeft = scrollLeft;
-        
+
         // ✅ TRIPLE RAF for maximum browser compatibility
         requestAnimationFrame(() => {
             elements.editor.scrollTop = scrollTop;
             elements.editor.scrollLeft = scrollLeft;
-            
+
             requestAnimationFrame(() => {
                 elements.editor.scrollTop = scrollTop;
                 elements.editor.scrollLeft = scrollLeft;
-                
+
                 requestAnimationFrame(() => {
                     elements.editor.scrollTop = scrollTop;
                     elements.editor.scrollLeft = scrollLeft;
                 });
             });
         });
-        
+
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
         }
@@ -2069,7 +2101,7 @@
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
         }
-        
+
         // Trigger immediate renumbering after outdent to update all affected lists
         setTimeout(() => {
             renumberAllOrderedLists();

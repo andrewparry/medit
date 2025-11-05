@@ -18,7 +18,7 @@ function validateAriaAttributes(element, expectedAttributes) {
 
     Object.entries(expectedAttributes).forEach(([attr, expectedValue]) => {
         const actualValue = element.getAttribute(attr);
-        
+
         if (expectedValue === null) {
             // Attribute should not exist
             if (actualValue !== null) {
@@ -64,18 +64,18 @@ function validateSemanticStructure(document) {
     // Check heading hierarchy
     const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
     let previousLevel = 0;
-    
+
     headings.forEach((heading, index) => {
         const level = parseInt(heading.tagName.charAt(1));
-        
+
         if (index === 0 && level !== 1) {
             results.warnings.push('First heading should be h1');
         }
-        
+
         if (level > previousLevel + 1) {
             results.warnings.push(`Heading level skipped: h${previousLevel} to h${level}`);
         }
-        
+
         previousLevel = level;
     });
 
@@ -106,23 +106,23 @@ function validateKeyboardNavigation(document) {
     ];
 
     const focusableElements = document.querySelectorAll(focusableSelectors.join(', '));
-    
+
     focusableElements.forEach(element => {
         const tabIndex = element.getAttribute('tabindex');
-        
+
         // Check for positive tabindex (anti-pattern)
         if (tabIndex && parseInt(tabIndex) > 0) {
             results.warnings.push(`Element has positive tabindex: ${element.tagName} (${tabIndex})`);
         }
-        
+
         // Check for missing accessible names on interactive elements
         if (['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(element.tagName)) {
-            const hasAccessibleName = 
+            const hasAccessibleName =
                 element.getAttribute('aria-label') ||
                 element.getAttribute('aria-labelledby') ||
                 element.textContent.trim() ||
                 (element.tagName === 'INPUT' && element.getAttribute('placeholder'));
-                
+
             if (!hasAccessibleName) {
                 results.warnings.push(`Interactive element missing accessible name: ${element.tagName}`);
             }
@@ -173,28 +173,30 @@ function validateFormAccessibility(document) {
     };
 
     const formElements = document.querySelectorAll('input, select, textarea');
-    
+
     formElements.forEach(element => {
         const id = element.getAttribute('id');
         const ariaLabel = element.getAttribute('aria-label');
         const ariaLabelledBy = element.getAttribute('aria-labelledby');
-        
+
         // Check for associated label
         let hasLabel = false;
-        
+
         if (id) {
             const label = document.querySelector(`label[for="${id}"]`);
-            if (label) hasLabel = true;
+            if (label) {
+                hasLabel = true;
+            }
         }
-        
+
         if (ariaLabel || ariaLabelledBy) {
             hasLabel = true;
         }
-        
+
         if (!hasLabel && element.type !== 'hidden' && element.type !== 'submit') {
             results.warnings.push(`Form element missing label: ${element.tagName} (type: ${element.type})`);
         }
-        
+
         // Check for required field indicators
         if (element.hasAttribute('required')) {
             const ariaRequired = element.getAttribute('aria-required');
@@ -220,16 +222,16 @@ function validateLiveRegions(document) {
     };
 
     const liveRegions = document.querySelectorAll('[aria-live]');
-    
+
     liveRegions.forEach(element => {
         const ariaLive = element.getAttribute('aria-live');
         const validValues = ['off', 'polite', 'assertive'];
-        
+
         if (!validValues.includes(ariaLive)) {
             results.passed = false;
             results.errors.push(`Invalid aria-live value: ${ariaLive}`);
         }
-        
+
         // Check if live region has appropriate role
         const role = element.getAttribute('role');
         if (ariaLive === 'assertive' && !role) {
@@ -265,11 +267,11 @@ function auditAccessibility(document) {
         try {
             const sectionResults = fn();
             results.sections[name] = sectionResults;
-            
+
             if (!sectionResults.passed) {
                 results.passed = false;
             }
-            
+
             results.errors.push(...sectionResults.errors);
             results.warnings.push(...sectionResults.warnings);
         } catch (error) {
@@ -353,7 +355,7 @@ function validateScreenReaderCompatibility(element) {
     images.forEach(img => {
         const alt = img.getAttribute('alt');
         const role = img.getAttribute('role');
-        
+
         if (alt === null && role !== 'presentation') {
             results.warnings.push('Image missing alt attribute');
         }

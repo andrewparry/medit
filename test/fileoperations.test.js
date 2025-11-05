@@ -102,7 +102,7 @@ class MockFileReader {
 
     readAsText(file) {
         this.readyState = 1; // LOADING
-        
+
         if (this.onloadstart) {
             this.onloadstart({ type: 'loadstart' });
         }
@@ -111,23 +111,23 @@ class MockFileReader {
             try {
                 this.result = file.content;
                 this.readyState = 2; // DONE
-                
+
                 if (this.onload) {
-                    this.onload({ 
+                    this.onload({
                         type: 'load',
                         target: this
                     });
                 }
-                
+
                 if (this.onloadend) {
                     this.onloadend({ type: 'loadend' });
                 }
             } catch (error) {
                 this.error = error;
                 this.readyState = 2; // DONE
-                
+
                 if (this.onerror) {
-                    this.onerror({ 
+                    this.onerror({
                         type: 'error',
                         target: this
                     });
@@ -287,20 +287,20 @@ class FileManager {
         this.editorCore = editorCore;
         this.supportsFileSystemAccess = this.checkFileSystemAccessSupport();
         this.currentFileHandle = null;
-        
+
         this.init();
     }
 
     init() {
         this.setupFileInput();
-        console.log('FileManager initialized', { 
-            supportsFileSystemAccess: this.supportsFileSystemAccess 
+        console.log('FileManager initialized', {
+            supportsFileSystemAccess: this.supportsFileSystemAccess
         });
     }
 
     checkFileSystemAccessSupport() {
-        return typeof window !== 'undefined' && 
-               'showOpenFilePicker' in window && 
+        return typeof window !== 'undefined' &&
+               'showOpenFilePicker' in window &&
                'showSaveFilePicker' in window;
     }
 
@@ -366,7 +366,7 @@ class FileManager {
                     }
 
                     const content = await this.readFileContent(file);
-                    
+
                     this.editorCore.setMarkdown(content);
                     this.editorCore.setFileName(file.name);
 
@@ -387,22 +387,24 @@ class FileManager {
     readFileContent(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            
+
             reader.onload = (event) => {
                 resolve(event.target.result);
             };
-            
+
             reader.onerror = () => {
                 reject(new Error('Failed to read file'));
             };
-            
+
             reader.readAsText(file);
         });
     }
 
     async handleFileInputChange(event) {
         const file = event.target.files[0];
-        if (!file) return;
+        if (!file) {
+            return;
+        }
 
         try {
             const content = await this.readFileContent(file);
@@ -417,7 +419,7 @@ class FileManager {
     async saveFile(filename = null) {
         try {
             const content = this.editorCore.getMarkdown();
-            
+
             if (this.supportsFileSystemAccess) {
                 if (this.currentFileHandle && !filename) {
                     return await this.saveFileWithFileSystemAccess(content);
@@ -471,11 +473,11 @@ class FileManager {
         link.href = url;
         link.download = filename;
         link.style.display = 'none';
-        
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         window.URL.revokeObjectURL(url);
 
         this.editorCore.setFileName(filename);
@@ -496,7 +498,7 @@ class FileManager {
     validateMarkdownFile(file) {
         const validExtensions = ['.md', '.markdown', '.txt'];
         const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-        
+
         if (!validExtensions.includes(extension)) {
             throw new Error(`Invalid file type. Expected: ${validExtensions.join(', ')}`);
         }
@@ -519,7 +521,7 @@ describe('File Operations Integration Tests', () => {
         jest.clearAllMocks();
         mockShowOpenFilePicker.mockClear();
         mockShowSaveFilePicker.mockClear();
-        
+
         // Create fresh instances
         mockEditorCore = new MockEditorCore();
         fileManager = new FileManager(mockEditorCore);
@@ -540,7 +542,7 @@ describe('File Operations Integration Tests', () => {
             test('should open basic markdown file successfully', async () => {
                 const testContent = '# Test Document\n\nThis is a test markdown file.';
                 const mockFileHandle = new MockFileSystemFileHandle('test.md', testContent);
-                
+
                 mockShowOpenFilePicker.mockResolvedValue([mockFileHandle]);
 
                 const result = await fileManager.openFile();
@@ -605,7 +607,7 @@ Characters like & < > " ' should be handled properly.`;
             test('should open empty markdown file', async () => {
                 const emptyContent = '';
                 const mockFileHandle = new MockFileSystemFileHandle('empty.md', emptyContent);
-                
+
                 mockShowOpenFilePicker.mockResolvedValue([mockFileHandle]);
 
                 const result = await fileManager.openFile();
@@ -695,7 +697,7 @@ Characters like & < > " ' should be handled properly.`;
 
                 // Simulate file selection
                 const openPromise = fileManager.openFile();
-                
+
                 // Simulate file input change
                 setTimeout(() => {
                     fileManager.fileInput.files = [mockFile];
@@ -712,7 +714,7 @@ Characters like & < > " ' should be handled properly.`;
 
             test('should handle file reading errors with traditional method', async () => {
                 const mockFile = new MockFile('content', 'error.md');
-                
+
                 // Mock FileReader to simulate error
                 const originalFileReader = global.FileReader;
                 global.FileReader = class extends MockFileReader {
@@ -728,7 +730,7 @@ Characters like & < > " ' should be handled properly.`;
                 };
 
                 const openPromise = fileManager.openFile();
-                
+
                 setTimeout(() => {
                     fileManager.fileInput.files = [mockFile];
                     const changeEvent = { target: { files: [mockFile] } };
@@ -736,14 +738,14 @@ Characters like & < > " ' should be handled properly.`;
                 }, 10);
 
                 await expect(openPromise).rejects.toThrow('Failed to read file');
-                
+
                 // Restore original FileReader
                 global.FileReader = originalFileReader;
             });
 
             test('should handle no file selected with traditional method', async () => {
                 const openPromise = fileManager.openFile();
-                
+
                 setTimeout(() => {
                     const changeEvent = { target: { files: [] } };
                     fileManager.fileInput.onchange(changeEvent);
@@ -893,7 +895,7 @@ Emojis: 🚀 🎉 💡 ⭐`;
                 const mockDate = new Date('2023-12-25T10:30:45.123Z');
                 const originalDate = global.Date;
                 const originalDateNow = Date.now;
-                
+
                 global.Date = class extends Date {
                     constructor(...args) {
                         if (args.length === 0) {
@@ -902,12 +904,12 @@ Emojis: 🚀 🎉 💡 ⭐`;
                             super(...args);
                         }
                     }
-                    
+
                     static now() {
                         return mockDate.getTime();
                     }
                 };
-                
+
                 // Copy static methods
                 Object.setPrototypeOf(global.Date, originalDate);
                 Object.getOwnPropertyNames(originalDate).forEach(name => {
@@ -996,7 +998,7 @@ Emojis: 🚀 🎉 💡 ⭐`;
 
             test('should handle large content with traditional method', async () => {
                 // Create large content (1MB)
-                const largeContent = '# Large Document\n\n' + 'A'.repeat(1024 * 1024);
+                const largeContent = `# Large Document\n\n${  'A'.repeat(1024 * 1024)}`;
                 mockEditorCore.setMarkdown(largeContent);
 
                 const result = await fileManager.saveFile('large-file.md');
@@ -1052,7 +1054,7 @@ Emojis: 🚀 🎉 💡 ⭐`;
     describe('Error Handling and Edge Cases', () => {
         test('should handle corrupted file content gracefully', async () => {
             fileManager.supportsFileSystemAccess = true;
-            
+
             // Mock a file that throws an error when reading content
             const corruptedFileHandle = {
                 name: 'corrupted.md',
@@ -1070,7 +1072,7 @@ Emojis: 🚀 🎉 💡 ⭐`;
 
         test('should handle network interruption during file operations', async () => {
             fileManager.supportsFileSystemAccess = true;
-            
+
             const testContent = '# Network Test';
             mockEditorCore.setMarkdown(testContent);
 
@@ -1105,7 +1107,7 @@ Emojis: 🚀 🎉 💡 ⭐`;
 
             const testContent1 = '# First Document';
             const testContent2 = '# Second Document';
-            
+
             const fileHandle1 = new MockFileSystemFileHandle('first.md', testContent1);
             const fileHandle2 = new MockFileSystemFileHandle('second.md', testContent2);
 
@@ -1149,7 +1151,7 @@ Emojis: 🚀 🎉 💡 ⭐`;
             fileManager.supportsFileSystemAccess = true;
             const testContent = '# Event Test Document';
             const mockFileHandle = new MockFileSystemFileHandle('event-test.md', testContent);
-            
+
             mockShowOpenFilePicker.mockResolvedValue([mockFileHandle]);
 
             await fileManager.openFile();
@@ -1165,7 +1167,7 @@ Emojis: 🚀 🎉 💡 ⭐`;
             fileManager.supportsFileSystemAccess = true;
             const testContent = '# State Update Test';
             const mockFileHandle = new MockFileSystemFileHandle('state-test.md', testContent);
-            
+
             mockShowOpenFilePicker.mockResolvedValue([mockFileHandle]);
 
             await fileManager.openFile();

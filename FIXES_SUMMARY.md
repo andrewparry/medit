@@ -1,4 +1,4 @@
-# Final Polish - Fixes Applied to Markdown WYSIWYG Editor
+I# Final Polish - Fixes Applied to Markdown WYSIWYG Editor
 
 ## Overview
 This document summarizes all fixes applied to resolve the remaining issues in the Markdown WYSIWYG Editor.

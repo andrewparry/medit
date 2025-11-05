@@ -16,7 +16,9 @@ describe('Header formatting on trailing blank lines', () => {
         }
 
         normalizeEditorHtml(html) {
-            if (!html) return '';
+            if (!html) {
+                return '';
+            }
 
             let content = html;
 
@@ -42,7 +44,9 @@ describe('Header formatting on trailing blank lines', () => {
         }
 
         getEditorContent() {
-            if (!this.editorElement) return '';
+            if (!this.editorElement) {
+                return '';
+            }
 
             const content = this.normalizeEditorHtml(this.editorElement.innerHTML);
             if (!/[\S\u00A0]/.test(content)) {
@@ -52,12 +56,16 @@ describe('Header formatting on trailing blank lines', () => {
         }
 
         setEditorContent(content) {
-            if (!this.editorElement) return;
+            if (!this.editorElement) {
+                return;
+            }
             this.editorElement.innerHTML = content.replace(/\n/g, '<br>');
         }
 
         getNodeTextLength(node) {
-            if (!node) return 0;
+            if (!node) {
+                return 0;
+            }
 
             if (node.nodeType === this.window.Node.TEXT_NODE) {
                 return node.textContent.length;
@@ -86,7 +94,9 @@ describe('Header formatting on trailing blank lines', () => {
         }
 
         getAccumulatedTextLengthUpToChild(container, offset) {
-            if (!container || !container.childNodes) return 0;
+            if (!container || !container.childNodes) {
+                return 0;
+            }
 
             let length = 0;
             const limit = Math.min(offset, container.childNodes.length);
@@ -98,7 +108,9 @@ describe('Header formatting on trailing blank lines', () => {
 
         getCurrentCursorPositionInText() {
             const selection = this.window.getSelection();
-            if (!selection.rangeCount) return 0;
+            if (!selection.rangeCount) {
+                return 0;
+            }
 
             const range = selection.getRangeAt(0);
 
@@ -112,7 +124,7 @@ describe('Header formatting on trailing blank lines', () => {
                 tempDiv.appendChild(fragment);
             }
 
-            let textBeforeCursor = this.normalizeEditorHtml(tempDiv.innerHTML);
+            const textBeforeCursor = this.normalizeEditorHtml(tempDiv.innerHTML);
 
             if (!textBeforeCursor && range.startContainer) {
                 if (range.startContainer === this.editorElement) {
@@ -134,18 +146,26 @@ describe('Header formatting on trailing blank lines', () => {
         }
 
         setCursorPositionInText(position) {
-            if (!this.editorElement) return;
+            if (!this.editorElement) {
+                return;
+            }
 
             const content = this.getEditorContent();
-            if (position > content.length) position = content.length;
-            if (position < 0) position = 0;
+            if (position > content.length) {
+                position = content.length;
+            }
+            if (position < 0) {
+                position = 0;
+            }
 
             const range = this.document.createRange();
             let remaining = position;
             let found = false;
 
             const traverse = (node) => {
-                if (found || !node) return;
+                if (found || !node) {
+                    return;
+                }
 
                 if (node.nodeType === this.window.Node.TEXT_NODE) {
                     const length = node.textContent.length;
@@ -182,7 +202,9 @@ describe('Header formatting on trailing blank lines', () => {
                 const children = Array.from(node.childNodes || []);
                 for (const child of children) {
                     traverse(child);
-                    if (found) return;
+                    if (found) {
+                        return;
+                    }
                 }
             };
 
@@ -200,11 +222,15 @@ describe('Header formatting on trailing blank lines', () => {
         }
 
         applyFormatting(formatType) {
-            if (!this.editorElement) return;
+            if (!this.editorElement) {
+                return;
+            }
 
             const selection = this.window.getSelection();
             const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-            if (!range) return;
+            if (!range) {
+                return;
+            }
 
             const selectedText = range.toString();
 
@@ -215,14 +241,18 @@ describe('Header formatting on trailing blank lines', () => {
             };
 
             const format = formats[formatType];
-            if (!format) return;
+            if (!format) {
+                return;
+            }
 
             this.applyLineFormatting(format, selectedText);
         }
 
         applyLineFormatting(format, selectedText) {
             const selection = this.window.getSelection();
-            if (!selection.rangeCount) return;
+            if (!selection.rangeCount) {
+                return;
+            }
 
             const cursorPos = this.getCurrentCursorPositionInText();
             const editorContent = this.getEditorContent();

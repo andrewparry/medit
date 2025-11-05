@@ -7,7 +7,7 @@ Open `index.html` in your browser and follow these test scenarios.
 
 ### Steps:
 1. Type in the editor: `hello world test`
-2. Select the word "world" by double-clicking or click-dragging
+2. Select the word "world" by double-clicking or click-dragging.
 3. Click the **B** (Bold) button in the toolbar
 4. OR press `Ctrl+B` (Windows/Linux) or `Cmd+B` (Mac)
 
@@ -25,7 +25,7 @@ hello **world** test
 
 ### Steps:
 1. Type in the editor: `hello test`
-2. Place cursor between "hello" and "test" (click after the space)
+2. Place cursor between "hello" and "test" (click after the space)...
 3. Click the **B** (Bold) button in the toolbar
 4. OR press `Ctrl+B` (Windows/Linux) or `Cmd+B` (Mac)
 

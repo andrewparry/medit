@@ -12,14 +12,16 @@
      * Update preview with current markdown content
      */
     const updatePreview = () => {
-        if (!elements.editor || !elements.preview) return;
-        
+        if (!elements.editor || !elements.preview) {
+            return;
+        }
+
         const markdown = elements.editor.value;
         const renderHtml = state.renderHtml || false;
         const rawHtml = window.markedLite.parse(markdown, { renderHtml });
         const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
         elements.preview.innerHTML = safeHtml || '<p class="preview-placeholder">Start typing to see your formatted preview.</p>';
-        
+
         // Apply Prism.js syntax highlighting to code blocks in preview
         setTimeout(() => {
             if (window.Prism) {
@@ -42,12 +44,14 @@
      * Toggle preview visibility
      */
     const togglePreview = () => {
-        if (!elements.togglePreviewButton || !elements.editorContainer) return;
-        
+        if (!elements.togglePreviewButton || !elements.editorContainer) {
+            return;
+        }
+
         state.isPreviewVisible = !state.isPreviewVisible;
         elements.togglePreviewButton.setAttribute('aria-pressed', state.isPreviewVisible);
         elements.editorContainer.classList.toggle('preview-hidden', !state.isPreviewVisible);
-        
+
         // Hide/show resize handle based on preview visibility
         if (elements.resizeHandle) {
             if (state.isPreviewVisible) {
@@ -60,9 +64,9 @@
                 }
             }
         }
-        
+
         elements.togglePreviewButton.title = state.isPreviewVisible ? 'Hide preview (Ctrl+Shift+P)' : 'Show preview (Ctrl+Shift+P)';
-        
+
         // Persist preview state
         if (window.localStorage) {
             try {
@@ -71,7 +75,7 @@
                 console.error('Failed to persist preview state', error);
             }
         }
-        
+
         // Trigger resize to update wrapping
         setTimeout(() => {
             window.dispatchEvent(new Event('resize'));

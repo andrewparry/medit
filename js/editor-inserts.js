@@ -12,29 +12,30 @@
      * Insert a link
      */
     const insertLink = async () => {
-        console.log('insertLink function called');
         const { start, end, value } = utils.getSelection();
         const selectedText = value.slice(start, end);
 
-        const result = await dialogs.multiPromptDialog([
-            {
-                label: 'Link text',
-                defaultValue: selectedText || '',
-                inputType: 'text',
-                key: 'text',
-                required: false
-            },
-            {
-                label: 'Link URL (https://...)',
-                defaultValue: 'https://',
-                inputType: 'url',
-                key: 'url',
-                required: true
-            }
-        ], 'Insert Link');
+        const result = await dialogs.multiPromptDialog(
+            [
+                {
+                    label: 'Link text',
+                    defaultValue: selectedText || '',
+                    inputType: 'text',
+                    key: 'text',
+                    required: false
+                },
+                {
+                    label: 'Link URL (https://...)',
+                    defaultValue: 'https://',
+                    inputType: 'url',
+                    key: 'url',
+                    required: true
+                }
+            ],
+            'Insert Link'
+        );
 
         if (!result) {
-            console.log('Link insertion cancelled');
             return;
         }
 
@@ -42,12 +43,10 @@
         const url = result.url;
 
         if (!url) {
-            console.log('Link insertion cancelled - no URL');
             return;
         }
 
         const linkSyntax = `[${linkText}](${url})`;
-        console.log('Inserting link:', linkSyntax);
         formatting.replaceSelection(linkSyntax, linkSyntax.length);
     };
 
@@ -55,27 +54,27 @@
      * Insert an image
      */
     const insertImage = async () => {
-        console.log('insertImage function called');
-
-        const result = await dialogs.multiPromptDialog([
-            {
-                label: 'Image description (alt text)',
-                defaultValue: 'Image description',
-                inputType: 'text',
-                key: 'alt',
-                required: true
-            },
-            {
-                label: 'Image URL (https://...)',
-                defaultValue: 'https://',
-                inputType: 'url',
-                key: 'url',
-                required: true
-            }
-        ], 'Insert Image');
+        const result = await dialogs.multiPromptDialog(
+            [
+                {
+                    label: 'Image description (alt text)',
+                    defaultValue: 'Image description',
+                    inputType: 'text',
+                    key: 'alt',
+                    required: true
+                },
+                {
+                    label: 'Image URL (https://...)',
+                    defaultValue: 'https://',
+                    inputType: 'url',
+                    key: 'url',
+                    required: true
+                }
+            ],
+            'Insert Image'
+        );
 
         if (!result) {
-            console.log('Image insertion cancelled');
             return;
         }
 
@@ -83,12 +82,10 @@
         const url = result.url;
 
         if (!url) {
-            console.log('Image insertion cancelled - no URL');
             return;
         }
 
         const imageSyntax = `![${altText}](${url})`;
-        console.log('Inserting image:', imageSyntax);
         formatting.replaceSelection(imageSyntax, imageSyntax.length);
     };
 
@@ -144,7 +141,9 @@
                 utils.updateCounters();
             }
             if (MarkdownEditor.stateManager) {
-                MarkdownEditor.stateManager.markDirty(elements.editor.value !== MarkdownEditor.state.lastSavedContent);
+                MarkdownEditor.stateManager.markDirty(
+                    elements.editor.value !== MarkdownEditor.state.lastSavedContent
+                );
             }
             if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
                 MarkdownEditor.autosave.scheduleAutosave();
@@ -164,8 +163,14 @@
         const after = value.slice(end);
 
         // Add proper spacing: blank line before and after if not at document edges
-        const leading = start > 0 && !before.endsWith('\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
-        const trailing = after.length > 0 && !after.startsWith('\n') ? '\n\n' : (after.startsWith('\n') && !after.startsWith('\n\n') ? '\n' : '');
+        const leading =
+            start > 0 && !before.endsWith('\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
+        const trailing =
+            after.length > 0 && !after.startsWith('\n')
+                ? '\n\n'
+                : after.startsWith('\n') && !after.startsWith('\n\n')
+                  ? '\n'
+                  : '';
 
         const hr = '---';
         const inserted = `${leading}${hr}${trailing}`;
@@ -199,9 +204,11 @@
             const matchEnd = matchStart + match[0].length;
 
             // Check if cursor or selection is within or touches the footnote reference
-            if ((start >= matchStart && start <= matchEnd) ||
+            if (
+                (start >= matchStart && start <= matchEnd) ||
                 (end >= matchStart && end <= matchEnd) ||
-                (start <= matchStart && end >= matchEnd)) {
+                (start <= matchStart && end >= matchEnd)
+            ) {
                 footnoteToRemove = {
                     identifier: match[1],
                     matchStart: matchStart,
@@ -306,7 +313,9 @@
                 utils.updateCounters();
             }
             if (MarkdownEditor.stateManager) {
-                MarkdownEditor.stateManager.markDirty(elements.editor.value !== MarkdownEditor.state.lastSavedContent);
+                MarkdownEditor.stateManager.markDirty(
+                    elements.editor.value !== MarkdownEditor.state.lastSavedContent
+                );
             }
             if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
                 MarkdownEditor.autosave.scheduleAutosave();
@@ -325,22 +334,25 @@
         const selectedText = value.slice(start, end);
 
         // Prompt for footnote identifier and text
-        const result = await dialogs.multiPromptDialog([
-            {
-                label: 'Footnote identifier (e.g., 1, note1, etc.)',
-                defaultValue: selectedText || '1',
-                inputType: 'text',
-                key: 'identifier',
-                required: true
-            },
-            {
-                label: 'Footnote text',
-                defaultValue: '',
-                inputType: 'text',
-                key: 'text',
-                required: true
-            }
-        ], 'Insert Footnote');
+        const result = await dialogs.multiPromptDialog(
+            [
+                {
+                    label: 'Footnote identifier (e.g., 1, note1, etc.)',
+                    defaultValue: selectedText || '1',
+                    inputType: 'text',
+                    key: 'identifier',
+                    required: true
+                },
+                {
+                    label: 'Footnote text',
+                    defaultValue: '',
+                    inputType: 'text',
+                    key: 'text',
+                    required: true
+                }
+            ],
+            'Insert Footnote'
+        );
 
         if (!result) {
             return;
@@ -392,7 +404,9 @@
                     utils.updateCounters();
                 }
                 if (MarkdownEditor.stateManager) {
-                    MarkdownEditor.stateManager.markDirty(elements.editor.value !== MarkdownEditor.state.lastSavedContent);
+                    MarkdownEditor.stateManager.markDirty(
+                        elements.editor.value !== MarkdownEditor.state.lastSavedContent
+                    );
                 }
                 if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
                     MarkdownEditor.autosave.scheduleAutosave();
@@ -423,16 +437,40 @@
         const isInsideCodeBlock = backticksBefore % 2 !== 0;
         if (isInsideCodeBlock) {
             elements.autosaveStatus.textContent = 'Cannot insert table inside code block';
-            await dialogs.alertDialog('Tables cannot be inserted inside code blocks.', 'Insert Table');
+            await dialogs.alertDialog(
+                'Tables cannot be inserted inside code blocks.',
+                'Insert Table'
+            );
             return;
         }
 
         // Ask user for rows/cols and header row
-        const result = await dialogs.multiPromptDialog([
-            { label: 'Columns (1-12)', defaultValue: '2', inputType: 'number', key: 'cols', required: true },
-            { label: 'Rows (1-50)', defaultValue: '2', inputType: 'number', key: 'rows', required: true },
-            { label: 'Include header row? (yes/no)', defaultValue: 'yes', inputType: 'text', key: 'header', required: true }
-        ], 'Insert Table');
+        const result = await dialogs.multiPromptDialog(
+            [
+                {
+                    label: 'Columns (1-12)',
+                    defaultValue: '2',
+                    inputType: 'number',
+                    key: 'cols',
+                    required: true
+                },
+                {
+                    label: 'Rows (1-50)',
+                    defaultValue: '2',
+                    inputType: 'number',
+                    key: 'rows',
+                    required: true
+                },
+                {
+                    label: 'Include header row? (yes/no)',
+                    defaultValue: 'yes',
+                    inputType: 'text',
+                    key: 'header',
+                    required: true
+                }
+            ],
+            'Insert Table'
+        );
 
         if (!result) {
             return;
@@ -445,8 +483,11 @@
 
         const cols = Math.max(1, Math.min(12, toInt(result.cols, 2)));
         const rows = Math.max(1, Math.min(50, toInt(result.rows, 2)));
-        const headerYes = String(result.header || 'yes').trim().toLowerCase();
-        const includeHeader = headerYes === 'y' || headerYes === 'yes' || headerYes === 'true' || headerYes === '1';
+        const headerYes = String(result.header || 'yes')
+            .trim()
+            .toLowerCase();
+        const includeHeader =
+            headerYes === 'y' || headerYes === 'yes' || headerYes === 'true' || headerYes === '1';
 
         // Build table
         const headerCells = Array.from({ length: cols }, (_, i) => `Header ${i + 1}`).join(' | ');
@@ -455,7 +496,9 @@
 
         const bodyRows = [];
         for (let r = 0; r < bodyRowsCount; r += 1) {
-            const cells = Array.from({ length: cols }, (_, c) => `Cell ${r + 1}-${c + 1}`).join(' | ');
+            const cells = Array.from({ length: cols }, (_, c) => `Cell ${r + 1}-${c + 1}`).join(
+                ' | '
+            );
             bodyRows.push(`| ${cells} |`);
         }
 
@@ -500,4 +543,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

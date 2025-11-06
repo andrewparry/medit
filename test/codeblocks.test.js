@@ -4,6 +4,8 @@
  * Requirements: 7.2, 7.3
  */
 
+/* eslint-env node, jest */
+
 // Mock DOM environment for testing
 class MockElement {
     constructor(tagName = 'div') {
@@ -44,11 +46,11 @@ class MockElement {
         return this.attributes.get(name);
     }
 
-    querySelector(selector) {
+    querySelector(_selector) {
         return null; // Simplified for testing
     }
 
-    querySelectorAll(selector) {
+    querySelectorAll(_selector) {
         return []; // Simplified for testing
     }
 
@@ -76,7 +78,7 @@ class MockElement {
 
     click() {
         const clickListeners = this.eventListeners.get('click') || [];
-        clickListeners.forEach(callback => callback({ preventDefault: () => {} }));
+        clickListeners.forEach((callback) => callback({ preventDefault: () => {} }));
     }
 
     cloneRange() {
@@ -186,13 +188,13 @@ class MockSelection {
 global.document = {
     getElementById: (id) => {
         const mockElements = {
-            'editor': new MockElement('div'),
-            'preview': new MockElement('div')
+            editor: new MockElement('div'),
+            preview: new MockElement('div')
         };
         return mockElements[id] || null;
     },
-    querySelector: (selector) => new MockElement(),
-    querySelectorAll: (selector) => [],
+    querySelector: (_selector) => new MockElement(),
+    querySelectorAll: (_selector) => [],
     createElement: (tagName) => new MockElement(tagName),
     createRange: () => new MockRange(),
     createTextNode: (text) => ({ textContent: text, nodeType: 3 }),
@@ -288,14 +290,22 @@ class MockMarkdownParser {
         highlighted = highlighted.replace(/(\/\/.*$)/gm, '<span class="comment">$1</span>');
 
         // Strings (to avoid highlighting keywords in strings)
-        highlighted = highlighted.replace(/(["'`])((?:\\.|(?!\1)[^\\])*?)\1/g, '<span class="string">$1$2$1</span>');
+        highlighted = highlighted.replace(
+            /(["'`])((?:\\.|(?!\1)[^\\])*?)\1/g,
+            '<span class="string">$1$2$1</span>'
+        );
 
         // Keywords (avoid replacing inside existing spans)
-        highlighted = highlighted.replace(/\b(const|let|var|function|class|if|else|for|while|return)\b(?![^<]*<\/span>)/g,
-            '<span class="keyword">$1</span>');
+        highlighted = highlighted.replace(
+            /\b(const|let|var|function|class|if|else|for|while|return)\b(?![^<]*<\/span>)/g,
+            '<span class="keyword">$1</span>'
+        );
 
         // Numbers (avoid replacing inside existing spans)
-        highlighted = highlighted.replace(/\b(\d+\.?\d*)\b(?![^<]*<\/span>)/g, '<span class="number">$1</span>');
+        highlighted = highlighted.replace(
+            /\b(\d+\.?\d*)\b(?![^<]*<\/span>)/g,
+            '<span class="number">$1</span>'
+        );
 
         return highlighted;
     }
@@ -307,14 +317,22 @@ class MockMarkdownParser {
         highlighted = highlighted.replace(/(#.*$)/gm, '<span class="comment">$1</span>');
 
         // Strings
-        highlighted = highlighted.replace(/(["'])((?:\\.|(?!\1)[^\\])*?)\1/g, '<span class="string">$1$2$1</span>');
+        highlighted = highlighted.replace(
+            /(["'])((?:\\.|(?!\1)[^\\])*?)\1/g,
+            '<span class="string">$1$2$1</span>'
+        );
 
         // Keywords (avoid replacing inside existing spans)
-        highlighted = highlighted.replace(/\b(def|class|if|elif|else|for|while|return|import|from)\b(?![^<]*<\/span>)/g,
-            '<span class="keyword">$1</span>');
+        highlighted = highlighted.replace(
+            /\b(def|class|if|elif|else|for|while|return|import|from)\b(?![^<]*<\/span>)/g,
+            '<span class="keyword">$1</span>'
+        );
 
         // Numbers (avoid replacing inside existing spans)
-        highlighted = highlighted.replace(/\b(\d+\.?\d*)\b(?![^<]*<\/span>)/g, '<span class="number">$1</span>');
+        highlighted = highlighted.replace(
+            /\b(\d+\.?\d*)\b(?![^<]*<\/span>)/g,
+            '<span class="number">$1</span>'
+        );
 
         return highlighted;
     }
@@ -372,7 +390,6 @@ class MockPreview {
             }
 
             // Show success feedback
-            const originalText = button.textContent;
             button.textContent = 'Copied!';
             button.style.background = 'var(--color-success)';
             button.style.color = 'white';
@@ -381,12 +398,10 @@ class MockPreview {
             if (this.editorCore.accessibilityManager) {
                 this.editorCore.accessibilityManager.announce('Code copied to clipboard');
             }
-
         } catch (error) {
             console.error('Failed to copy code:', error);
 
             // Show error feedback
-            const originalText = button.textContent;
             button.textContent = 'Failed';
             button.style.background = 'var(--color-error)';
             button.style.color = 'white';
@@ -430,7 +445,9 @@ global.AccessibilityManager = MockAccessibilityManager;
 class EditorCore {
     constructor(container) {
         this.container = container;
+        // eslint-disable-next-line no-undef
         this.markdownParser = new MarkdownParser();
+        // eslint-disable-next-line no-undef
         this.accessibilityManager = new AccessibilityManager(this);
 
         // Initialize state
@@ -460,7 +477,7 @@ class EditorCore {
 
     emit(eventType, data) {
         if (this.eventListeners.has(eventType)) {
-            this.eventListeners.get(eventType).forEach(callback => {
+            this.eventListeners.get(eventType).forEach((callback) => {
                 try {
                     callback(data);
                 } catch (error) {
@@ -523,7 +540,9 @@ class EditorCore {
         const cursorPos = this.getCurrentCursorPosition(range);
 
         const beforeCursor = currentContent.substring(0, cursorPos);
-        const afterCursor = currentContent.substring(cursorPos + (selectedText ? selectedText.length : 0));
+        const afterCursor = currentContent.substring(
+            cursorPos + (selectedText ? selectedText.length : 0)
+        );
 
         const needsNewlineBefore = beforeCursor && !beforeCursor.endsWith('\n');
         const needsNewlineAfter = afterCursor && !afterCursor.startsWith('\n');
@@ -537,13 +556,16 @@ class EditorCore {
         this.state.content.markdown = newContent;
 
         if (!selectedText) {
-            const newCursorPos = beforeCursor.length + prefix.length + `\`\`\`${languageSpec}\n`.length;
+            const newCursorPos =
+                beforeCursor.length + prefix.length + `\`\`\`${languageSpec}\n`.length;
             this.setCursorPosition(newCursorPos);
         }
     }
 
     promptForCodeLanguage() {
-        const language = window.prompt ? window.prompt('Enter programming language (optional):') : '';
+        const language = window.prompt
+            ? window.prompt('Enter programming language (optional):')
+            : '';
         return language ? language.trim() : '';
     }
 
@@ -577,7 +599,9 @@ describe('Code Block Functionality', () => {
         jest.clearAllMocks();
         mockContainer = new MockElement('div');
         editorCore = new EditorCore(mockContainer);
+        // eslint-disable-next-line no-undef
         markdownParser = new MarkdownParser();
+        // eslint-disable-next-line no-undef
         preview = new Preview(editorCore);
 
         // Reset window.prompt mock
@@ -760,7 +784,8 @@ print("Python")
 
     describe('Copy Functionality', () => {
         test('should add copy buttons to code blocks', () => {
-            const html = '<pre data-language="javascript"><code class="language-javascript">console.log("test");</code></pre>';
+            const html =
+                '<pre data-language="javascript"><code class="language-javascript">console.log("test");</code></pre>';
             preview.updateContent(html);
 
             expect(preview.codeBlocksProcessed).toBe(true);
@@ -789,7 +814,10 @@ print("Python")
 
             await preview.copyCodeToClipboard(codeBlock, button);
 
-            expect(mockConsole.error).toHaveBeenCalledWith('Failed to copy code:', expect.any(Error));
+            expect(mockConsole.error).toHaveBeenCalledWith(
+                'Failed to copy code:',
+                expect.any(Error)
+            );
         });
 
         test('should use fallback copy method when clipboard API unavailable', async () => {
@@ -852,7 +880,9 @@ print("Python")
 
             await preview.copyCodeToClipboard(codeBlock, button);
 
-            expect(editorCore.accessibilityManager.lastAnnouncement).toBe('Code copied to clipboard');
+            expect(editorCore.accessibilityManager.lastAnnouncement).toBe(
+                'Code copied to clipboard'
+            );
         });
     });
 

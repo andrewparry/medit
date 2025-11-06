@@ -52,7 +52,7 @@
         const content = elements.editor.value || '';
         const plain = stripMarkdown(content);
         const normalized = normalizeWhitespace(plain);
-        const words = normalized ? normalized.split(' ').filter(w => w.length > 0).length : 0;
+        const words = normalized ? normalized.split(' ').filter((w) => w.length > 0).length : 0;
         const characters = plain.length;
 
         if (elements.wordCountDisplay) {
@@ -152,7 +152,8 @@
             return;
         }
 
-        elements.fileNameDisplay.textContent = elements.fileNameDisplay.textContent.trim() || 'Untitled.md';
+        elements.fileNameDisplay.textContent =
+            elements.fileNameDisplay.textContent.trim() || 'Untitled.md';
         elements.fileNameDisplay.contentEditable = 'false';
         delete elements.fileNameDisplay.dataset.originalName;
 
@@ -165,10 +166,7 @@
     /**
      * Escape HTML special characters
      */
-    const escapeHtml = (s) => s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     /**
      * Check if a string is a valid URL
@@ -195,10 +193,12 @@
         const protocolPattern = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
 
         // Pattern for URLs without protocol but with domain
-        const domainPattern = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/;
+        const domainPattern =
+            /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/;
 
         // Pattern for URLs starting with www.
-        const wwwPattern = /^www\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(\/.*)?$/;
+        const wwwPattern =
+            /^www\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(\/.*)?$/;
 
         // Pattern for localhost or IP addresses
         const localhostPattern = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(\/.*)?$/;
@@ -215,7 +215,11 @@
         }
 
         // Check domain patterns (without protocol)
-        if (domainPattern.test(trimmed) || wwwPattern.test(trimmed) || localhostPattern.test(trimmed)) {
+        if (
+            domainPattern.test(trimmed) ||
+            wwwPattern.test(trimmed) ||
+            localhostPattern.test(trimmed)
+        ) {
             // Try to construct URL with https:// prefix
             try {
                 new URL(`https://${trimmed}`);
@@ -244,4 +248,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

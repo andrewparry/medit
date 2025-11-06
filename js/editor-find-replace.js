@@ -20,7 +20,9 @@
                 return new RegExp(query, elements.findCase?.checked ? 'g' : 'gi');
             }
             const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const pattern = elements.findWhole?.checked ? `(^|[^\\w])(${escaped})(?=[^\\w]|$)` : escaped;
+            const pattern = elements.findWhole?.checked
+                ? `(^|[^\\w])(${escaped})(?=[^\\w]|$)`
+                : escaped;
             return new RegExp(pattern, elements.findCase?.checked ? 'g' : 'gi');
         } catch (e) {
             return null;
@@ -74,16 +76,18 @@
             textNodes.push(n);
         }
 
-        let total = 0;
         textNodes.forEach((text) => {
             const value = text.nodeValue;
             let m;
             let lastIndex = 0;
             const fragments = [];
-            const re = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : `${regex.flags  }g`);
+            const re = new RegExp(
+                regex.source,
+                regex.flags.includes('g') ? regex.flags : `${regex.flags}g`
+            );
             while ((m = re.exec(value)) !== null) {
                 const start = m.index + (m[1] ? m[1].length : 0);
-                const len = (m[2] ? m[2].length : m[0].length);
+                const len = m[2] ? m[2].length : m[0].length;
                 const end = start + len;
                 if (start > lastIndex) {
                     fragments.push(document.createTextNode(value.slice(lastIndex, start)));
@@ -93,7 +97,6 @@
                 mark.textContent = value.slice(start, end);
                 fragments.push(mark);
                 lastIndex = end;
-                total += 1;
             }
             if (lastIndex === 0) {
                 return;
@@ -112,11 +115,14 @@
         // Update count
         const positions = [];
         const src = elements.editor.value;
-        const reAll = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : `${regex.flags  }g`);
+        const reAll = new RegExp(
+            regex.source,
+            regex.flags.includes('g') ? regex.flags : `${regex.flags}g`
+        );
         let mm;
         while ((mm = reAll.exec(src)) !== null) {
             const s = mm.index + (mm[1] ? mm[1].length : 0);
-            const l = (mm[2] ? mm[2].length : mm[0].length);
+            const l = mm[2] ? mm[2].length : mm[0].length;
             positions.push({ start: s, end: s + l });
         }
         searchState.matches = positions;
@@ -144,11 +150,14 @@
 
         // Ensure positions are up-to-date
         const positions = [];
-        const reAll = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : `${regex.flags  }g`);
+        const reAll = new RegExp(
+            regex.source,
+            regex.flags.includes('g') ? regex.flags : `${regex.flags}g`
+        );
         let mm;
         while ((mm = reAll.exec(text)) !== null) {
             const s = mm.index + (mm[1] ? mm[1].length : 0);
-            const l = (mm[2] ? mm[2].length : mm[0].length);
+            const l = mm[2] ? mm[2].length : mm[0].length;
             positions.push({ start: s, end: s + l });
         }
         searchState.matches = positions;
@@ -159,8 +168,8 @@
             if (pos.start > last) {
                 html += utils.escapeHtml(text.slice(last, pos.start));
             }
-            const cls = (idx === searchState.current) ? 'find-hit-current' : 'find-hit';
-            html += `<mark class="${cls}">${  utils.escapeHtml(text.slice(pos.start, pos.end))  }</mark>`;
+            const cls = idx === searchState.current ? 'find-hit-current' : 'find-hit';
+            html += `<mark class="${cls}">${utils.escapeHtml(text.slice(pos.start, pos.end))}</mark>`;
             last = pos.end;
         });
         html += utils.escapeHtml(text.slice(last));
@@ -185,7 +194,10 @@
             const hitOffsetTop = current.offsetTop;
             const hitHeight = current.offsetHeight || 1;
             const desiredTop = hitOffsetTop - (elements.editor.clientHeight / 2 - hitHeight / 2);
-            const maxScroll = Math.max(0, elements.editor.scrollHeight - elements.editor.clientHeight);
+            const maxScroll = Math.max(
+                0,
+                elements.editor.scrollHeight - elements.editor.clientHeight
+            );
             const targetScroll = Math.min(maxScroll, Math.max(0, desiredTop));
             if (Math.abs(elements.editor.scrollTop - targetScroll) > 1) {
                 elements.editor.scrollTop = targetScroll;
@@ -207,9 +219,18 @@
         // Center the hit within the viewport
         requestAnimationFrame(() => {
             const currentRect = current.getBoundingClientRect();
-            const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height')) || 0;
-            const toolbarH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--toolbar-height')) || 0;
-            const findH = (elements.findBar && !elements.findBar.hidden) ? elements.findBar.getBoundingClientRect().height : 0;
+            const headerH =
+                parseInt(
+                    getComputedStyle(document.documentElement).getPropertyValue('--header-height')
+                ) || 0;
+            const toolbarH =
+                parseInt(
+                    getComputedStyle(document.documentElement).getPropertyValue('--toolbar-height')
+                ) || 0;
+            const findH =
+                elements.findBar && !elements.findBar.hidden
+                    ? elements.findBar.getBoundingClientRect().height
+                    : 0;
             const topInset = headerH + toolbarH + findH;
             const usableHeight = window.innerHeight - topInset;
             const desiredCenterY = topInset + usableHeight / 2;
@@ -235,7 +256,10 @@
         }
 
         const value = elements.editor.value;
-        const startFrom = direction === -1 ? Math.max(0, elements.editor.selectionStart - 1) : Math.max(elements.editor.selectionEnd, searchState.lastIndex);
+        const startFrom =
+            direction === -1
+                ? Math.max(0, elements.editor.selectionStart - 1)
+                : Math.max(elements.editor.selectionEnd, searchState.lastIndex);
 
         // Forward search from startFrom
         regex.lastIndex = startFrom;
@@ -295,15 +319,21 @@
         let matchOk = false;
         if (elements.findRegex?.checked) {
             try {
-                matchOk = new RegExp(`^${regex.source}$`, regex.flags.replace('g','')).test(selected);
+                matchOk = new RegExp(`^${regex.source}$`, regex.flags.replace('g', '')).test(
+                    selected
+                );
             } catch (_) {
                 matchOk = false;
             }
         } else if (elements.findWhole?.checked) {
-            const equal = elements.findCase?.checked ? selected === query : selected.toLowerCase() === query.toLowerCase();
+            const equal = elements.findCase?.checked
+                ? selected === query
+                : selected.toLowerCase() === query.toLowerCase();
             matchOk = equal;
         } else {
-            const equal = elements.findCase?.checked ? selected === query : selected.toLowerCase() === query.toLowerCase();
+            const equal = elements.findCase?.checked
+                ? selected === query
+                : selected.toLowerCase() === query.toLowerCase();
             matchOk = equal;
         }
 
@@ -316,7 +346,9 @@
 
         const before = elements.editor.value.slice(0, start);
         const after = elements.editor.value.slice(end);
-        const replaceWith = elements.findRegex?.checked ? selected.replace(new RegExp(regex.source, regex.flags.replace('g','')), replacement) : replacement;
+        const replaceWith = elements.findRegex?.checked
+            ? selected.replace(new RegExp(regex.source, regex.flags.replace('g', '')), replacement)
+            : replacement;
         elements.editor.value = `${before}${replaceWith}${after}`;
         const newPos = before.length + replaceWith.length;
         elements.editor.setSelectionRange(newPos, newPos);
@@ -339,7 +371,7 @@
         }
 
         updateRawHighlightsForFind();
-        const totalAfter = (searchState.matches?.length) || 0;
+        const totalAfter = searchState.matches?.length || 0;
         searchState.current = -1;
         if (elements.findCount) {
             elements.findCount.textContent = `0/${totalAfter}`;
@@ -377,7 +409,7 @@
                 const e = s + (m[2] ? m[2].length : m[0].length);
                 parts.push(original.slice(last, s));
                 parts.push(replacement);
-                accLen += (s - last) + replacement.length;
+                accLen += s - last + replacement.length;
                 caretAfter = accLen;
                 last = e;
                 count += 1;
@@ -396,7 +428,7 @@
                     const e = s + (m[2] ? m[2].length : m[0].length);
                     parts.push(original.slice(last, s));
                     parts.push(replacement);
-                    accLen += (s - last) + replacement.length;
+                    accLen += s - last + replacement.length;
                     caretAfter = accLen;
                     last = e;
                     count += 1;
@@ -416,7 +448,7 @@
                     const e = s + m[0].length;
                     parts.push(original.slice(last, s));
                     parts.push(replacement);
-                    accLen += (s - last) + replacement.length;
+                    accLen += s - last + replacement.length;
                     caretAfter = accLen;
                     last = e;
                     count += 1;
@@ -447,7 +479,7 @@
             elements.editor.setSelectionRange(caretAfter, caretAfter);
         }
         updateRawHighlightsForFind();
-        const totalAfterAll = (searchState.matches?.length) || 0;
+        const totalAfterAll = searchState.matches?.length || 0;
         searchState.current = -1;
         if (elements.findCount) {
             elements.findCount.textContent = `0/${totalAfterAll}`;
@@ -536,10 +568,10 @@
         const selEnd = elements.editor.selectionEnd;
         let idx = -1;
         if (searchState.matches && searchState.matches.length) {
-            idx = searchState.matches.findIndex(m => m.start === selStart && m.end === selEnd);
+            idx = searchState.matches.findIndex((m) => m.start === selStart && m.end === selEnd);
         }
         searchState.current = idx;
-        const total = (searchState.matches?.length) || 0;
+        const total = searchState.matches?.length || 0;
         if (elements.findCount) {
             elements.findCount.textContent = `${idx >= 0 ? idx + 1 : 0}/${total}`;
         }
@@ -565,4 +597,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

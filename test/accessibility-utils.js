@@ -3,6 +3,8 @@
  * Helper functions for testing accessibility compliance
  */
 
+/* eslint-env node */
+
 /**
  * Check if element has proper ARIA attributes
  * @param {HTMLElement} element - Element to check
@@ -107,12 +109,14 @@ function validateKeyboardNavigation(document) {
 
     const focusableElements = document.querySelectorAll(focusableSelectors.join(', '));
 
-    focusableElements.forEach(element => {
+    focusableElements.forEach((element) => {
         const tabIndex = element.getAttribute('tabindex');
 
         // Check for positive tabindex (anti-pattern)
         if (tabIndex && parseInt(tabIndex) > 0) {
-            results.warnings.push(`Element has positive tabindex: ${element.tagName} (${tabIndex})`);
+            results.warnings.push(
+                `Element has positive tabindex: ${element.tagName} (${tabIndex})`
+            );
         }
 
         // Check for missing accessible names on interactive elements
@@ -124,7 +128,9 @@ function validateKeyboardNavigation(document) {
                 (element.tagName === 'INPUT' && element.getAttribute('placeholder'));
 
             if (!hasAccessibleName) {
-                results.warnings.push(`Interactive element missing accessible name: ${element.tagName}`);
+                results.warnings.push(
+                    `Interactive element missing accessible name: ${element.tagName}`
+                );
             }
         }
     });
@@ -174,7 +180,7 @@ function validateFormAccessibility(document) {
 
     const formElements = document.querySelectorAll('input, select, textarea');
 
-    formElements.forEach(element => {
+    formElements.forEach((element) => {
         const id = element.getAttribute('id');
         const ariaLabel = element.getAttribute('aria-label');
         const ariaLabelledBy = element.getAttribute('aria-labelledby');
@@ -194,7 +200,9 @@ function validateFormAccessibility(document) {
         }
 
         if (!hasLabel && element.type !== 'hidden' && element.type !== 'submit') {
-            results.warnings.push(`Form element missing label: ${element.tagName} (type: ${element.type})`);
+            results.warnings.push(
+                `Form element missing label: ${element.tagName} (type: ${element.type})`
+            );
         }
 
         // Check for required field indicators
@@ -223,7 +231,7 @@ function validateLiveRegions(document) {
 
     const liveRegions = document.querySelectorAll('[aria-live]');
 
-    liveRegions.forEach(element => {
+    liveRegions.forEach((element) => {
         const ariaLive = element.getAttribute('aria-live');
         const validValues = ['off', 'polite', 'assertive'];
 
@@ -298,13 +306,13 @@ function simulateKeyboardNavigation(document, keys = ['Tab', 'Shift+Tab', 'Enter
 
     const focusableElements = document.querySelectorAll(
         'button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
-        'textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"]), ' +
-        '[contenteditable="true"]'
+            'textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"]), ' +
+            '[contenteditable="true"]'
     );
 
     let currentFocusIndex = -1;
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
         try {
             if (key === 'Tab') {
                 currentFocusIndex = Math.min(currentFocusIndex + 1, focusableElements.length - 1);
@@ -344,7 +352,7 @@ function validateScreenReaderCompatibility(element) {
 
     // Check for hidden content that should be accessible
     const hiddenElements = element.querySelectorAll('[aria-hidden="true"]');
-    hiddenElements.forEach(hidden => {
+    hiddenElements.forEach((hidden) => {
         if (hidden.textContent.trim() && !hidden.getAttribute('aria-label')) {
             results.warnings.push('Hidden element contains text but no alternative');
         }
@@ -352,7 +360,7 @@ function validateScreenReaderCompatibility(element) {
 
     // Check for decorative images
     const images = element.querySelectorAll('img');
-    images.forEach(img => {
+    images.forEach((img) => {
         const alt = img.getAttribute('alt');
         const role = img.getAttribute('role');
 

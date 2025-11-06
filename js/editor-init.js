@@ -25,7 +25,9 @@
             elements.autosaveStatus.textContent = 'Saving draft...';
         }
         if (MarkdownEditor.stateManager) {
-            MarkdownEditor.stateManager.markDirty(elements.editor.value !== MarkdownEditor.state.lastSavedContent);
+            MarkdownEditor.stateManager.markDirty(
+                elements.editor.value !== MarkdownEditor.state.lastSavedContent
+            );
         }
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
@@ -37,7 +39,10 @@
             MarkdownEditor.syntaxHighlight.updateRawHighlights();
         }
         // Auto-renumber ordered lists to keep editor in sync with preview
-        if (MarkdownEditor.formatting && MarkdownEditor.formatting.renumberAllOrderedListsDebounced) {
+        if (
+            MarkdownEditor.formatting &&
+            MarkdownEditor.formatting.renumberAllOrderedListsDebounced
+        ) {
             MarkdownEditor.formatting.renumberAllOrderedListsDebounced();
         }
     };
@@ -146,7 +151,10 @@
 
         // Preview toggle
         if (elements.togglePreviewButton && MarkdownEditor.preview) {
-            elements.togglePreviewButton.addEventListener('click', MarkdownEditor.preview.togglePreview);
+            elements.togglePreviewButton.addEventListener(
+                'click',
+                MarkdownEditor.preview.togglePreview
+            );
         }
 
         // File operations
@@ -170,7 +178,10 @@
 
         // HTML rendering toggle
         if (elements.toggleHtmlButton && MarkdownEditor.ui) {
-            elements.toggleHtmlButton.addEventListener('click', MarkdownEditor.ui.toggleHtmlRendering);
+            elements.toggleHtmlButton.addEventListener(
+                'click',
+                MarkdownEditor.ui.toggleHtmlRendering
+            );
         }
 
         // Help button
@@ -180,7 +191,10 @@
 
         // Filename editing
         if (elements.fileNameDisplay && MarkdownEditor.utils) {
-            elements.fileNameDisplay.addEventListener('click', MarkdownEditor.utils.handleFilenameEdit);
+            elements.fileNameDisplay.addEventListener(
+                'click',
+                MarkdownEditor.utils.handleFilenameEdit
+            );
             elements.fileNameDisplay.addEventListener('keydown', (event) => {
                 if (elements.fileNameDisplay.isContentEditable) {
                     if (event.key === 'Enter') {
@@ -188,7 +202,9 @@
                         MarkdownEditor.utils.finalizeFilename();
                     } else if (event.key === 'Escape') {
                         event.preventDefault();
-                        elements.fileNameDisplay.textContent = elements.fileNameDisplay.dataset.originalName || elements.fileNameDisplay.textContent;
+                        elements.fileNameDisplay.textContent =
+                            elements.fileNameDisplay.dataset.originalName ||
+                            elements.fileNameDisplay.textContent;
                         MarkdownEditor.utils.finalizeFilename();
                     }
                 } else if (event.key === 'Enter' || event.key === ' ') {
@@ -196,7 +212,10 @@
                     MarkdownEditor.utils.handleFilenameEdit();
                 }
             });
-            elements.fileNameDisplay.addEventListener('blur', MarkdownEditor.utils.finalizeFilename);
+            elements.fileNameDisplay.addEventListener(
+                'blur',
+                MarkdownEditor.utils.finalizeFilename
+            );
         }
 
         // File input change
@@ -220,7 +239,10 @@
 
         // Storage changes
         window.addEventListener('storage', (event) => {
-            if (event.key === MarkdownEditor.constants.AUTOSAVE_KEY && event.newValue !== elements.editor.value) {
+            if (
+                event.key === MarkdownEditor.constants.AUTOSAVE_KEY &&
+                event.newValue !== elements.editor.value
+            ) {
                 if (elements.autosaveStatus) {
                     elements.autosaveStatus.textContent = 'Remote change detected';
                 }
@@ -246,10 +268,14 @@
         // Find/Replace events
         if (elements.findBar && MarkdownEditor.findReplace) {
             if (elements.findNextBtn) {
-                elements.findNextBtn.addEventListener('click', () => MarkdownEditor.findReplace.findInEditor(1));
+                elements.findNextBtn.addEventListener('click', () =>
+                    MarkdownEditor.findReplace.findInEditor(1)
+                );
             }
             if (elements.findPrevBtn) {
-                elements.findPrevBtn.addEventListener('click', () => MarkdownEditor.findReplace.findInEditor(-1));
+                elements.findPrevBtn.addEventListener('click', () =>
+                    MarkdownEditor.findReplace.findInEditor(-1)
+                );
             }
             if (elements.toggleFindButton) {
                 elements.toggleFindButton.addEventListener('click', () => {
@@ -314,10 +340,14 @@
                 });
             }
             if (elements.replaceOneBtn) {
-                elements.replaceOneBtn.addEventListener('click', () => MarkdownEditor.findReplace.replaceOne());
+                elements.replaceOneBtn.addEventListener('click', () =>
+                    MarkdownEditor.findReplace.replaceOne()
+                );
             }
             if (elements.replaceAllBtn) {
-                elements.replaceAllBtn.addEventListener('click', () => MarkdownEditor.findReplace.replaceAll());
+                elements.replaceAllBtn.addEventListener('click', () =>
+                    MarkdownEditor.findReplace.replaceAll()
+                );
             }
         }
     };
@@ -405,8 +435,6 @@
 
         // Bind all events
         bindEvents();
-
-        console.log('Markdown Editor initialized successfully');
     };
 
     // Initialize when DOM is ready
@@ -424,4 +452,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

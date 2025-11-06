@@ -136,9 +136,10 @@
             const beforeSelection = value.slice(Math.max(0, start - 3), start);
             const afterSelection = value.slice(end, Math.min(value.length, end + 3));
 
-            formatting.bold = (beforeSelection.endsWith('**') && afterSelection.startsWith('**')) ||
-                              (beforeSelection.endsWith('__') && afterSelection.startsWith('__')) ||
-                              (beforeSelection.endsWith('***') && afterSelection.startsWith('***'));
+            formatting.bold =
+                (beforeSelection.endsWith('**') && afterSelection.startsWith('**')) ||
+                (beforeSelection.endsWith('__') && afterSelection.startsWith('__')) ||
+                (beforeSelection.endsWith('***') && afterSelection.startsWith('***'));
         } else {
             // No selection: check if cursor is inside bold text
             // Pattern for bold: **text**, __text__, or ***text*** (bold+italic)
@@ -181,8 +182,8 @@
             }
 
             const beforeCursor = value.slice(0, start);
-            const isAtEndOfItalic = italicMatches.some(match => beforeCursor.endsWith(match));
-            const isAfterItalic = italicMatches.some(match => {
+            const isAtEndOfItalic = italicMatches.some((match) => beforeCursor.endsWith(match));
+            const isAfterItalic = italicMatches.some((match) => {
                 const matchEnd = value.indexOf(match) + match.length;
                 return start === matchEnd;
             });
@@ -209,8 +210,10 @@
             }
 
             const beforeCursor = value.slice(0, start);
-            const isAtEndOfUnderline = underlineMatches.some(match => beforeCursor.endsWith(match));
-            const isAfterUnderline = underlineMatches.some(match => {
+            const isAtEndOfUnderline = underlineMatches.some((match) =>
+                beforeCursor.endsWith(match)
+            );
+            const isAfterUnderline = underlineMatches.some((match) => {
                 const matchEnd = value.indexOf(match) + match.length;
                 return start === matchEnd;
             });
@@ -237,13 +240,16 @@
             }
 
             const beforeCursor = value.slice(0, start);
-            const isAtEndOfStrikethrough = strikethroughMatches.some(match => beforeCursor.endsWith(match));
-            const isAfterStrikethrough = strikethroughMatches.some(match => {
+            const isAtEndOfStrikethrough = strikethroughMatches.some((match) =>
+                beforeCursor.endsWith(match)
+            );
+            const isAfterStrikethrough = strikethroughMatches.some((match) => {
                 const matchEnd = value.indexOf(match) + match.length;
                 return start === matchEnd;
             });
 
-            formatting.strikethrough = isInsideStrikethrough || isAtEndOfStrikethrough || isAfterStrikethrough;
+            formatting.strikethrough =
+                isInsideStrikethrough || isAtEndOfStrikethrough || isAfterStrikethrough;
         }
 
         // Check for inline code (`text`)
@@ -265,8 +271,8 @@
             }
 
             const beforeCursor = value.slice(0, start);
-            const isAtEndOfCode = codeMatches.some(match => beforeCursor.endsWith(match));
-            const isAfterCode = codeMatches.some(match => {
+            const isAtEndOfCode = codeMatches.some((match) => beforeCursor.endsWith(match));
+            const isAfterCode = codeMatches.some((match) => {
                 const matchEnd = value.indexOf(match) + match.length;
                 return start === matchEnd;
             });
@@ -276,7 +282,10 @@
 
         // Check for headers (at start of line)
         const lineStart = value.lastIndexOf('\n', start - 1) + 1;
-        const lineText = value.slice(lineStart, value.indexOf('\n', start) === -1 ? value.length : value.indexOf('\n', start));
+        const lineText = value.slice(
+            lineStart,
+            value.indexOf('\n', start) === -1 ? value.length : value.indexOf('\n', start)
+        );
 
         // Check for blockquote (at start of line)
         if (lineText.match(/^>\s/)) {
@@ -322,19 +331,29 @@
         const prevLineStart = value.lastIndexOf('\n', lineStart - 2) + 1;
         const nextLineEndIndex = value.indexOf('\n', value.indexOf('\n', start) + 1);
         const prevLine = value.slice(prevLineStart, lineStart - 1 >= 0 ? lineStart - 1 : 0);
-        const nextLine = value.slice(value.indexOf('\n', start) + 1 || value.length, nextLineEndIndex === -1 ? value.length : nextLineEndIndex);
+        const nextLine = value.slice(
+            value.indexOf('\n', start) + 1 || value.length,
+            nextLineEndIndex === -1 ? value.length : nextLineEndIndex
+        );
 
         const hasPipe = /\|/.test(lineText);
         const isSeparator = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(lineText);
         const prevHasPipe = /\|/.test(prevLine || '');
         const nextHasPipe = /\|/.test(nextLine || '');
-        const prevIsSeparator = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(prevLine || '');
-        const nextIsSeparator = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(nextLine || '');
+        const prevIsSeparator = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(
+            prevLine || ''
+        );
+        const nextIsSeparator = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(
+            nextLine || ''
+        );
 
         if (!formatting.codeBlock) {
             if (isSeparator) {
                 formatting.table = true;
-            } else if (hasPipe && (prevHasPipe || nextHasPipe || prevIsSeparator || nextIsSeparator)) {
+            } else if (
+                hasPipe &&
+                (prevHasPipe || nextHasPipe || prevIsSeparator || nextIsSeparator)
+            ) {
                 formatting.table = true;
             }
         }
@@ -348,9 +367,11 @@
             const matchEnd = matchStart + match[0].length;
 
             // Check if cursor or selection is within or touches the footnote reference
-            if ((start >= matchStart && start <= matchEnd) ||
+            if (
+                (start >= matchStart && start <= matchEnd) ||
                 (end >= matchStart && end <= matchEnd) ||
-                (start <= matchStart && end >= matchEnd)) {
+                (start <= matchStart && end >= matchEnd)
+            ) {
                 formatting.footnote = true;
                 break;
             }
@@ -485,6 +506,70 @@
     };
 
     /**
+     * Get the word at the cursor position
+     * Returns { word: string, start: number, end: number } or null if no word found
+     * Handles cursor at word boundaries (start/end of word)
+     */
+    const getWordAtCursor = (cursorPos, text) => {
+        if (cursorPos < 0 || cursorPos > text.length || text.length === 0) {
+            return null;
+        }
+
+        // Word boundary regex: alphanumeric characters and underscores
+        const wordCharPattern = /[\w]/;
+
+        // Check if cursor is on a word character or adjacent to one
+        const charAtCursor = text[cursorPos];
+        const charBefore = cursorPos > 0 ? text[cursorPos - 1] : null;
+
+        // If cursor is on a word character, find the word boundaries
+        if (charAtCursor && wordCharPattern.test(charAtCursor)) {
+            // Find the start of the word (go backwards until we hit a non-word character)
+            let wordStart = cursorPos;
+            while (wordStart > 0 && wordCharPattern.test(text[wordStart - 1])) {
+                wordStart--;
+            }
+
+            // Find the end of the word (go forwards until we hit a non-word character)
+            let wordEnd = cursorPos;
+            while (wordEnd < text.length && wordCharPattern.test(text[wordEnd])) {
+                wordEnd++;
+            }
+
+            // Extract the word
+            const word = text.slice(wordStart, wordEnd);
+
+            // Only return if we found a valid word (non-empty)
+            if (word.length > 0) {
+                return {
+                    word: word,
+                    start: wordStart,
+                    end: wordEnd
+                };
+            }
+        } else if (charBefore && wordCharPattern.test(charBefore)) {
+            // Cursor is right after a word (at whitespace/punctuation), find the word before
+            let wordStart = cursorPos - 1;
+            while (wordStart > 0 && wordCharPattern.test(text[wordStart - 1])) {
+                wordStart--;
+            }
+
+            const wordEnd = cursorPos;
+            const word = text.slice(wordStart, wordEnd);
+
+            if (word.length > 0) {
+                return {
+                    word: word,
+                    start: wordStart,
+                    end: wordEnd
+                };
+            }
+        }
+
+        return null;
+    };
+
+    /**
      * Apply inline formatting (bold, italic, strikethrough, code)
      */
     const applyInlineFormat = (prefix, suffix, placeholder = '') => {
@@ -533,10 +618,15 @@
                 // Fallback: just insert formatting
                 const selection = hasSelection ? value.slice(start, end) : placeholder;
                 const inserted = `${prefix}${selection}${suffix}`;
-                replaceSelection(inserted, hasSelection ? inserted.length : {
-                    start: prefix.length,
-                    end: prefix.length + selection.length
-                });
+                replaceSelection(
+                    inserted,
+                    hasSelection
+                        ? inserted.length
+                        : {
+                              start: prefix.length,
+                              end: prefix.length + selection.length
+                          }
+                );
                 return;
             }
 
@@ -593,7 +683,10 @@
                             // Clamp to valid range within the new text
                             const contentStart = matchStart;
                             const contentEnd = matchStart + newText.length;
-                            restoredStart = Math.max(contentStart, Math.min(contentEnd, restoredStart));
+                            restoredStart = Math.max(
+                                contentStart,
+                                Math.min(contentEnd, restoredStart)
+                            );
                             restoredEnd = Math.max(contentStart, Math.min(contentEnd, restoredEnd));
 
                             // Focus if needed
@@ -696,7 +789,9 @@
                     utils.updateCounters();
                 }
                 if (MarkdownEditor.stateManager) {
-                    MarkdownEditor.stateManager.markDirty(elements.editor.value !== state.lastSavedContent);
+                    MarkdownEditor.stateManager.markDirty(
+                        elements.editor.value !== state.lastSavedContent
+                    );
                 }
                 if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
                     MarkdownEditor.autosave.scheduleAutosave();
@@ -716,18 +811,31 @@
         }
 
         // ADD FORMATTING (not already formatted)
-        const selection = hasSelection ? value.slice(start, end) : placeholder;
-        const inserted = `${prefix}${selection}${suffix}`;
-
         if (hasSelection) {
             // Replace selection with formatted text, cursor at end
+            const selection = value.slice(start, end);
+            const inserted = `${prefix}${selection}${suffix}`;
             replaceSelection(inserted, inserted.length);
         } else {
-            // No selection: insert placeholder and select it
-            replaceSelection(inserted, {
-                start: prefix.length,
-                end: prefix.length + selection.length
-            });
+            // No selection: try to wrap the word at cursor, or insert placeholder
+            const wordAtCursor = getWordAtCursor(start, value);
+
+            if (wordAtCursor) {
+                // Wrap the word at cursor position
+                // Temporarily set selection to the word so we can use replaceSelection
+                elements.editor.setSelectionRange(wordAtCursor.start, wordAtCursor.end);
+
+                const formattedWord = `${prefix}${wordAtCursor.word}${suffix}`;
+                // Use replaceSelection to maintain history and scroll position
+                replaceSelection(formattedWord, formattedWord.length);
+            } else {
+                // No word at cursor: insert placeholder and select it
+                const inserted = `${prefix}${placeholder}${suffix}`;
+                replaceSelection(inserted, {
+                    start: prefix.length,
+                    end: prefix.length + placeholder.length
+                });
+            }
         }
     };
 
@@ -778,7 +886,9 @@
                 const existingText = headingMatch ? headingMatch[3] : content;
                 const normalizedText = existingText.replace(/^\s+/, '');
 
-                oldHeadingLength = headingMatch ? headingMatch[1].length + headingMatch[2].length : 0;
+                oldHeadingLength = headingMatch
+                    ? headingMatch[1].length + headingMatch[2].length
+                    : 0;
                 const hasCleanSpacing = headingMatch ? headingMatch[2] === ' ' : false;
 
                 if (existingLevel === level && headingMatch && hasCleanSpacing) {
@@ -1746,9 +1856,10 @@
                 if (!listState.has(level)) {
                     // Get parent counter for tracking
                     const parentLevel = level - 1;
-                    const parentCounter = level > 0 && listState.has(parentLevel)
-                        ? listState.get(parentLevel).counter
-                        : 0;
+                    const parentCounter =
+                        level > 0 && listState.has(parentLevel)
+                            ? listState.get(parentLevel).counter
+                            : 0;
 
                     listState.set(level, {
                         counter: 1,
@@ -1836,7 +1947,7 @@
 
         const isCheckbox = !!checkboxMatch;
         const isOrdered = !!orderedMatch;
-        const match = isCheckbox ? checkboxMatch : (isOrdered ? orderedMatch : unorderedMatch);
+        const match = isCheckbox ? checkboxMatch : isOrdered ? orderedMatch : unorderedMatch;
         const indent = match[1];
         const marker = match[2];
         const content = isCheckbox ? match[4] : match[3];
@@ -1855,7 +1966,9 @@
         if (content.trim() === '' && (isAtEndOfLine || cursorPosInLine <= markerEndPos)) {
             // Remove the empty list item and exit list
             const before = value.slice(0, lineStart);
-            const after = value.slice(value.indexOf('\n', start) !== -1 ? value.indexOf('\n', start) : value.length);
+            const after = value.slice(
+                value.indexOf('\n', start) !== -1 ? value.indexOf('\n', start) : value.length
+            );
 
             elements.editor.value = before + after;
             elements.editor.setSelectionRange(lineStart, lineStart);
@@ -1868,7 +1981,9 @@
                 utils.updateCounters();
             }
             if (MarkdownEditor.stateManager) {
-                MarkdownEditor.stateManager.markDirty(elements.editor.value !== state.lastSavedContent);
+                MarkdownEditor.stateManager.markDirty(
+                    elements.editor.value !== state.lastSavedContent
+                );
             }
             if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
                 MarkdownEditor.autosave.scheduleAutosave();
@@ -1919,17 +2034,20 @@
             newNextLine = `${indent}${nextMarker} ${contentAfterCursor}`;
         }
 
-        const newValue = `${before + newCurrentLine  }\n${  newNextLine  }${after}`;
+        const newValue = `${before + newCurrentLine}\n${newNextLine}${after}`;
         elements.editor.value = newValue;
 
         // Position cursor at start of content on new line
         let newCursorPos;
         if (isCheckbox) {
-            newCursorPos = before.length + newCurrentLine.length + 1 + indent.length + nextMarker.length + 1;
+            newCursorPos =
+                before.length + newCurrentLine.length + 1 + indent.length + nextMarker.length + 1;
         } else if (isOrdered) {
-            newCursorPos = before.length + newCurrentLine.length + 1 + indent.length + nextMarker.length + 1;
+            newCursorPos =
+                before.length + newCurrentLine.length + 1 + indent.length + nextMarker.length + 1;
         } else {
-            newCursorPos = before.length + newCurrentLine.length + 1 + indent.length + nextMarker.length + 1;
+            newCursorPos =
+                before.length + newCurrentLine.length + 1 + indent.length + nextMarker.length + 1;
         }
         elements.editor.setSelectionRange(newCursorPos, newCursorPos);
 
@@ -2129,4 +2247,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

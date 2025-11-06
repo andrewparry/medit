@@ -9,6 +9,41 @@
     const { elements, state } = MarkdownEditor;
 
     /**
+     * Toggle checkbox in markdown source based on line number
+     */
+    const toggleCheckboxByLine = (lineNumber) => {
+        if (!elements.editor || !MarkdownEditor.formatting) {
+            return;
+        }
+
+        const value = elements.editor.value;
+        const lines = value.split('\n');
+        const lineIndex = lineNumber - 1; // Convert to 0-based index
+
+        if (lineIndex < 0 || lineIndex >= lines.length) {
+            return;
+        }
+
+        const line = lines[lineIndex];
+        const checkboxMatch = line.match(/^(\s*)([-*+])\s+\[([xX ])\]\s+(.*)$/);
+
+        if (checkboxMatch) {
+            // Calculate cursor position at the start of this line
+            let cursorPos = 0;
+            for (let i = 0; i < lineIndex; i++) {
+                cursorPos += lines[i].length + 1; // +1 for newline
+            }
+
+            // Set cursor to this line
+            elements.editor.setSelectionRange(cursorPos, cursorPos);
+            elements.editor.focus();
+
+            // Toggle the checkbox
+            MarkdownEditor.formatting.toggleCheckboxAtCursor();
+        }
+    };
+
+    /**
      * Update preview with current markdown content
      */
     const updatePreview = () => {
@@ -20,15 +55,34 @@
         const renderHtml = state.renderHtml || false;
         const rawHtml = window.markedLite.parse(markdown, { renderHtml });
         const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
-        elements.preview.innerHTML = safeHtml || '<p class="preview-placeholder">Start typing to see your formatted preview.</p>';
+        elements.preview.innerHTML =
+            safeHtml ||
+            '<p class="preview-placeholder">Start typing to see your formatted preview.</p>';
+
+        // Make checkboxes clickable
+        const checkboxes = elements.preview.querySelectorAll('input.task-checkbox');
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener('click', (event) => {
+                event.preventDefault();
+                const lineNumber = parseInt(checkbox.getAttribute('data-line'), 10);
+                if (lineNumber) {
+                    toggleCheckboxByLine(lineNumber);
+                }
+            });
+        });
 
         // Apply Prism.js syntax highlighting to code blocks in preview
         setTimeout(() => {
             if (window.Prism) {
-                const codeBlocks = elements.preview.querySelectorAll('pre code[class*="language-"]');
+                const codeBlocks = elements.preview.querySelectorAll(
+                    'pre code[class*="language-"]'
+                );
                 codeBlocks.forEach((block) => {
                     try {
-                        if (!block.classList.contains('language-none') && !block.parentElement.classList.contains('prism-loaded')) {
+                        if (
+                            !block.classList.contains('language-none') &&
+                            !block.parentElement.classList.contains('prism-loaded')
+                        ) {
                             window.Prism.highlightElement(block);
                             block.parentElement.classList.add('prism-loaded');
                         }
@@ -65,12 +119,17 @@
             }
         }
 
-        elements.togglePreviewButton.title = state.isPreviewVisible ? 'Hide preview (Ctrl+Shift+P)' : 'Show preview (Ctrl+Shift+P)';
+        elements.togglePreviewButton.title = state.isPreviewVisible
+            ? 'Hide preview (Ctrl+Shift+P)'
+            : 'Show preview (Ctrl+Shift+P)';
 
         // Persist preview state
         if (window.localStorage) {
             try {
-                localStorage.setItem('markdown-editor-preview', state.isPreviewVisible ? 'visible' : 'hidden');
+                localStorage.setItem(
+                    'markdown-editor-preview',
+                    state.isPreviewVisible ? 'visible' : 'hidden'
+                );
             } catch (error) {
                 console.error('Failed to persist preview state', error);
             }
@@ -115,4 +174,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

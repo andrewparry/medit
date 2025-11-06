@@ -522,6 +522,20 @@
             }
         }
 
+        // Handle Space for task completion (Ctrl/Cmd+Space)
+        if (key === ' ' && ctrlOrCmd && !event.shiftKey) {
+            // Check if we're in the editor
+            if (document.activeElement === elements.editor) {
+                if (MarkdownEditor.formatting && MarkdownEditor.formatting.toggleCheckboxAtCursor) {
+                    const handled = MarkdownEditor.formatting.toggleCheckboxAtCursor();
+                    if (handled) {
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+        }
+
         if (!ctrlOrCmd) {
             return;
         }
@@ -802,13 +816,14 @@
                 <div class="command-item"><span class="command-name">Bullet List</span><span class="command-shortcut">Ctrl/Cmd + Shift + 8</span></div>
                 <div class="command-item"><span class="command-name">Numbered List</span><span class="command-shortcut">Ctrl/Cmd + Shift + 7</span></div>
                 <div class="command-item"><span class="command-name">Task List</span><span class="command-shortcut">Toolbar</span></div>
+                <div class="command-item"><span class="command-name">Toggle Task</span><span class="command-shortcut">Ctrl/Cmd + Space</span></div>
                 <div class="command-item"><span class="command-name">Code Block</span><span class="command-shortcut">Ctrl/Cmd + Shift + C</span></div>
                 <div class="command-item"><span class="command-name">Indent List Item</span><span class="command-shortcut">Tab</span></div>
                 <div class="command-item"><span class="command-name">Outdent List Item</span><span class="command-shortcut">Shift + Tab</span></div>
             </div>
             <div class="example-box">
                 <div class="example-label">Example Markdown:</div>
-- Bullet item 1<br>- Bullet item 2<br>  - Nested bullet item<br><br>1. Numbered item 1<br>2. Numbered item 2<br>   1. Nested numbered item<br><br>- [ ] Task item 1<br>- [x] Task item 2 (completed)<br><br>\`\`\`javascript<br>function hello() {<br>  console.log("Hello");<br>}<br>\`\`\`
+- Bullet item 1<br>- Bullet item 2<br>  - Nested bullet item<br><br>1. Numbered item 1<br>2. Numbered item 2<br>   1. Nested numbered item<br><br>- [ ] Task item 1<br>- [x] Task item 2 (completed)<br><br>💡 <strong>Tip:</strong> Click checkboxes in preview or press Ctrl/Cmd+Space on a task line to toggle completion.<br><br>\`\`\`javascript<br>function hello() {<br>  console.log("Hello");<br>}<br>\`\`\`
             </div>
             <div class="note"><strong>Tip:</strong> Press Enter in a list to continue the list. Press Enter twice to exit the list.</div>
         </div>

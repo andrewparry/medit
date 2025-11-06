@@ -5,14 +5,16 @@
 (function (global) {
     const ALLOWED_HEADINGS = 6;
 
-    const escapeHtml = (value) => value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    const escapeHtml = (value) =>
+        value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
 
-    const escapeAttribute = (value) => escapeHtml(value).replace(/\(/g, '&#40;').replace(/\)/g, '&#41;');
+    const escapeAttribute = (value) =>
+        escapeHtml(value).replace(/\(/g, '&#40;').replace(/\)/g, '&#41;');
 
     const parseInline = (input, footnoteRefs = null, renderHtml = false) => {
         const codeSegments = [];
@@ -38,12 +40,44 @@
             // Store HTML tags before processing (only safe tags that sanitizer allows)
             // Match HTML tags: <tag>...</tag> or <tag />
             // Use a placeholder that won't be escaped (no <, >, &, ", ')
-            const htmlTagRegex = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:\s+[a-zA-Z-]+(?:=(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*(\/?)>/g;
+            const htmlTagRegex =
+                /<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:\s+[a-zA-Z-]+(?:=(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*(\/?)>/g;
             result = result.replace(htmlTagRegex, (match, closing, tagName, attrs, selfClosing) => {
                 const tag = tagName.toLowerCase();
                 // Only preserve tags that are in the sanitizer's allowed list
-                const allowedTags = ['a', 'blockquote', 'br', 'code', 'del', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                    'hr', 'img', 'input', 'li', 'ol', 'p', 'pre', 'span', 'strong', 'sup', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul', 'u'];
+                const allowedTags = [
+                    'a',
+                    'blockquote',
+                    'br',
+                    'code',
+                    'del',
+                    'div',
+                    'em',
+                    'h1',
+                    'h2',
+                    'h3',
+                    'h4',
+                    'h5',
+                    'h6',
+                    'hr',
+                    'img',
+                    'input',
+                    'li',
+                    'ol',
+                    'p',
+                    'pre',
+                    'span',
+                    'strong',
+                    'sup',
+                    'table',
+                    'tbody',
+                    'td',
+                    'th',
+                    'thead',
+                    'tr',
+                    'ul',
+                    'u'
+                ];
                 if (allowedTags.includes(tag)) {
                     const index = htmlTags.push(match) - 1;
                     // Use a placeholder that won't be escaped by escapeHtml
@@ -59,17 +93,24 @@
 
         // Restore preserved HTML tags if renderHtml is true
         if (renderHtml && htmlTags.length > 0) {
-            result = result.replace(/___HTML_TAG_(\d+)___/g, (_, index) => htmlTags[parseInt(index, 10)]);
+            result = result.replace(
+                /___HTML_TAG_(\d+)___/g,
+                (_, index) => htmlTags[parseInt(index, 10)]
+            );
         }
 
         // Images must be parsed before links to avoid double wrapping.
-        result = result.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) =>
-            `<img src="${escapeAttribute(url)}" alt="${escapeHtml(alt)}" loading="lazy">`
+        result = result.replace(
+            /!\[([^\]]*)\]\(([^)]+)\)/g,
+            (_, alt, url) =>
+                `<img src="${escapeAttribute(url)}" alt="${escapeHtml(alt)}" loading="lazy">`
         );
 
         // Parse links with safe attributes (but not footnote references).
-        result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) =>
-            `<a href="${escapeAttribute(url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`
+        result = result.replace(
+            /\[([^\]]+)\]\(([^)]+)\)/g,
+            (_, label, url) =>
+                `<a href="${escapeAttribute(url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`
         );
 
         // Bold, italic, strikethrough, and underline emphasis.
@@ -102,7 +143,10 @@
         }
 
         // Restore inline code segments now that formatting is done.
-        result = result.replace(/§§CODE(\d+)§§/g, (_, index) => `<code>${escapeHtml(codeSegments[index])}</code>`);
+        result = result.replace(
+            /§§CODE(\d+)§§/g,
+            (_, index) => `<code>${escapeHtml(codeSegments[index])}</code>`
+        );
 
         return result;
     };
@@ -122,20 +166,21 @@
 
     const isTableDivider = (line) => /^\s*\|?(\s*:?-{3,}:?\s*\|)+\s*:?-{3,}:?\s*\|?\s*$/.test(line);
 
-    const splitTableRow = (line) => line
-        .trim()
-        .replace(/^\|/, '')
-        .replace(/\|$/, '')
-        .split('|')
-        .map((cell) => cell.trim());
+    const splitTableRow = (line) =>
+        line
+            .trim()
+            .replace(/^\|/, '')
+            .replace(/\|$/, '')
+            .split('|')
+            .map((cell) => cell.trim());
 
     const parse = (markdown, options = {}) => {
         const renderHtml = options.renderHtml || false;
         const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
         const output = [];
         const state = {
-            listStack: [],  // Stack of { type: 'ul'|'ol', indent: number }
-            listBuffer: []  // Buffer for building nested list HTML
+            listStack: [], // Stack of { type: 'ul'|'ol', indent: number }
+            listBuffer: [] // Buffer for building nested list HTML
         };
         let inCodeBlock = false;
         let codeFenceBuffer = [];
@@ -161,8 +206,12 @@
                     codeBlockLanguage = languageMatch ? languageMatch[1].toLowerCase() : '';
                 } else {
                     // Close code block with language class for Prism.js
-                    const langClass = codeBlockLanguage ? ` class="language-${escapeAttribute(codeBlockLanguage)}"` : '';
-                    output.push(`<pre><code${langClass}>${escapeHtml(codeFenceBuffer.join('\n'))}</code></pre>`);
+                    const langClass = codeBlockLanguage
+                        ? ` class="language-${escapeAttribute(codeBlockLanguage)}"`
+                        : '';
+                    output.push(
+                        `<pre><code${langClass}>${escapeHtml(codeFenceBuffer.join('\n'))}</code></pre>`
+                    );
                     inCodeBlock = false;
                     codeFenceBuffer = [];
                     codeBlockLanguage = '';
@@ -184,7 +233,9 @@
             const nextLine = lines[index + 1] ? lines[index + 1].trim() : '';
             if (/^\s*\|.+\|\s*$/.test(trimmed) && isTableDivider(nextLine)) {
                 closeListIfNeeded(state, output);
-                const headerCells = splitTableRow(trimmed).map(cell => parseInline(cell, footnoteRefs, renderHtml));
+                const headerCells = splitTableRow(trimmed).map((cell) =>
+                    parseInline(cell, footnoteRefs, renderHtml)
+                );
                 index += 1; // Skip divider line
                 const bodyRows = [];
                 for (let bodyIndex = index + 1; bodyIndex < lines.length; bodyIndex += 1) {
@@ -192,7 +243,11 @@
                     if (!/^\s*\|.+\|\s*$/.test(potentialRow)) {
                         break;
                     }
-                    bodyRows.push(splitTableRow(potentialRow).map(cell => parseInline(cell, footnoteRefs, renderHtml)));
+                    bodyRows.push(
+                        splitTableRow(potentialRow).map((cell) =>
+                            parseInline(cell, footnoteRefs, renderHtml)
+                        )
+                    );
                     index = bodyIndex;
                 }
 
@@ -208,7 +263,9 @@
             if (headingMatch) {
                 closeListIfNeeded(state, output);
                 const level = Math.min(headingMatch[1].length, ALLOWED_HEADINGS);
-                output.push(`<h${level}>${parseInline(headingMatch[2].trim(), footnoteRefs, renderHtml)}</h${level}>`);
+                output.push(
+                    `<h${level}>${parseInline(headingMatch[2].trim(), footnoteRefs, renderHtml)}</h${level}>`
+                );
                 continue;
             }
 
@@ -239,7 +296,7 @@
                     state.listBuffer.push(`<${listType}>`);
                 } else if (state.listStack.length < level + 1) {
                     // Need to go deeper - open intermediate lists
-                    const levelsToOpen = (level + 1) - state.listStack.length;
+                    const levelsToOpen = level + 1 - state.listStack.length;
                     for (let j = 0; j < levelsToOpen; j++) {
                         const newLevel = state.listStack.length;
                         state.listStack.push({ type: listType, level: newLevel });
@@ -260,9 +317,12 @@
                     }
                 }
 
-                // Add the list item with checkbox
+                // Add the list item with checkbox (clickable, with data attributes for tracking)
                 const checkboxAttr = checked ? ' checked' : '';
-                state.listBuffer.push(`<li><input type="checkbox"${checkboxAttr} disabled> ${parseInline(content, footnoteRefs, renderHtml)}`);
+                const lineNumber = index + 1; // 1-based line number for tracking
+                state.listBuffer.push(
+                    `<li><input type="checkbox"${checkboxAttr} class="task-checkbox" data-line="${lineNumber}" data-checked="${checked}"> ${parseInline(content, footnoteRefs, renderHtml)}`
+                );
                 continue;
             }
 
@@ -292,7 +352,7 @@
                     state.listBuffer.push(`<${listType}>`);
                 } else if (state.listStack.length < level + 1) {
                     // Need to go deeper - open intermediate lists
-                    const levelsToOpen = (level + 1) - state.listStack.length;
+                    const levelsToOpen = level + 1 - state.listStack.length;
                     for (let j = 0; j < levelsToOpen; j++) {
                         const newLevel = state.listStack.length;
                         state.listStack.push({ type: listType, level: newLevel });
@@ -349,7 +409,9 @@
             const quoteMatch = trimmed.match(/^>\s?(.*)$/);
             if (quoteMatch) {
                 closeListIfNeeded(state, output);
-                output.push(`<blockquote>${parseInline(quoteMatch[1], footnoteRefs, renderHtml)}</blockquote>`);
+                output.push(
+                    `<blockquote>${parseInline(quoteMatch[1], footnoteRefs, renderHtml)}</blockquote>`
+                );
                 continue;
             }
 
@@ -367,8 +429,12 @@
 
         if (inCodeBlock) {
             // Handle unclosed code block (e.g., at end of document)
-            const langClass = codeBlockLanguage ? ` class="language-${escapeAttribute(codeBlockLanguage)}"` : '';
-            output.push(`<pre><code${langClass}>${escapeHtml(codeFenceBuffer.join('\n'))}</code></pre>`);
+            const langClass = codeBlockLanguage
+                ? ` class="language-${escapeAttribute(codeBlockLanguage)}"`
+                : '';
+            output.push(
+                `<pre><code${langClass}>${escapeHtml(codeFenceBuffer.join('\n'))}</code></pre>`
+            );
         }
         closeListIfNeeded(state, output);
 
@@ -379,13 +445,16 @@
             output.push('<ol>');
 
             // Sort footnotes by their number for consistent ordering
-            const sortedFootnotes = Array.from(footnoteDefs.entries())
-                .sort((a, b) => a[1].number - b[1].number);
+            const sortedFootnotes = Array.from(footnoteDefs.entries()).sort(
+                (a, b) => a[1].number - b[1].number
+            );
 
             for (const [identifier, def] of sortedFootnotes) {
                 const safeId = escapeAttribute(identifier);
                 const footnoteText = parseInline(def.text, footnoteRefs, renderHtml);
-                output.push(`<li id="fn-${safeId}">${footnoteText} <a href="#fnref-${safeId}" class="footnote-backref">↩</a></li>`);
+                output.push(
+                    `<li id="fn-${safeId}">${footnoteText} <a href="#fnref-${safeId}" class="footnote-backref">↩</a></li>`
+                );
             }
 
             output.push('</ol>');

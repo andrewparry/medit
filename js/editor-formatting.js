@@ -1336,12 +1336,127 @@
     };
 
     /**
+     * Toggle checkbox state at cursor position
+     * If cursor is on a checkbox line, toggle between [ ] and [x]
+     * Otherwise, insert a new checkbox list item
+     */
+    const toggleCheckboxAtCursor = () => {
+        if (!elements.editor) {
+            return;
+        }
+
+        // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
+        const scrollTop = elements.editor.scrollTop;
+        const scrollLeft = elements.editor.scrollLeft;
+        const hadFocus = document.activeElement === elements.editor;
+
+        const { start, value } = utils.getSelection();
+        const lines = value.split('\n');
+        const currentLineIndex = value.slice(0, start).split('\n').length - 1;
+        const currentLine = lines[currentLineIndex] || '';
+
+        // Check if current line is a checkbox
+        const checkboxMatch = currentLine.match(/^(\s*)([-*+])\s+\[([xX ])\]\s+(.*)$/);
+
+        if (checkboxMatch) {
+            // Toggle the checkbox state
+            const indent = checkboxMatch[1];
+            const marker = checkboxMatch[2];
+            const isChecked = checkboxMatch[3].toLowerCase() === 'x';
+            const content = checkboxMatch[4];
+            const newState = isChecked ? ' ' : 'x';
+            const newLine = `${indent}${marker} [${newState}] ${content}`;
+
+            // Calculate line boundaries
+            const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+            const lineEnd = value.indexOf('\n', start);
+            const actualLineEnd = lineEnd === -1 ? value.length : lineEnd;
+
+            const before = value.slice(0, lineStart);
+            const after = value.slice(actualLineEnd);
+
+            // Capture pre-change snapshot
+            if (history && history.pushHistory) {
+                history.pushHistory();
+            }
+
+            elements.editor.value = `${before}${newLine}${after}`;
+
+            // ✅ IMMEDIATE scroll lock #1 (after content change)
+            elements.editor.scrollTop = scrollTop;
+            elements.editor.scrollLeft = scrollLeft;
+
+            // ✅ CRITICAL: Only focus if not already focused, and prevent scroll
+            if (!hadFocus) {
+                elements.editor.focus({ preventScroll: true });
+            }
+
+            // Maintain cursor position
+            const newCursorPos = start + (newLine.length - currentLine.length);
+            elements.editor.setSelectionRange(newCursorPos, newCursorPos);
+
+            // ✅ IMMEDIATE scroll lock #2 (after setSelectionRange)
+            elements.editor.scrollTop = scrollTop;
+            elements.editor.scrollLeft = scrollLeft;
+
+            // ✅ TRIPLE RAF for maximum browser compatibility
+            requestAnimationFrame(() => {
+                elements.editor.scrollTop = scrollTop;
+                elements.editor.scrollLeft = scrollLeft;
+
+                requestAnimationFrame(() => {
+                    elements.editor.scrollTop = scrollTop;
+                    elements.editor.scrollLeft = scrollLeft;
+
+                    requestAnimationFrame(() => {
+                        elements.editor.scrollTop = scrollTop;
+                        elements.editor.scrollLeft = scrollLeft;
+                    });
+                });
+            });
+
+            // Capture post-change snapshot
+            if (history && history.pushHistory) {
+                history.pushHistory();
+            }
+
+            if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+                MarkdownEditor.preview.updatePreview();
+            }
+            if (utils.updateCounters) {
+                utils.updateCounters();
+            }
+            if (MarkdownEditor.stateManager) {
+                MarkdownEditor.stateManager.markDirty(
+                    elements.editor.value !== state.lastSavedContent
+                );
+            }
+            if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+                MarkdownEditor.autosave.scheduleAutosave();
+            }
+
+            return true; // Indicate we toggled a checkbox
+        }
+
+        return false; // Not on a checkbox line
+    };
+
+    /**
      * Toggle checkbox list markers
+     * If cursor is on a checkbox line, toggle its state
+     * Otherwise, add/remove checkbox markers from selected lines
      */
     const toggleCheckboxList = () => {
         if (!elements.editor) {
             return;
         }
+
+        // First, try to toggle checkbox at cursor if we're on a checkbox line
+        if (toggleCheckboxAtCursor()) {
+            return; // Successfully toggled, we're done
+        }
+
+        // Otherwise, proceed with the original behavior (add/remove checkbox markers)
 
         // ✅ CRITICAL: Capture scroll and focus state BEFORE any operations
         const scrollTop = elements.editor.scrollTop;
@@ -2227,6 +2342,7 @@
         applyBlockquote,
         toggleList,
         toggleCheckboxList,
+        toggleCheckboxAtCursor,
         applyCodeBlock,
         replaceSelection,
         indentListItem,

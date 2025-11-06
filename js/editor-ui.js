@@ -60,7 +60,9 @@
 
         // Update status message
         if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = isEnabled ? 'HTML rendering enabled' : 'HTML rendering disabled';
+            elements.autosaveStatus.textContent = isEnabled
+                ? 'HTML rendering enabled'
+                : 'HTML rendering disabled';
             setTimeout(() => {
                 if (elements.autosaveStatus && !MarkdownEditor.state.dirty) {
                     elements.autosaveStatus.textContent = 'Draft saved';
@@ -103,7 +105,12 @@
      * Initialize resize handle
      */
     const initializeResize = () => {
-        if (!elements.resizeHandle || !elements.editorPane || !elements.previewPane || !elements.editorContainer) {
+        if (
+            !elements.resizeHandle ||
+            !elements.editorPane ||
+            !elements.previewPane ||
+            !elements.editorContainer
+        ) {
             return;
         }
 
@@ -210,7 +217,8 @@
 
                 if (window.localStorage && elements.editorPane && elements.editorContainer) {
                     try {
-                        const currentRatio = (elements.editorPane.offsetWidth / elements.editorContainer.offsetWidth);
+                        const currentRatio =
+                            elements.editorPane.offsetWidth / elements.editorContainer.offsetWidth;
                         localStorage.setItem(constants.SPLIT_RATIO_KEY, currentRatio.toString());
                     } catch (error) {
                         console.error('Failed to save split ratio', error);
@@ -260,7 +268,9 @@
                 if (typeof e?.pointerId === 'number') {
                     elements.resizeHandle.releasePointerCapture(e.pointerId);
                 }
-            } catch (_) {}
+            } catch {
+                // Ignore pointer capture errors
+            }
         };
 
         elements.resizeHandle.addEventListener('pointerdown', (e) => {
@@ -270,7 +280,9 @@
                 if (typeof e.pointerId === 'number') {
                     elements.resizeHandle.setPointerCapture(e.pointerId);
                 }
-            } catch (_) {}
+            } catch {
+                // Ignore pointer capture errors
+            }
             document.addEventListener('pointermove', handlePointerMove);
             document.addEventListener('pointerup', handlePointerUp);
             document.addEventListener('pointercancel', handlePointerUp);
@@ -281,7 +293,9 @@
         });
         try {
             elements.resizeHandle.setAttribute('draggable', 'false');
-        } catch (_) {}
+        } catch {
+            // Ignore attribute setting errors
+        }
 
         // Keyboard support
         elements.resizeHandle.addEventListener('keydown', (e) => {
@@ -332,27 +346,27 @@
         switch (action) {
             case 'bold':
                 if (MarkdownEditor.formatting) {
-                    MarkdownEditor.formatting.applyInlineFormat('**', '**', 'bold text');
+                    MarkdownEditor.formatting.applyInlineFormat('**', '**');
                 }
                 break;
             case 'italic':
                 if (MarkdownEditor.formatting) {
-                    MarkdownEditor.formatting.applyInlineFormat('*', '*', 'italic text');
+                    MarkdownEditor.formatting.applyInlineFormat('*', '*');
                 }
                 break;
             case 'underline':
                 if (MarkdownEditor.formatting) {
-                    MarkdownEditor.formatting.applyInlineFormat('++', '++', 'underlined text');
+                    MarkdownEditor.formatting.applyInlineFormat('++', '++');
                 }
                 break;
             case 'strikethrough':
                 if (MarkdownEditor.formatting) {
-                    MarkdownEditor.formatting.applyInlineFormat('~~', '~~', 'deleted text');
+                    MarkdownEditor.formatting.applyInlineFormat('~~', '~~');
                 }
                 break;
             case 'code':
                 if (MarkdownEditor.formatting) {
-                    MarkdownEditor.formatting.applyInlineFormat('`', '`', 'code');
+                    MarkdownEditor.formatting.applyInlineFormat('`', '`');
                 }
                 break;
             case 'blockquote':
@@ -449,7 +463,6 @@
             return;
         }
         event.preventDefault();
-        console.log('Toolbar button clicked:', target.dataset.format);
         handleFormatting(target.dataset.format);
     };
 
@@ -467,7 +480,9 @@
                 event.preventDefault();
 
                 // Check if we're on a list item
-                const { start, value } = MarkdownEditor.utils ? MarkdownEditor.utils.getSelection() : { start: 0, value: '' };
+                const { start, value } = MarkdownEditor.utils
+                    ? MarkdownEditor.utils.getSelection()
+                    : { start: 0, value: '' };
                 const lineStart = value.lastIndexOf('\n', start - 1) + 1;
                 const lineEnd = value.indexOf('\n', start);
                 const currentLine = value.slice(lineStart, lineEnd === -1 ? value.length : lineEnd);
@@ -498,7 +513,8 @@
         if (key === 'enter' && !ctrlOrCmd && !event.shiftKey) {
             // Check if we're in the editor
             if (document.activeElement === elements.editor) {
-                const handled = MarkdownEditor.formatting && MarkdownEditor.formatting.handleEnterInList();
+                const handled =
+                    MarkdownEditor.formatting && MarkdownEditor.formatting.handleEnterInList();
                 if (handled) {
                     event.preventDefault();
                     return;
@@ -635,7 +651,10 @@
     const recomputeFindBarOffset = () => {
         const toolbarEl = document.querySelector('.toolbar-section');
         const h = toolbarEl ? toolbarEl.getBoundingClientRect().height : 0;
-        document.documentElement.style.setProperty('--toolbar-height', `${Math.max(0, Math.round(h))}px`);
+        document.documentElement.style.setProperty(
+            '--toolbar-height',
+            `${Math.max(0, Math.round(h))}px`
+        );
     };
 
     /**
@@ -865,7 +884,11 @@
 
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
-        const win = window.open(url, 'cheatsheet', 'width=900,height=800,scrollbars=yes,resizable=yes');
+        const win = window.open(
+            url,
+            'cheatsheet',
+            'width=900,height=800,scrollbars=yes,resizable=yes'
+        );
 
         if (win) {
             win.focus();
@@ -893,4 +916,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

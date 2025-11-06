@@ -131,7 +131,6 @@
 
         // Check for bold (**text** or __text__)
         if (hasSelection) {
-            const selectedText = value.slice(start, end);
             // Check if selection is wrapped with bold markers
             const beforeSelection = value.slice(Math.max(0, start - 3), start);
             const afterSelection = value.slice(end, Math.min(value.length, end + 3));
@@ -322,9 +321,7 @@
 
         // Check for code blocks (```)
         const beforeCursor = value.slice(0, start);
-        const afterCursor = value.slice(start);
         const codeBlockStart = (beforeCursor.match(/```/g) || []).length;
-        const codeBlockEnd = (afterCursor.match(/```/g) || []).length;
         formatting.codeBlock = codeBlockStart % 2 === 1;
 
         // Check for tables
@@ -572,7 +569,7 @@
     /**
      * Apply inline formatting (bold, italic, strikethrough, code)
      */
-    const applyInlineFormat = (prefix, suffix, placeholder = '') => {
+    const applyInlineFormat = (prefix, suffix) => {
         const { start, end, value } = utils.getSelection();
         const hasSelection = start !== end;
 
@@ -616,17 +613,15 @@
                 markerLength = 1;
             } else {
                 // Fallback: just insert formatting
-                const selection = hasSelection ? value.slice(start, end) : placeholder;
-                const inserted = `${prefix}${selection}${suffix}`;
-                replaceSelection(
-                    inserted,
-                    hasSelection
-                        ? inserted.length
-                        : {
-                              start: prefix.length,
-                              end: prefix.length + selection.length
-                          }
-                );
+                if (hasSelection) {
+                    const selection = value.slice(start, end);
+                    const inserted = `${prefix}${selection}${suffix}`;
+                    replaceSelection(inserted, inserted.length);
+                } else {
+                    // No selection: insert formatting markers and position cursor between them
+                    const inserted = `${prefix}${suffix}`;
+                    replaceSelection(inserted, prefix.length);
+                }
                 return;
             }
 
@@ -829,12 +824,9 @@
                 // Use replaceSelection to maintain history and scroll position
                 replaceSelection(formattedWord, formattedWord.length);
             } else {
-                // No word at cursor: insert placeholder and select it
-                const inserted = `${prefix}${placeholder}${suffix}`;
-                replaceSelection(inserted, {
-                    start: prefix.length,
-                    end: prefix.length + placeholder.length
-                });
+                // No word at cursor: insert formatting markers and position cursor between them
+                const inserted = `${prefix}${suffix}`;
+                replaceSelection(inserted, prefix.length);
             }
         }
     };

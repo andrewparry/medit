@@ -4,12 +4,42 @@
  */
 (function (global) {
     const ALLOWED_TAGS = new Set([
-        'a', 'blockquote', 'br', 'code', 'del', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'hr', 'img', 'input', 'li', 'ol', 'p', 'pre', 'span', 'strong', 'sup', 'table', 'tbody', 'td', 'th', 'thead', 'tr', 'ul', 'u'
+        'a',
+        'blockquote',
+        'br',
+        'code',
+        'del',
+        'div',
+        'em',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'hr',
+        'img',
+        'input',
+        'li',
+        'ol',
+        'p',
+        'pre',
+        'span',
+        'strong',
+        'sup',
+        'table',
+        'tbody',
+        'td',
+        'th',
+        'thead',
+        'tr',
+        'ul',
+        'u'
     ]);
 
     const URI_ATTRS = new Set(['href', 'src']);
-    const SAFE_PROTOCOL = /^(https?:|mailto:|data:image\/(png|gif|jpeg|webp);base64,|\/|#|\.\/|\.\.\/)/i;
+    const SAFE_PROTOCOL =
+        /^(https?:|mailto:|data:image\/(png|gif|jpeg|webp);base64,|\/|#|\.\/|\.\.\/)/i;
 
     const sanitizeNode = (node) => {
         if (node.nodeType === Node.TEXT_NODE) {
@@ -38,7 +68,24 @@
                     node.removeAttribute(attr.name);
                     return;
                 }
-            } else if (!['alt', 'title', 'loading', 'rel', 'target', 'class', 'type', 'checked', 'disabled', 'id', 'href'].includes(name)) {
+            } else if (name.startsWith('data-')) {
+                // Allow data-* attributes for editor integrations
+                return;
+            } else if (
+                ![
+                    'alt',
+                    'title',
+                    'loading',
+                    'rel',
+                    'target',
+                    'class',
+                    'type',
+                    'checked',
+                    'disabled',
+                    'id',
+                    'href'
+                ].includes(name)
+            ) {
                 node.removeAttribute(attr.name);
                 return;
             }

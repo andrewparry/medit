@@ -91,6 +91,49 @@
                     }
                 });
             }
+
+            // Add copy buttons to all code blocks in preview
+            const allPreBlocks = elements.preview.querySelectorAll('pre');
+            allPreBlocks.forEach((preBlock) => {
+                // Skip if copy button already exists
+                if (preBlock.querySelector('.code-copy-btn')) {
+                    return;
+                }
+
+                const copyButton = document.createElement('button');
+                copyButton.className = 'code-copy-btn';
+                copyButton.setAttribute('aria-label', 'Copy code to clipboard');
+                copyButton.innerHTML =
+                    '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 10.5V3.5C3 2.67157 3.67157 2 4.5 2H10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+                copyButton.addEventListener('click', async () => {
+                    const codeElement = preBlock.querySelector('code');
+                    const codeText = codeElement ? codeElement.textContent : preBlock.textContent;
+
+                    try {
+                        await navigator.clipboard.writeText(codeText);
+                        copyButton.innerHTML =
+                            '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 4L6 11.5L2.5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                        copyButton.classList.add('copied');
+
+                        setTimeout(() => {
+                            copyButton.innerHTML =
+                                '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 10.5V3.5C3 2.67157 3.67157 2 4.5 2H10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                    } catch (error) {
+                        console.warn('Failed to copy code to clipboard:', error);
+                        copyButton.innerHTML =
+                            '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+                        setTimeout(() => {
+                            copyButton.innerHTML =
+                                '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 10.5V3.5C3 2.67157 3.67157 2 4.5 2H10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+                        }, 2000);
+                    }
+                });
+
+                preBlock.appendChild(copyButton);
+            });
         }, 0);
     };
 

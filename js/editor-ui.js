@@ -342,7 +342,7 @@
     /**
      * Handle formatting action
      */
-    const handleFormatting = (action) => {
+    const handleFormatting = async (action) => {
         switch (action) {
             case 'bold':
                 if (MarkdownEditor.formatting) {
@@ -426,7 +426,7 @@
                 break;
             case 'codeBlock':
                 if (MarkdownEditor.formatting) {
-                    MarkdownEditor.formatting.applyCodeBlock();
+                    await MarkdownEditor.formatting.applyCodeBlock();
                 }
                 break;
             case 'link':

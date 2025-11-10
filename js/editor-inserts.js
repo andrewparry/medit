@@ -13,13 +13,28 @@
      */
     const insertLink = async () => {
         const { start, end, value } = utils.getSelection();
-        const selectedText = value.slice(start, end);
+        const trimmedSelectedText = value.slice(start, end).trim();
+
+        const beforeCursor = value.slice(0, start);
+        const codeFenceCount = (beforeCursor.match(/```/g) || []).length;
+        const isInsideCodeBlock = codeFenceCount % 2 !== 0;
+
+        if (isInsideCodeBlock) {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Cannot insert link inside code block';
+            }
+            await dialogs.alertDialog(
+                'Links cannot be inserted inside code blocks.',
+                'Insert Link'
+            );
+            return;
+        }
 
         const result = await dialogs.multiPromptDialog(
             [
                 {
                     label: 'Link text',
-                    defaultValue: selectedText || '',
+                    defaultValue: trimmedSelectedText || '',
                     inputType: 'text',
                     key: 'text',
                     required: false
@@ -29,7 +44,9 @@
                     defaultValue: 'https://',
                     inputType: 'url',
                     key: 'url',
-                    required: true
+                    required: true,
+                    helperText: 'Enter a full URL (https://example.com) or relative path',
+                    suggestions: ['https://', 'http://', 'mailto:', 'tel:']
                 }
             ],
             'Insert Link'
@@ -39,14 +56,55 @@
             return;
         }
 
-        const linkText = result.text || result.url;
-        const url = result.url;
+        const rawText = typeof result.text === 'string' ? result.text.trim() : '';
+        const rawUrl = typeof result.url === 'string' ? result.url.trim() : '';
 
-        if (!url) {
+        if (!rawUrl) {
+            await dialogs.alertDialog('Link URL is required.', 'Insert Link');
             return;
         }
 
-        const linkSyntax = `[${linkText}](${url})`;
+        const hasProtocolPrefix = /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(rawUrl);
+        const isRelativePath = /^(\.{1,2}\/|\/|#)/.test(rawUrl);
+        const mailtoPattern = /^mailto:[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+        const telPattern = /^tel:\+?[0-9()[\]\s-]+$/;
+
+        let normalizedUrl = rawUrl;
+
+        if (hasProtocolPrefix) {
+            if (rawUrl.startsWith('mailto:')) {
+                if (!mailtoPattern.test(rawUrl)) {
+                    await dialogs.alertDialog(
+                        'Please enter a valid email address after mailto:.',
+                        'Insert Link'
+                    );
+                    return;
+                }
+            } else if (rawUrl.startsWith('tel:')) {
+                if (!telPattern.test(rawUrl)) {
+                    await dialogs.alertDialog(
+                        'Please enter a valid telephone number after tel:.',
+                        'Insert Link'
+                    );
+                    return;
+                }
+            } else if (!utils.isValidUrl(rawUrl)) {
+                await dialogs.alertDialog('Please enter a valid URL.', 'Insert Link');
+                return;
+            }
+        } else if (!isRelativePath) {
+            if (!utils.isValidUrl(rawUrl)) {
+                await dialogs.alertDialog('Please enter a valid URL.', 'Insert Link');
+                return;
+            }
+
+            if (!rawUrl.match(/^https?:\/\//i)) {
+                normalizedUrl = `https://${rawUrl.replace(/^\/+/, '')}`;
+            }
+        }
+
+        const linkText = rawText || normalizedUrl;
+        const linkSyntax = `[${linkText}](${normalizedUrl})`;
         formatting.replaceSelection(linkSyntax, linkSyntax.length);
     };
 

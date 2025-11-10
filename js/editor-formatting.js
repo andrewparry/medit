@@ -1637,38 +1637,84 @@
     /**
      * Apply code block formatting
      */
-    const applyCodeBlock = () => {
+    const applyCodeBlock = async () => {
         if (!elements.editor) {
             return;
         }
 
-        // Preserve scroll position
-        const scrollTop = elements.editor.scrollTop;
-        const scrollLeft = elements.editor.scrollLeft;
-
+        // Capture current selection before showing dialog
         const { start, end, value } = utils.getSelection();
         const before = value.slice(0, start);
         const after = value.slice(end);
         const selection = value.slice(start, end);
         const hasSelection = start !== end && selection.length > 0;
-        const content = hasSelection ? selection : '';
-        const fence = '```';
-        const leading = start > 0 && !before.endsWith('\n') ? '\n' : '';
-        const trailing = after.startsWith('\n') || after.length === 0 ? '' : '\n';
-        const prefix = `${leading}${fence}\n`;
-        const suffix = `\n${fence}${trailing}`;
-        const inserted = `${prefix}${content}${suffix}`;
 
-        if (hasSelection) {
-            replaceSelection(inserted, inserted.length - trailing.length);
-        } else {
-            replaceSelection(inserted, prefix.length);
+        // Use the dialog framework to prompt for language
+        const dialogs = MarkdownEditor.dialogs;
+        if (!dialogs || !dialogs.multiPromptDialog) {
+            return;
         }
 
-        // Extra scroll lock for code blocks (they tend to shift more)
-        requestAnimationFrame(() => {
-            elements.editor.scrollTop = scrollTop;
-            elements.editor.scrollLeft = scrollLeft;
+        const result = await dialogs.multiPromptDialog(
+            [
+                {
+                    label: 'Programming language (optional)',
+                    defaultValue: '',
+                    inputType: 'text',
+                    key: 'language',
+                    required: false,
+                    helperText:
+                        'Leave empty for plain code block or specify: javascript, python, html, etc.',
+                    suggestions: [
+                        'javascript',
+                        'python',
+                        'html',
+                        'css',
+                        'java',
+                        'c',
+                        'cpp',
+                        'bash',
+                        'json',
+                        'markdown',
+                        'sql',
+                        'typescript'
+                    ]
+                }
+            ],
+            'Insert Code Block'
+        );
+
+        // User cancelled the dialog
+        if (!result) {
+            return;
+        }
+
+        const language = typeof result.language === 'string' ? result.language.trim() : '';
+        const languageSuffix = language ? language : '';
+        const placeholderText = 'Enter your code here';
+        const fence = '```';
+
+        const precedingSpacing = before.length > 0 && !before.endsWith('\n') ? '\n\n' : '';
+        const trailingSpacing = after.length > 0 && !after.startsWith('\n') ? '\n\n' : '';
+
+        const openingFenceLine = `${fence}${languageSuffix}\n`;
+
+        let blockContent = hasSelection ? selection : placeholderText;
+
+        if (!blockContent.endsWith('\n')) {
+            blockContent += '\n';
+        }
+
+        const closingFenceLine = fence;
+        const inserted = `${precedingSpacing}${openingFenceLine}${blockContent}${closingFenceLine}${trailingSpacing}`;
+
+        const selectionStartOffset = precedingSpacing.length + openingFenceLine.length;
+        const selectionContentLength = hasSelection ? selection.length : placeholderText.length;
+        const selectionEndOffset = selectionStartOffset + selectionContentLength;
+
+        replaceSelection(inserted, {
+            start: selectionStartOffset,
+            end: selectionEndOffset
         });
     };
 

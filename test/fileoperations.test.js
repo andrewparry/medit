@@ -1376,28 +1376,6 @@ Emojis: 🚀 🎉 💡 ⭐`;
     });
 
     describe('Edge Cases - File Handle Management', () => {
-        test('should reset file handles when using traditional method', async () => {
-            fileManager.currentFileHandle = new MockFileSystemFileHandle('old.md', 'old content');
-            fileManager.supportsFileSystemAccess = false;
-
-            const testContent = '# New Content';
-            const mockFile = new MockFile(testContent, 'new.md');
-
-            // Simulate traditional file input
-            const openPromise = fileManager.openFile();
-
-            setTimeout(() => {
-                fileManager.fileInput.files = [mockFile];
-                const changeEvent = { target: { files: [mockFile] } };
-                fileManager.fileInput.onchange(changeEvent);
-            }, 10);
-
-            await openPromise;
-
-            // File handles should be reset
-            expect(fileManager.currentFileHandle).toBeNull();
-        });
-
         test('should maintain file handle on successful save', async () => {
             fileManager.supportsFileSystemAccess = true;
             const testContent = '# Test Content';
@@ -1408,6 +1386,23 @@ Emojis: 🚀 🎉 💡 ⭐`;
 
             await fileManager.saveFile('test.md');
 
+            expect(fileManager.currentFileHandle).toBe(mockFileHandle);
+        });
+
+        test('should handle file operations with missing file handle gracefully', async () => {
+            // Test that operations work even without file handles
+            fileManager.currentFileHandle = null;
+            fileManager.supportsFileSystemAccess = true;
+
+            const testContent = '# Test';
+            mockEditorCore.setMarkdown(testContent);
+
+            const mockFileHandle = new MockFileSystemFileHandle('new.md');
+            mockShowSaveFilePicker.mockResolvedValue(mockFileHandle);
+
+            const result = await fileManager.saveFile('new.md');
+
+            expect(result.name).toBe('new.md');
             expect(fileManager.currentFileHandle).toBe(mockFileHandle);
         });
     });

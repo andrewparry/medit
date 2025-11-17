@@ -20,3 +20,8 @@ package-lock.json
 # Generated files
 TRANSFORMATION_COMPLETE.md
 
+# IDE and tool directories
+.vscode/
+.kiro/
+.idea/
+

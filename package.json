@@ -30,8 +30,8 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint \"js/**/*.js\" \"test/**/*.js\" --ignore-path .gitignore --max-warnings=100 --quiet",
     "lint:fix": "eslint \"js/**/*.js\" \"test/**/*.js\" --fix --ignore-path .gitignore",
-    "format": "prettier --write \"**/*.{js,json,md,css,html}\"",
-    "format:check": "prettier --check \"**/*.{js,json,md,css,html}\"",
+    "format": "prettier --write \"**/*.{js,json,md,css,html}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{js,json,md,css,html}\" --ignore-path .prettierignore",
     "prepare": "husky"
   },
   "lint-staged": {

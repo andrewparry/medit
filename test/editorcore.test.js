@@ -4,6 +4,9 @@
  * Requirements: 1.3
  */
 
+/* eslint-env jest, node */
+/* eslint-disable no-undef */
+
 // Mock DOM elements for testing
 class MockElement {
     constructor(tagName = 'div') {
@@ -71,7 +74,7 @@ class MockElement {
     click() {
         // Trigger click event
         const clickListeners = this.eventListeners.get('click') || [];
-        clickListeners.forEach(callback => callback({ preventDefault: () => {} }));
+        clickListeners.forEach((callback) => callback({ preventDefault: () => {} }));
     }
 }
 
@@ -79,8 +82,8 @@ class MockElement {
 global.document = {
     getElementById: (id) => {
         const mockElements = {
-            'editor': new MockElement('div'),
-            'preview': new MockElement('div'),
+            editor: new MockElement('div'),
+            preview: new MockElement('div'),
             'toggle-preview': new MockElement('button'),
             'word-count': new MockElement('span'),
             'char-count': new MockElement('span')
@@ -293,7 +296,7 @@ class EditorCore {
 
     emit(eventType, data) {
         if (this.eventListeners.has(eventType)) {
-            this.eventListeners.get(eventType).forEach(callback => {
+            this.eventListeners.get(eventType).forEach((callback) => {
                 try {
                     callback(data);
                 } catch (error) {
@@ -440,7 +443,9 @@ describe('EditorCore State Management', () => {
             expect(editorCore.state.file.name).toBe(fileName);
             expect(editorCore.state.file.hasUnsavedChanges).toBe(false);
             expect(editorCore.state.file.lastSaved).toBeInstanceOf(Date);
-            expect(editorCore.state.file.lastSaved.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
+            expect(editorCore.state.file.lastSaved.getTime()).toBeGreaterThanOrEqual(
+                beforeTime.getTime()
+            );
         });
 
         test('should mark content as dirty', () => {
@@ -462,7 +467,9 @@ describe('EditorCore State Management', () => {
             expect(editorCore.state.content.isDirty).toBe(false);
             expect(editorCore.state.file.hasUnsavedChanges).toBe(false);
             expect(editorCore.state.file.lastSaved).toBeInstanceOf(Date);
-            expect(editorCore.state.file.lastSaved.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
+            expect(editorCore.state.file.lastSaved.getTime()).toBeGreaterThanOrEqual(
+                beforeTime.getTime()
+            );
         });
 
         test('should update active formatting set', () => {

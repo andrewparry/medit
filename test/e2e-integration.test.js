@@ -4,6 +4,9 @@
  * Requirements: 6.1, 1.1
  */
 
+/* eslint-env jest, node */
+/* eslint-disable no-undef */
+
 // Mock browser environment for testing
 const { JSDOM } = require('jsdom');
 
@@ -16,7 +19,8 @@ describe('End-to-End Integration Tests', () => {
 
     beforeEach(() => {
         // Create a complete DOM environment
-        dom = new JSDOM(`
+        dom = new JSDOM(
+            `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -61,11 +65,13 @@ describe('End-to-End Integration Tests', () => {
                 <input type="file" id="file-input" accept=".md,.markdown,.txt" style="display: none;" aria-hidden="true">
             </body>
             </html>
-        `, {
-            url: 'http://localhost',
-            pretendToBeVisual: true,
-            resources: 'usable'
-        });
+        `,
+            {
+                url: 'http://localhost',
+                pretendToBeVisual: true,
+                resources: 'usable'
+            }
+        );
 
         window = dom.window;
         document = window.document;
@@ -223,7 +229,10 @@ describe('End-to-End Integration Tests', () => {
             // Create large document content (10,000 lines)
             const largeContent = Array(10000)
                 .fill(0)
-                .map((_, i) => `Line ${i + 1}: This is a test line with some content to simulate a real document.`)
+                .map(
+                    (_, i) =>
+                        `Line ${i + 1}: This is a test line with some content to simulate a real document.`
+                )
                 .join('\n');
 
             const editor = document.getElementById('editor');
@@ -401,7 +410,7 @@ describe('End-to-End Integration Tests', () => {
                 'button, [contenteditable="true"], input'
             );
 
-            interactiveElements.forEach(element => {
+            interactiveElements.forEach((element) => {
                 // Elements should be focusable (not have tabindex="-1" unless intentional)
                 const tabIndex = element.getAttribute('tabindex');
                 if (tabIndex !== null) {
@@ -467,7 +476,7 @@ describe('End-to-End Integration Tests', () => {
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'
             ];
 
-            userAgents.forEach(ua => {
+            userAgents.forEach((ua) => {
                 Object.defineProperty(window.navigator, 'userAgent', {
                     value: ua,
                     configurable: true

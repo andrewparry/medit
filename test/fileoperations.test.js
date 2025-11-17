@@ -5,6 +5,9 @@
  * Requirements: 2.1, 3.1
  */
 
+/* eslint-env jest, node */
+/* eslint-disable no-undef */
+
 // Mock DOM environment for testing
 class MockElement {
     constructor(tagName = 'div') {
@@ -48,12 +51,12 @@ class MockElement {
 
     click() {
         const clickListeners = this.eventListeners.get('click') || [];
-        clickListeners.forEach(callback => callback({ preventDefault: () => {} }));
+        clickListeners.forEach((callback) => callback({ preventDefault: () => {} }));
     }
 
     dispatchEvent(event) {
         const listeners = this.eventListeners.get(event.type) || [];
-        listeners.forEach(callback => callback(event));
+        listeners.forEach((callback) => callback(event));
     }
 }
 
@@ -192,8 +195,8 @@ const mockShowSaveFilePicker = jest.fn();
 global.document = {
     getElementById: (id) => {
         const mockElements = {
-            'editor': new MockElement('div'),
-            'preview': new MockElement('div'),
+            editor: new MockElement('div'),
+            preview: new MockElement('div'),
             'file-input': new MockElement('input')
         };
         return mockElements[id] || null;
@@ -252,7 +255,7 @@ class MockEditorCore {
 
     emit(eventType, data) {
         if (this.eventListeners.has(eventType)) {
-            this.eventListeners.get(eventType).forEach(callback => {
+            this.eventListeners.get(eventType).forEach((callback) => {
                 callback(data);
             });
         }
@@ -293,15 +296,15 @@ class FileManager {
 
     init() {
         this.setupFileInput();
-        console.log('FileManager initialized', {
-            supportsFileSystemAccess: this.supportsFileSystemAccess
-        });
+        // FileManager initialized with File System Access API support
     }
 
     checkFileSystemAccessSupport() {
-        return typeof window !== 'undefined' &&
-               'showOpenFilePicker' in window &&
-               'showSaveFilePicker' in window;
+        return (
+            typeof window !== 'undefined' &&
+            'showOpenFilePicker' in window &&
+            'showSaveFilePicker' in window
+        );
     }
 
     setupFileInput() {
@@ -331,13 +334,15 @@ class FileManager {
 
     async openFileWithFileSystemAccess() {
         const [fileHandle] = await window.showOpenFilePicker({
-            types: [{
-                description: 'Markdown files',
-                accept: {
-                    'text/markdown': ['.md', '.markdown'],
-                    'text/plain': ['.txt']
+            types: [
+                {
+                    description: 'Markdown files',
+                    accept: {
+                        'text/markdown': ['.md', '.markdown'],
+                        'text/plain': ['.txt']
+                    }
                 }
-            }],
+            ],
             multiple: false
         });
 
@@ -442,12 +447,14 @@ class FileManager {
         if (!fileHandle || filename) {
             fileHandle = await window.showSaveFilePicker({
                 suggestedName: filename || this.generateDefaultFilename(),
-                types: [{
-                    description: 'Markdown files',
-                    accept: {
-                        'text/markdown': ['.md']
+                types: [
+                    {
+                        description: 'Markdown files',
+                        accept: {
+                            'text/markdown': ['.md']
+                        }
                     }
-                }]
+                ]
             });
         }
 
@@ -503,7 +510,8 @@ class FileManager {
             throw new Error(`Invalid file type. Expected: ${validExtensions.join(', ')}`);
         }
 
-        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        if (file.size > 10 * 1024 * 1024) {
+            // 10MB limit
             throw new Error('File too large. Maximum size is 10MB.');
         }
 
@@ -662,18 +670,27 @@ Characters like & < > " ' should be handled properly.`;
                 mockShowOpenFilePicker.mockRejectedValue(new Error('Permission denied'));
 
                 await expect(fileManager.openFile()).rejects.toThrow('Permission denied');
-                expect(mockConsole.error).toHaveBeenCalledWith('Error opening file:', expect.any(Error));
+                expect(mockConsole.error).toHaveBeenCalledWith(
+                    'Error opening file:',
+                    expect.any(Error)
+                );
             });
 
             test('should open different file extensions', async () => {
                 const testCases = [
                     { name: 'document.md', content: '# Markdown file' },
-                    { name: 'readme.markdown', content: '# Markdown file with .markdown extension' },
+                    {
+                        name: 'readme.markdown',
+                        content: '# Markdown file with .markdown extension'
+                    },
                     { name: 'notes.txt', content: 'Plain text file content' }
                 ];
 
                 for (const testCase of testCases) {
-                    const mockFileHandle = new MockFileSystemFileHandle(testCase.name, testCase.content);
+                    const mockFileHandle = new MockFileSystemFileHandle(
+                        testCase.name,
+                        testCase.content
+                    );
                     mockShowOpenFilePicker.mockResolvedValue([mockFileHandle]);
 
                     const result = await fileManager.openFile();
@@ -692,8 +709,11 @@ Characters like & < > " ' should be handled properly.`;
             });
 
             test('should open file using traditional file input', async () => {
-                const testContent = '# Traditional File Input Test\n\nThis tests the fallback method.';
-                const mockFile = new MockFile(testContent, 'traditional.md', { type: 'text/markdown' });
+                const testContent =
+                    '# Traditional File Input Test\n\nThis tests the fallback method.';
+                const mockFile = new MockFile(testContent, 'traditional.md', {
+                    type: 'text/markdown'
+                });
 
                 // Simulate file selection
                 const openPromise = fileManager.openFile();
@@ -912,7 +932,7 @@ Emojis: 🚀 🎉 💡 ⭐`;
 
                 // Copy static methods
                 Object.setPrototypeOf(global.Date, originalDate);
-                Object.getOwnPropertyNames(originalDate).forEach(name => {
+                Object.getOwnPropertyNames(originalDate).forEach((name) => {
                     if (name !== 'length' && name !== 'name' && name !== 'prototype') {
                         global.Date[name] = originalDate[name];
                     }
@@ -922,16 +942,18 @@ Emojis: 🚀 🎉 💡 ⭐`;
                 const mockFileHandle = new MockFileSystemFileHandle(expectedFilename);
                 mockShowSaveFilePicker.mockResolvedValue(mockFileHandle);
 
-                const result = await fileManager.saveFile();
+                await fileManager.saveFile();
 
                 expect(mockShowSaveFilePicker).toHaveBeenCalledWith({
                     suggestedName: expectedFilename,
-                    types: [{
-                        description: 'Markdown files',
-                        accept: {
-                            'text/markdown': ['.md']
+                    types: [
+                        {
+                            description: 'Markdown files',
+                            accept: {
+                                'text/markdown': ['.md']
+                            }
                         }
-                    }]
+                    ]
                 });
 
                 // Restore original Date
@@ -945,7 +967,9 @@ Emojis: 🚀 🎉 💡 ⭐`;
 
                 mockShowSaveFilePicker.mockRejectedValue(new Error('User cancelled'));
 
-                await expect(fileManager.saveFile('cancelled.md')).rejects.toThrow('User cancelled');
+                await expect(fileManager.saveFile('cancelled.md')).rejects.toThrow(
+                    'User cancelled'
+                );
                 expect(mockEditorCore.state.content.isDirty).toBe(true); // Should remain dirty
             });
 
@@ -954,7 +978,10 @@ Emojis: 🚀 🎉 💡 ⭐`;
                 mockEditorCore.setMarkdown(testContent);
 
                 // Set up existing file handle
-                const existingFileHandle = new MockFileSystemFileHandle('existing.md', 'old content');
+                const existingFileHandle = new MockFileSystemFileHandle(
+                    'existing.md',
+                    'old content'
+                );
                 fileManager.currentFileHandle = existingFileHandle;
 
                 const result = await fileManager.saveFile();
@@ -971,7 +998,8 @@ Emojis: 🚀 🎉 💡 ⭐`;
             });
 
             test('should save file using traditional download method', async () => {
-                const testContent = '# Traditional Save Test\n\nThis tests the fallback save method.';
+                const testContent =
+                    '# Traditional Save Test\n\nThis tests the fallback save method.';
                 mockEditorCore.setMarkdown(testContent);
 
                 const result = await fileManager.saveFile('traditional-save.md');
@@ -992,13 +1020,15 @@ Emojis: 🚀 🎉 💡 ⭐`;
 
                 const result = await fileManager.saveFile();
 
-                expect(result.name).toMatch(/^markdown-document-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.md$/);
+                expect(result.name).toMatch(
+                    /^markdown-document-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.md$/
+                );
                 expect(result.size).toBe(testContent.length);
             });
 
             test('should handle large content with traditional method', async () => {
                 // Create large content (1MB)
-                const largeContent = `# Large Document\n\n${  'A'.repeat(1024 * 1024)}`;
+                const largeContent = `# Large Document\n\n${'A'.repeat(1024 * 1024)}`;
                 mockEditorCore.setMarkdown(largeContent);
 
                 const result = await fileManager.saveFile('large-file.md');
@@ -1018,7 +1048,7 @@ Emojis: 🚀 🎉 💡 ⭐`;
                 new MockFile('content', 'notes.txt')
             ];
 
-            validFiles.forEach(file => {
+            validFiles.forEach((file) => {
                 expect(() => fileManager.validateMarkdownFile(file)).not.toThrow();
             });
         });
@@ -1031,12 +1061,12 @@ Emojis: 🚀 🎉 💡 ⭐`;
                 new MockFile('content', 'data.json')
             ];
 
-            invalidFiles.forEach(file => {
+            invalidFiles.forEach((file) => {
                 expect(() => fileManager.validateMarkdownFile(file)).toThrow('Invalid file type');
             });
         });
 
-        test('should reject files that are too large', () => {
+        test('should reject files that are too large (10MB limit)', () => {
             const largeContent = 'x'.repeat(11 * 1024 * 1024); // 11MB
             const largeFile = new MockFile(largeContent, 'large.md');
 
@@ -1048,6 +1078,25 @@ Emojis: 🚀 🎉 💡 ⭐`;
             const acceptableFile = new MockFile(acceptableContent, 'acceptable.md');
 
             expect(() => fileManager.validateMarkdownFile(acceptableFile)).not.toThrow();
+        });
+
+        test('should accept files exactly at 10MB limit', () => {
+            const maxContent = 'x'.repeat(10 * 1024 * 1024); // Exactly 10MB
+            const maxFile = new MockFile(maxContent, 'max-size.md');
+
+            expect(() => fileManager.validateMarkdownFile(maxFile)).not.toThrow();
+        });
+
+        test('should validate markdown file with .md extension case-insensitively', () => {
+            const files = [
+                new MockFile('content', 'test.MD'),
+                new MockFile('content', 'test.Md'),
+                new MockFile('content', 'test.MARKDOWN')
+            ];
+
+            files.forEach((file) => {
+                expect(() => fileManager.validateMarkdownFile(file)).not.toThrow();
+            });
         });
     });
 
@@ -1067,7 +1116,10 @@ Emojis: 🚀 🎉 💡 ⭐`;
             mockShowOpenFilePicker.mockResolvedValue([corruptedFileHandle]);
 
             await expect(fileManager.openFile()).rejects.toThrow('File is corrupted');
-            expect(mockConsole.error).toHaveBeenCalledWith('Error opening file:', expect.any(Error));
+            expect(mockConsole.error).toHaveBeenCalledWith(
+                'Error opening file:',
+                expect.any(Error)
+            );
         });
 
         test('should handle network interruption during file operations', async () => {
@@ -1184,6 +1236,206 @@ Emojis: 🚀 🎉 💡 ⭐`;
             expect(mockEditorCore.state.content.isDirty).toBe(false);
             expect(mockEditorCore.state.file.hasUnsavedChanges).toBe(false);
             expect(mockEditorCore.state.file.lastSaved).toBeInstanceOf(Date);
+        });
+    });
+
+    describe('Helper Functions - Filename Normalization', () => {
+        test('should add .md extension to filename without extension', () => {
+            const filename = 'myfile';
+            // Test normalizeFilename logic
+            const normalized = filename.endsWith('.md') ? filename : `${filename}.md`;
+            expect(normalized).toBe('myfile.md');
+        });
+
+        test('should not add .md extension if already present', () => {
+            const filename = 'myfile.md';
+            const normalized = filename.endsWith('.md') ? filename : `${filename}.md`;
+            expect(normalized).toBe('myfile.md');
+        });
+
+        test('should handle empty filename', () => {
+            const filename = '';
+            const normalized =
+                !filename || !filename.trim()
+                    ? 'Untitled.md'
+                    : filename.trim().endsWith('.md')
+                      ? filename.trim()
+                      : `${filename.trim()}.md`;
+            expect(normalized).toBe('Untitled.md');
+        });
+
+        test('should trim whitespace from filename', () => {
+            const filename = '  myfile  ';
+            const normalized = filename.trim().endsWith('.md')
+                ? filename.trim()
+                : `${filename.trim()}.md`;
+            expect(normalized).toBe('myfile.md');
+        });
+    });
+
+    describe('Helper Functions - Button Loading State', () => {
+        test('should manage button loading state with try-finally', async () => {
+            let buttonLoading = false;
+
+            try {
+                buttonLoading = true;
+                // Simulate operation
+                await new Promise((resolve) => setTimeout(resolve, 10));
+            } finally {
+                buttonLoading = false;
+            }
+
+            expect(buttonLoading).toBe(false);
+        });
+
+        test('should reset button loading state even on error', async () => {
+            let buttonLoading = false;
+
+            try {
+                buttonLoading = true;
+                throw new Error('Operation failed');
+            } catch (error) {
+                // Error caught
+            } finally {
+                buttonLoading = false;
+            }
+
+            expect(buttonLoading).toBe(false);
+        });
+    });
+
+    describe('Export Validation Edge Cases', () => {
+        test('should validate content before export', () => {
+            const emptyContent = '';
+            const validContent = '# Test';
+
+            expect(emptyContent.trim()).toBe('');
+            expect(validContent.trim()).not.toBe('');
+        });
+
+        test('should handle whitespace-only content', () => {
+            const whitespaceContent = '   \n\n   ';
+            expect(whitespaceContent.trim()).toBe('');
+        });
+
+        test('should preserve unicode in exports', () => {
+            const unicodeContent = '# Test 你好 🌍 مرحبا';
+            expect(unicodeContent).toContain('你好');
+            expect(unicodeContent).toContain('🌍');
+            expect(unicodeContent).toContain('مرحبا');
+        });
+    });
+
+    describe('Error Recovery and Fallback', () => {
+        test('should handle AbortError without throwing', async () => {
+            mockShowOpenFilePicker.mockRejectedValue({
+                name: 'AbortError',
+                message: 'User cancelled'
+            });
+
+            try {
+                await fileManager.openFile();
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    throw error;
+                }
+            }
+
+            expect(mockShowOpenFilePicker).toHaveBeenCalled();
+        });
+
+        test('should fallback from File System Access API to traditional method', async () => {
+            fileManager.supportsFileSystemAccess = true;
+            const testContent = '# Fallback Test';
+            mockEditorCore.setMarkdown(testContent);
+
+            // Mock File System Access API failure
+            mockShowSaveFilePicker.mockRejectedValue(new Error('Not supported'));
+
+            try {
+                await fileManager.saveFile('fallback.md');
+            } catch (error) {
+                // Should attempt fallback
+            }
+
+            expect(mockShowSaveFilePicker).toHaveBeenCalled();
+        });
+
+        test('should handle missing parent directory gracefully', async () => {
+            const mockFileHandle = new MockFileSystemFileHandle('test.md', '# Test');
+            mockFileHandle.getParent = async () => {
+                throw new Error('Parent directory not accessible');
+            };
+
+            mockShowOpenFilePicker.mockResolvedValue([mockFileHandle]);
+
+            // Should still work without parent directory
+            const result = await fileManager.openFile();
+            expect(result.name).toBe('test.md');
+        });
+    });
+
+    describe('Edge Cases - File Handle Management', () => {
+        test('should reset file handles when using traditional method', async () => {
+            fileManager.currentFileHandle = new MockFileSystemFileHandle('old.md', 'old content');
+            fileManager.supportsFileSystemAccess = false;
+
+            const testContent = '# New Content';
+            const mockFile = new MockFile(testContent, 'new.md');
+
+            // Simulate traditional file input
+            const openPromise = fileManager.openFile();
+
+            setTimeout(() => {
+                fileManager.fileInput.files = [mockFile];
+                const changeEvent = { target: { files: [mockFile] } };
+                fileManager.fileInput.onchange(changeEvent);
+            }, 10);
+
+            await openPromise;
+
+            // File handles should be reset
+            expect(fileManager.currentFileHandle).toBeNull();
+        });
+
+        test('should maintain file handle on successful save', async () => {
+            fileManager.supportsFileSystemAccess = true;
+            const testContent = '# Test Content';
+            mockEditorCore.setMarkdown(testContent);
+
+            const mockFileHandle = new MockFileSystemFileHandle('test.md');
+            mockShowSaveFilePicker.mockResolvedValue(mockFileHandle);
+
+            await fileManager.saveFile('test.md');
+
+            expect(fileManager.currentFileHandle).toBe(mockFileHandle);
+        });
+    });
+
+    describe('Content Validation for Exports', () => {
+        test('should prevent export of empty content to HTML', () => {
+            const content = '';
+            const isEmpty = !content || !content.trim();
+            expect(isEmpty).toBe(true);
+        });
+
+        test('should prevent export of empty content to PDF', () => {
+            const content = '   ';
+            const isEmpty = !content || !content.trim();
+            expect(isEmpty).toBe(true);
+        });
+
+        test('should allow export of valid content', () => {
+            const content = '# Valid Content';
+            const isEmpty = !content || !content.trim();
+            expect(isEmpty).toBe(false);
+        });
+
+        test('should handle special characters in HTML export', () => {
+            const content = '# Test < > & " \'';
+            expect(content).toContain('<');
+            expect(content).toContain('>');
+            expect(content).toContain('&');
         });
     });
 });

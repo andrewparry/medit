@@ -9,11 +9,120 @@
     const { elements, state, utils, dialogs, history } = MarkdownEditor;
 
     // File System Access API support
-    const supportsFileSystemAccess = 'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
+    const supportsFileSystemAccess =
+        'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
 
     // Track file handles for File System Access API
     let currentFileHandle = null;
     let currentDirectoryHandle = null;
+
+    // Constants
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    /**
+     * Reset file handles
+     */
+    const resetFileHandles = () => {
+        currentFileHandle = null;
+        currentDirectoryHandle = null;
+    };
+
+    /**
+     * Validate file before reading
+     */
+    const validateFile = async (file) => {
+        // Validate file extension
+        if (!/\.(md|markdown)$/i.test(file.name)) {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Only Markdown files can be opened';
+            }
+            await dialogs.alertDialog(
+                'Please choose a Markdown (.md or .markdown) file.',
+                'Invalid File Type'
+            );
+            return false;
+        }
+
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'File too large';
+            }
+            await dialogs.alertDialog(
+                `File size exceeds 10MB limit. Selected file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`,
+                'File Too Large'
+            );
+            return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * Load file content into editor (common logic for all file loading methods)
+     */
+    const loadFileContent = (content, filename) => {
+        elements.editor.value = content;
+
+        if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+            MarkdownEditor.preview.updatePreview();
+        }
+
+        if (utils.updateCounters) {
+            utils.updateCounters();
+        }
+
+        if (elements.fileNameDisplay) {
+            elements.fileNameDisplay.textContent = filename;
+        }
+
+        state.lastSavedContent = elements.editor.value;
+
+        if (MarkdownEditor.stateManager) {
+            MarkdownEditor.stateManager.markDirty(false);
+        }
+
+        if (elements.autosaveStatus) {
+            elements.autosaveStatus.textContent = `Opened ${filename}`;
+        }
+
+        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+            MarkdownEditor.autosave.scheduleAutosave();
+        }
+
+        // Reset history baseline
+        if (history && history.initHistory) {
+            history.initHistory();
+        }
+
+        if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
+            MarkdownEditor.formatting.updateToolbarStates();
+        }
+
+        // Close and clear find/replace UI
+        if (elements.findBar) {
+            elements.findBar.hidden = true;
+        }
+        if (elements.findInput) {
+            elements.findInput.value = '';
+        }
+        if (elements.replaceInput) {
+            elements.replaceInput.value = '';
+        }
+        if (elements.findCount) {
+            elements.findCount.textContent = '0/0';
+        }
+        if (MarkdownEditor.stateManager) {
+            MarkdownEditor.stateManager.resetSearchState();
+        }
+        if (elements.editorHighlights) {
+            elements.editorHighlights.innerHTML = '';
+        }
+        if (elements.toggleFindButton) {
+            elements.toggleFindButton.setAttribute('aria-pressed', 'false');
+            elements.toggleFindButton.classList.remove('active');
+        }
+    };
 
     /**
      * Set button loading state
@@ -26,7 +135,8 @@
         if (loading) {
             button.disabled = true;
             button.classList.add('loading');
-            const originalText = button.querySelector('.btn-text')?.textContent || button.textContent;
+            const originalText =
+                button.querySelector('.btn-text')?.textContent || button.textContent;
             button.dataset.originalText = originalText;
             if (button.querySelector('.btn-text')) {
                 button.querySelector('.btn-text').textContent = 'Loading...';
@@ -77,8 +187,7 @@
         utils.setSelection(0, 0);
 
         // Reset file handles
-        currentFileHandle = null;
-        currentDirectoryHandle = null;
+        resetFileHandles();
 
         // Close and clear find/replace UI
         if (elements.findBar) {
@@ -109,7 +218,8 @@
      * Handle new document
      */
     const handleNewDocument = async () => {
-        const hasUnsavedChanges = state.dirty && elements.editor && elements.editor.value !== state.lastSavedContent;
+        const hasUnsavedChanges =
+            state.dirty && elements.editor && elements.editor.value !== state.lastSavedContent;
 
         if (!hasUnsavedChanges) {
             resetEditorState();
@@ -144,115 +254,75 @@
 
         setButtonLoading(elements.openButton, true);
 
-        // Try File System Access API first if available
-        if (supportsFileSystemAccess) {
-            try {
-                const [fileHandle] = await window.showOpenFilePicker({
-                    types: [{
-                        description: 'Markdown files',
-                        accept: {
-                            'text/markdown': ['.md', '.markdown']
-                        }
-                    }],
-                    multiple: false
-                });
-
-                const file = await fileHandle.getFile();
-                currentFileHandle = fileHandle;
-
-                // Get the directory handle for future saves
+        try {
+            // Try File System Access API first if available
+            if (supportsFileSystemAccess) {
                 try {
-                    currentDirectoryHandle = await fileHandle.getParent();
-                } catch (e) {
-                    // Parent directory might not be accessible in all cases
-                    console.warn('Could not get parent directory:', e);
-                }
+                    const [fileHandle] = await window.showOpenFilePicker({
+                        types: [
+                            {
+                                description: 'Markdown files',
+                                accept: {
+                                    'text/markdown': ['.md', '.markdown']
+                                }
+                            }
+                        ],
+                        multiple: false
+                    });
 
-                await readFileFromHandle(file);
-                setButtonLoading(elements.openButton, false);
-                return;
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    setButtonLoading(elements.openButton, false);
+                    const file = await fileHandle.getFile();
+                    currentFileHandle = fileHandle;
+
+                    // Get the directory handle for future saves
+                    try {
+                        currentDirectoryHandle = await fileHandle.getParent();
+                    } catch (e) {
+                        // Parent directory might not be accessible in all cases
+                        // This is expected in some browsers/environments
+                    }
+
+                    await readFileFromHandle(file);
                     return;
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        return;
+                    }
+                    // Fall back to traditional file input if File System Access API fails
+                    // This handles permission errors or unsupported browsers
                 }
-                // Fall back to traditional file input if File System Access API fails
-                console.warn('File System Access API failed, falling back to traditional method:', error);
             }
-        }
 
-        // Fall back to traditional file input
-        elements.fileInput.click();
+            // Fall back to traditional file input
+            elements.fileInput.click();
+        } finally {
+            setButtonLoading(elements.openButton, false);
+        }
     };
 
     /**
      * Read file from FileReader (for File System Access API)
      */
     const readFileFromHandle = async (file) => {
-        if (!/\.(md|markdown)$/i.test(file.name)) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Only Markdown files can be opened';
-            }
-            await dialogs.alertDialog('Please choose a Markdown (.md or .markdown) file.', 'Invalid File Type');
+        // Validate file
+        if (!(await validateFile(file))) {
             return;
         }
 
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = 'Opening file...';
-        }
+        try {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Opening file...';
+            }
 
-        const content = await file.text();
-        elements.editor.value = content;
-        if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
-            MarkdownEditor.preview.updatePreview();
-        }
-        if (utils.updateCounters) {
-            utils.updateCounters();
-        }
-        if (elements.fileNameDisplay) {
-            elements.fileNameDisplay.textContent = file.name;
-        }
-        state.lastSavedContent = elements.editor.value;
-        if (MarkdownEditor.stateManager) {
-            MarkdownEditor.stateManager.markDirty(false);
-        }
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = `Opened ${file.name}`;
-        }
-        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
-            MarkdownEditor.autosave.scheduleAutosave();
-        }
-
-        // Reset history baseline
-        if (history && history.initHistory) {
-            history.initHistory();
-        }
-        if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
-            MarkdownEditor.formatting.updateToolbarStates();
-        }
-
-        // Close and clear find/replace UI
-        if (elements.findBar) {
-            elements.findBar.hidden = true;
-        }
-        if (elements.findInput) {
-            elements.findInput.value = '';
-        }
-        if (elements.replaceInput) {
-            elements.replaceInput.value = '';
-        }
-        if (elements.findCount) {
-            elements.findCount.textContent = '0/0';
-        }
-        if (MarkdownEditor.stateManager) {
-            MarkdownEditor.stateManager.resetSearchState();
-        }
-        if (elements.editorHighlights) {
-            elements.editorHighlights.innerHTML = '';
-        }
-        if (elements.toggleFindButton) {
-            elements.toggleFindButton.setAttribute('aria-pressed', 'false');
-            elements.toggleFindButton.classList.remove('active');
+            const content = await file.text();
+            loadFileContent(content, file.name);
+        } catch (error) {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Failed to open file';
+            }
+            await dialogs.alertDialog(
+                'Unable to read the selected file. The file may be corrupted or inaccessible.',
+                'Error Opening File'
+            );
         }
     };
 
@@ -260,90 +330,202 @@
      * Read file (traditional method via file input)
      */
     const readFile = async (file) => {
-        setButtonLoading(elements.openButton, false);
-
-        if (!/\.(md|markdown)$/i.test(file.name)) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Only Markdown files can be opened';
-            }
-            await dialogs.alertDialog('Please choose a Markdown (.md or .markdown) file.', 'Invalid File Type');
+        // Validate file
+        if (!(await validateFile(file))) {
             return;
         }
 
         setButtonLoading(elements.openButton, true);
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = 'Opening file...';
+
+        try {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Opening file...';
+            }
+
+            // Reset file handles for traditional file input
+            resetFileHandles();
+
+            // Use Promise-based FileReader
+            const content = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsText(file);
+            });
+
+            loadFileContent(content, file.name);
+        } catch (error) {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Failed to open file';
+            }
+            await dialogs.alertDialog(
+                'Unable to read the selected file. The file may be corrupted or inaccessible.',
+                'Error Opening File'
+            );
+        } finally {
+            setButtonLoading(elements.openButton, false);
+        }
+    };
+
+    /**
+     * Normalize filename to ensure .md extension
+     */
+    const normalizeFilename = (filename) => {
+        if (!filename || !filename.trim()) {
+            return 'Untitled.md';
+        }
+        const trimmed = filename.trim();
+        return trimmed.endsWith('.md') ? trimmed : `${trimmed}.md`;
+    };
+
+    /**
+     * Determine save options for File System Access API
+     */
+    const determineSaveOptions = async (normalizedName, isTrulyNewFile) => {
+        const saveOptions = {
+            suggestedName: normalizedName,
+            types: [
+                {
+                    description: 'Markdown files',
+                    accept: {
+                        'text/markdown': ['.md']
+                    }
+                }
+            ]
+        };
+
+        // Set default directory:
+        // - For truly new files (never opened): use downloads folder
+        // - For files that were opened (have file handle): use the directory where it was opened from
+        if (isTrulyNewFile) {
+            // New file: default to downloads folder
+            saveOptions.startIn = 'downloads';
+        } else {
+            // We have a file handle (file was opened) - try to get directory
+            let directoryHandle = currentDirectoryHandle;
+
+            // If we don't have a directory handle stored, try to get it from the file handle
+            if (!directoryHandle && currentFileHandle) {
+                try {
+                    directoryHandle = await currentFileHandle.getParent();
+                    currentDirectoryHandle = directoryHandle; // Cache it for next time
+                } catch (e) {
+                    // Parent directory might not be accessible in all cases
+                    // This is expected in some browsers/environments
+                }
+            }
+
+            // Use the directory handle if we have it
+            if (directoryHandle) {
+                saveOptions.startIn = directoryHandle;
+            }
+            // If we still don't have a directory handle, don't set startIn
+            // Browser will default to last location (which might be Downloads)
+            // This can happen if file was opened via traditional file input
         }
 
-        // Reset file handles for traditional file input
-        currentFileHandle = null;
-        currentDirectoryHandle = null;
+        return saveOptions;
+    };
 
-        const reader = new FileReader();
-        reader.onload = () => {
-            elements.editor.value = reader.result;
-            if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
-                MarkdownEditor.preview.updatePreview();
-            }
-            if (utils.updateCounters) {
-                utils.updateCounters();
-            }
-            if (elements.fileNameDisplay) {
-                elements.fileNameDisplay.textContent = file.name;
-            }
-            state.lastSavedContent = elements.editor.value;
+    /**
+     * Save file using File System Access API
+     */
+    const saveFileWithFileSystemAccess = async (content, normalizedName) => {
+        let fileHandle = currentFileHandle;
+        const isTrulyNewFile = !currentFileHandle;
+
+        // Compare names case-insensitively and ignore .md extension differences
+        const currentFileName = currentFileHandle ? currentFileHandle.name.toLowerCase() : '';
+        const normalizedFileName = normalizedName.toLowerCase();
+        const nameMatches =
+            currentFileHandle &&
+            (currentFileName === normalizedFileName ||
+                currentFileName.replace(/\.md$/, '') === normalizedFileName.replace(/\.md$/, ''));
+
+        // If we have a file handle and the name matches, save directly (no dialog - avoids permission text)
+        if (fileHandle && nameMatches) {
+            const writable = await fileHandle.createWritable();
+            await writable.write(content);
+            await writable.close();
+
+            state.lastSavedContent = content;
             if (MarkdownEditor.stateManager) {
                 MarkdownEditor.stateManager.markDirty(false);
             }
             if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = `Opened ${file.name}`;
+                elements.autosaveStatus.textContent = `Saved ${normalizedName}`;
             }
             if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
                 MarkdownEditor.autosave.scheduleAutosave();
             }
+            return { success: true, filename: normalizedName };
+        }
 
-            // Reset history baseline
-            if (history && history.initHistory) {
-                history.initHistory();
-            }
-            if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
-                MarkdownEditor.formatting.updateToolbarStates();
-            }
+        // Show save dialog for new files or when name changed
+        const saveOptions = await determineSaveOptions(normalizedName, isTrulyNewFile);
+        fileHandle = await window.showSaveFilePicker(saveOptions);
+        currentFileHandle = fileHandle;
 
-            // Close and clear find/replace UI
-            if (elements.findBar) {
-                elements.findBar.hidden = true;
-            }
-            if (elements.findInput) {
-                elements.findInput.value = '';
-            }
-            if (elements.replaceInput) {
-                elements.replaceInput.value = '';
-            }
-            if (elements.findCount) {
-                elements.findCount.textContent = '0/0';
-            }
-            if (MarkdownEditor.stateManager) {
-                MarkdownEditor.stateManager.resetSearchState();
-            }
-            if (elements.editorHighlights) {
-                elements.editorHighlights.innerHTML = '';
-            }
-            if (elements.toggleFindButton) {
-                elements.toggleFindButton.setAttribute('aria-pressed', 'false');
-                elements.toggleFindButton.classList.remove('active');
-            }
-            setButtonLoading(elements.openButton, false);
-        };
-        reader.onerror = async () => {
-            console.error('Failed to read file', reader.error);
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Unable to open file';
-            }
-            setButtonLoading(elements.openButton, false);
-            await dialogs.alertDialog('Unable to open the selected file.', 'Error Opening File');
-        };
-        reader.readAsText(file);
+        // Update directory handle if we can get it
+        try {
+            currentDirectoryHandle = await fileHandle.getParent();
+        } catch (e) {
+            // Parent directory might not be accessible in all cases
+            // This is expected in some browsers/environments
+        }
+
+        const writable = await fileHandle.createWritable();
+        await writable.write(content);
+        await writable.close();
+
+        // Update filename display with the actual saved name
+        if (elements.fileNameDisplay) {
+            elements.fileNameDisplay.textContent = fileHandle.name;
+        }
+
+        state.lastSavedContent = content;
+        if (MarkdownEditor.stateManager) {
+            MarkdownEditor.stateManager.markDirty(false);
+        }
+        if (elements.autosaveStatus) {
+            elements.autosaveStatus.textContent = `Saved ${fileHandle.name}`;
+        }
+        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+            MarkdownEditor.autosave.scheduleAutosave();
+        }
+
+        return { success: true, filename: fileHandle.name };
+    };
+
+    /**
+     * Save file using traditional download method
+     */
+    const saveFileWithTraditionalMethod = async (content, normalizedName) => {
+        const blob = new Blob([content], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = normalizedName;
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+
+        state.lastSavedContent = content;
+        if (MarkdownEditor.stateManager) {
+            MarkdownEditor.stateManager.markDirty(false);
+        }
+        if (elements.autosaveStatus) {
+            elements.autosaveStatus.textContent = `Saved ${normalizedName}`;
+        }
+        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+            MarkdownEditor.autosave.scheduleAutosave();
+        }
+
+        return { success: true, filename: normalizedName };
     };
 
     /**
@@ -364,31 +546,32 @@
         }
 
         setButtonLoading(elements.saveButton, true);
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = 'Saving...';
-        }
-
-        let filename = elements.fileNameDisplay.textContent.trim();
-
-        if (!filename || filename === 'Untitled.md') {
-            const response = await dialogs.promptDialog(
-                'Enter a file name for your markdown document',
-                filename || 'Untitled.md',
-                'text',
-                'Save File'
-            );
-            if (response === null) {
-                if (elements.autosaveStatus) {
-                    elements.autosaveStatus.textContent = 'Save cancelled';
-                }
-                setButtonLoading(elements.saveButton, false);
-                return false;
-            }
-            filename = response.trim() || 'Untitled.md';
-        }
 
         try {
-            const normalizedName = filename.endsWith('.md') ? filename : `${filename}.md`;
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Saving...';
+            }
+
+            let filename = elements.fileNameDisplay.textContent.trim();
+
+            // Prompt for filename if it's untitled
+            if (!filename || filename === 'Untitled.md') {
+                const response = await dialogs.promptDialog(
+                    'Enter a file name for your markdown document',
+                    filename || 'Untitled.md',
+                    'text',
+                    'Save File'
+                );
+                if (response === null) {
+                    if (elements.autosaveStatus) {
+                        elements.autosaveStatus.textContent = 'Save cancelled';
+                    }
+                    return false;
+                }
+                filename = response;
+            }
+
+            const normalizedName = normalizeFilename(filename);
             elements.fileNameDisplay.textContent = normalizedName;
             elements.fileNameDisplay.contentEditable = 'false';
             delete elements.fileNameDisplay.dataset.originalName;
@@ -398,157 +581,34 @@
             // Use File System Access API if available
             if (supportsFileSystemAccess) {
                 try {
-                    let fileHandle = currentFileHandle;
-                    const isTrulyNewFile = !currentFileHandle;
-                    // Compare names case-insensitively and ignore .md extension differences
-                    const currentFileName = currentFileHandle ? currentFileHandle.name.toLowerCase() : '';
-                    const normalizedFileName = normalizedName.toLowerCase();
-                    const nameMatches = currentFileHandle &&
-                        (currentFileName === normalizedFileName ||
-                         currentFileName.replace(/\.md$/, '') === normalizedFileName.replace(/\.md$/, ''));
-
-                    // If we have a file handle and the name matches, save directly (no dialog - avoids permission text)
-                    if (fileHandle && nameMatches) {
-                        const writable = await fileHandle.createWritable();
-                        await writable.write(content);
-                        await writable.close();
-
-                        state.lastSavedContent = content;
-                        if (MarkdownEditor.stateManager) {
-                            MarkdownEditor.stateManager.markDirty(false);
-                        }
-                        if (elements.autosaveStatus) {
-                            elements.autosaveStatus.textContent = `Saved ${normalizedName}`;
-                        }
-                        if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
-                            MarkdownEditor.autosave.scheduleAutosave();
-                        }
-                        setButtonLoading(elements.saveButton, false);
-                        return true;
-                    }
-
-                    // Show save dialog for new files or when name changed
-                    // Note: The browser's native dialog will show permission text like "file:/// will be able to edit..."
-                    // This cannot be removed as it's a browser security feature.
-                    // To avoid this dialog, we save directly when we have a matching file handle (above).
-                    const saveOptions = {
-                        suggestedName: normalizedName,
-                        types: [{
-                            description: 'Markdown files',
-                            accept: {
-                                'text/markdown': ['.md']
-                            }
-                        }]
-                    };
-
-                    // Set default directory:
-                    // - For truly new files (never opened): use downloads folder
-                    // - For files that were opened (have file handle): use the directory where it was opened from
-                    if (isTrulyNewFile) {
-                        // New file: default to downloads folder
-                        saveOptions.startIn = 'downloads';
-                    } else {
-                        // We have a file handle (file was opened) - try to get directory
-                        let directoryHandle = currentDirectoryHandle;
-
-                        // If we don't have a directory handle stored, try to get it from the file handle
-                        if (!directoryHandle && currentFileHandle) {
-                            try {
-                                directoryHandle = await currentFileHandle.getParent();
-                                currentDirectoryHandle = directoryHandle; // Cache it for next time
-                            } catch (e) {
-                                console.warn('Could not get parent directory from file handle:', e);
-                            }
-                        }
-
-                        // Use the directory handle if we have it
-                        if (directoryHandle) {
-                            saveOptions.startIn = directoryHandle;
-                        }
-                        // If we still don't have a directory handle, don't set startIn
-                        // Browser will default to last location (which might be Downloads)
-                        // This can happen if file was opened via traditional file input
-                    }
-
-                    // Note: This will show the browser's permission dialog with text like "file:/// will be able to edit..."
-                    // This is a browser security feature and cannot be customized or removed.
-                    fileHandle = await window.showSaveFilePicker(saveOptions);
-                    currentFileHandle = fileHandle;
-
-                    // Update directory handle if we can get it
-                    try {
-                        currentDirectoryHandle = await fileHandle.getParent();
-                    } catch (e) {
-                        console.warn('Could not get parent directory:', e);
-                    }
-
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(content);
-                    await writable.close();
-
-                    // Update filename display with the actual saved name
-                    if (elements.fileNameDisplay) {
-                        elements.fileNameDisplay.textContent = fileHandle.name;
-                    }
-
-                    state.lastSavedContent = content;
-                    if (MarkdownEditor.stateManager) {
-                        MarkdownEditor.stateManager.markDirty(false);
-                    }
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = `Saved ${fileHandle.name}`;
-                    }
-                    if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
-                        MarkdownEditor.autosave.scheduleAutosave();
-                    }
-                    setButtonLoading(elements.saveButton, false);
+                    await saveFileWithFileSystemAccess(content, normalizedName);
                     return true;
                 } catch (error) {
                     if (error.name === 'AbortError') {
                         if (elements.autosaveStatus) {
                             elements.autosaveStatus.textContent = 'Save cancelled';
                         }
-                        setButtonLoading(elements.saveButton, false);
                         return false;
                     }
                     // Fall through to traditional save method
-                    console.warn('File System Access API save failed, falling back to download:', error);
+                    // This handles permission errors or unsupported browsers
                 }
             }
 
             // Fall back to traditional download method
-            const blob = new Blob([content], { type: 'text/markdown' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = normalizedName;
-            document.body.appendChild(link);
-            link.click();
-
-            setTimeout(() => {
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                setButtonLoading(elements.saveButton, false);
-            }, 100);
-
-            state.lastSavedContent = content;
-            if (MarkdownEditor.stateManager) {
-                MarkdownEditor.stateManager.markDirty(false);
-            }
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = `Saved ${link.download}`;
-            }
-            if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
-                MarkdownEditor.autosave.scheduleAutosave();
-            }
+            await saveFileWithTraditionalMethod(content, normalizedName);
             return true;
         } catch (error) {
-            console.error('Save failed', error);
             if (elements.autosaveStatus) {
                 elements.autosaveStatus.textContent = 'Save failed';
             }
-            setButtonLoading(elements.saveButton, false);
+            await dialogs.alertDialog(
+                'An error occurred while saving the file. Please try again.',
+                'Save Error'
+            );
             return false;
+        } finally {
+            setButtonLoading(elements.saveButton, false);
         }
     };
 
@@ -560,14 +620,24 @@
             return;
         }
 
-        const filename = elements.fileNameDisplay.textContent.trim().replace(/\.md$/, '');
-        const htmlFilename = filename.endsWith('.html') ? filename : `${filename}.html`;
+        const content = elements.editor.value;
+        if (!content || !content.trim()) {
+            await dialogs.alertDialog(
+                'Cannot export an empty document. Please add some content first.',
+                'Export Error'
+            );
+            return;
+        }
 
-        const renderHtml = state && state.renderHtml || false;
-        const rawHtml = window.markedLite.parse(elements.editor.value, { renderHtml });
-        const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
+        try {
+            const filename = elements.fileNameDisplay.textContent.trim().replace(/\.md$/, '');
+            const htmlFilename = filename.endsWith('.html') ? filename : `${filename}.html`;
 
-        const htmlDoc = `<!DOCTYPE html>
+            const renderHtml = (state && state.renderHtml) || false;
+            const rawHtml = window.markedLite.parse(content, { renderHtml });
+            const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
+
+            const htmlDoc = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -637,18 +707,27 @@ if (window.Prism) {
 </body>
 </html>`;
 
-        const blob = new Blob([htmlDoc], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = htmlFilename;
-        document.body.appendChild(link);
-        link.click();
+            const blob = new Blob([htmlDoc], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = htmlFilename;
+            document.body.appendChild(link);
+            link.click();
 
-        setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }, 100);
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+        } catch (error) {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Export failed';
+            }
+            await dialogs.alertDialog(
+                'An error occurred while exporting to HTML. Please try again.',
+                'Export Error'
+            );
+        }
     };
 
     /**
@@ -659,42 +738,74 @@ if (window.Prism) {
             return;
         }
 
-        const filename = elements.fileNameDisplay.textContent.trim().replace(/\.md$/, '');
-        const txtFilename = filename.endsWith('.txt') ? filename : `${filename}.txt`;
+        const content = elements.editor.value;
+        if (!content || !content.trim()) {
+            await dialogs.alertDialog(
+                'Cannot export an empty document. Please add some content first.',
+                'Export Error'
+            );
+            return;
+        }
 
-        const blob = new Blob([elements.editor.value], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = txtFilename;
-        document.body.appendChild(link);
-        link.click();
+        try {
+            const filename = elements.fileNameDisplay.textContent.trim().replace(/\.md$/, '');
+            const txtFilename = filename.endsWith('.txt') ? filename : `${filename}.txt`;
 
-        setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }, 100);
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = txtFilename;
+            document.body.appendChild(link);
+            link.click();
+
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+        } catch (error) {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Export failed';
+            }
+            await dialogs.alertDialog(
+                'An error occurred while exporting to plain text. Please try again.',
+                'Export Error'
+            );
+        }
     };
 
     /**
      * Export to PDF
      */
-    const exportToPdf = () => {
+    const exportToPdf = async () => {
         if (!elements.editor) {
             return;
         }
 
-        const renderHtml = state && state.renderHtml || false;
-        const rawHtml = window.markedLite.parse(elements.editor.value, { renderHtml });
-        const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
-
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            dialogs.alertDialog('Please allow pop-ups to export as PDF.', 'PDF Export');
+        const content = elements.editor.value;
+        if (!content || !content.trim()) {
+            await dialogs.alertDialog(
+                'Cannot export an empty document. Please add some content first.',
+                'Export Error'
+            );
             return;
         }
 
-        printWindow.document.write(`<!DOCTYPE html>
+        try {
+            const renderHtml = (state && state.renderHtml) || false;
+            const rawHtml = window.markedLite.parse(content, { renderHtml });
+            const safeHtml = window.simpleSanitizer.sanitize(rawHtml);
+
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                await dialogs.alertDialog(
+                    'Please allow pop-ups to export as PDF. Check your browser settings and try again.',
+                    'PDF Export Blocked'
+                );
+                return;
+            }
+
+            printWindow.document.write(`<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -764,21 +875,30 @@ if (window.Prism) {
 </body>
 </html>`);
 
-        printWindow.document.close();
+            printWindow.document.close();
 
-        // Wait for scripts to load and highlight code before printing
-        setTimeout(() => {
-            if (printWindow.Prism) {
-                printWindow.Prism.highlightAll();
-            }
-            // Additional delay to ensure highlighting is applied
+            // Wait for scripts to load and highlight code before printing
             setTimeout(() => {
-                printWindow.print();
+                if (printWindow.Prism) {
+                    printWindow.Prism.highlightAll();
+                }
+                // Additional delay to ensure highlighting is applied
                 setTimeout(() => {
-                    printWindow.close();
-                }, 1000);
-            }, 100);
-        }, 500);
+                    printWindow.print();
+                    setTimeout(() => {
+                        printWindow.close();
+                    }, 1000);
+                }, 100);
+            }, 500);
+        } catch (error) {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Export failed';
+            }
+            await dialogs.alertDialog(
+                'An error occurred while exporting to PDF. Please try again.',
+                'Export Error'
+            );
+        }
     };
 
     /**
@@ -807,7 +927,7 @@ if (window.Prism) {
                     }
                     break;
                 case 'pdf':
-                    exportToPdf();
+                    await exportToPdf();
                     if (elements.autosaveStatus) {
                         elements.autosaveStatus.textContent = 'Opening PDF export...';
                     }
@@ -820,11 +940,13 @@ if (window.Prism) {
                     break;
             }
         } catch (error) {
-            console.error('Export failed', error);
             if (elements.autosaveStatus) {
                 elements.autosaveStatus.textContent = 'Export failed';
             }
-            await dialogs.alertDialog('An error occurred while exporting the document.', 'Export Error');
+            await dialogs.alertDialog(
+                'An error occurred while exporting the document. Please try again.',
+                'Export Error'
+            );
         }
     };
 
@@ -844,4 +966,3 @@ if (window.Prism) {
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

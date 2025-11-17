@@ -27,6 +27,7 @@ git push origin main
 The pre-commit hook found 144 linting issues, but these are **pre-existing** in the codebase (mostly in test files using `global`, parsing issues with new syntax, etc.). They are not from the new files we created.
 
 All the new files we created are properly formatted:
+
 - ✅ All `.md` files (documentation)
 - ✅ All `.json` files (configs)
 - ✅ All `.yml` files (GitHub workflows)
@@ -59,4 +60,3 @@ If you want to commit normally (with hooks), you can make the ESLint config more
 ```
 
 Then commit normally without `--no-verify`.
-

@@ -20,7 +20,10 @@
         state.autosaveTimer = setTimeout(async () => {
             try {
                 localStorage.setItem(constants.AUTOSAVE_KEY, elements.editor.value);
-                localStorage.setItem(constants.AUTOSAVE_FILENAME_KEY, elements.fileNameDisplay.textContent.trim());
+                localStorage.setItem(
+                    constants.AUTOSAVE_FILENAME_KEY,
+                    elements.fileNameDisplay.textContent.trim()
+                );
                 if (elements.autosaveStatus) {
                     elements.autosaveStatus.textContent = 'Draft saved';
                 }
@@ -29,7 +32,11 @@
                 console.error('Autosave failed', error);
 
                 // Check if it's a quota exceeded error
-                if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED' || error.code === 22) {
+                if (
+                    error.name === 'QuotaExceededError' ||
+                    error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+                    error.code === 22
+                ) {
                     if (elements.autosaveStatus) {
                         elements.autosaveStatus.textContent = 'Storage full - autosave unavailable';
                     }
@@ -41,21 +48,30 @@
                         case 'clear':
                             if (clearAllAutosaveData()) {
                                 try {
-                                    localStorage.setItem(constants.AUTOSAVE_KEY, elements.editor.value);
-                                    localStorage.setItem(constants.AUTOSAVE_FILENAME_KEY, elements.fileNameDisplay.textContent.trim());
+                                    localStorage.setItem(
+                                        constants.AUTOSAVE_KEY,
+                                        elements.editor.value
+                                    );
+                                    localStorage.setItem(
+                                        constants.AUTOSAVE_FILENAME_KEY,
+                                        elements.fileNameDisplay.textContent.trim()
+                                    );
                                     if (elements.autosaveStatus) {
-                                        elements.autosaveStatus.textContent = 'Draft saved (cleared old data)';
+                                        elements.autosaveStatus.textContent =
+                                            'Draft saved (cleared old data)';
                                     }
                                 } catch (retryError) {
                                     disableAutosave();
                                     if (elements.autosaveStatus) {
-                                        elements.autosaveStatus.textContent = 'Autosave disabled - storage full';
+                                        elements.autosaveStatus.textContent =
+                                            'Autosave disabled - storage full';
                                     }
                                 }
                             } else {
                                 disableAutosave();
                                 if (elements.autosaveStatus) {
-                                    elements.autosaveStatus.textContent = 'Autosave disabled - unable to clear storage';
+                                    elements.autosaveStatus.textContent =
+                                        'Autosave disabled - unable to clear storage';
                                 }
                             }
                             break;
@@ -68,7 +84,8 @@
                         case 'ignore':
                         default:
                             if (elements.autosaveStatus) {
-                                elements.autosaveStatus.textContent = 'Autosave unavailable - storage full';
+                                elements.autosaveStatus.textContent =
+                                    'Autosave unavailable - storage full';
                             }
                             break;
                     }
@@ -227,4 +244,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

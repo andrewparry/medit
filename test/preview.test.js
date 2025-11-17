@@ -16,7 +16,9 @@ class MockElement {
                 this.className = this.className ? `${this.className} ${className}` : className;
             }),
             remove: jest.fn((className) => {
-                this.className = this.className.replace(new RegExp(`\\b${className}\\b`, 'g'), '').trim();
+                this.className = this.className
+                    .replace(new RegExp(`\\b${className}\\b`, 'g'), '')
+                    .trim();
             }),
             contains: jest.fn((className) => this.className.includes(className)),
             toggle: jest.fn((className) => {
@@ -195,10 +197,12 @@ class MockElement {
 
     click() {
         const clickListeners = this.eventListeners.get('click') || [];
-        clickListeners.forEach(callback => callback({
-            preventDefault: jest.fn(),
-            stopPropagation: jest.fn()
-        }));
+        clickListeners.forEach((callback) =>
+            callback({
+                preventDefault: jest.fn(),
+                stopPropagation: jest.fn()
+            })
+        );
     }
 
     remove() {
@@ -210,18 +214,18 @@ class MockElement {
     // Simulate image load/error events
     triggerLoad() {
         const loadListeners = this.eventListeners.get('load') || [];
-        loadListeners.forEach(callback => callback());
+        loadListeners.forEach((callback) => callback());
     }
 
     triggerError() {
         const errorListeners = this.eventListeners.get('error') || [];
-        errorListeners.forEach(callback => callback());
+        errorListeners.forEach((callback) => callback());
     }
 
     // Simulate scroll events
     triggerScroll() {
         const scrollListeners = this.eventListeners.get('scroll') || [];
-        scrollListeners.forEach(callback => callback());
+        scrollListeners.forEach((callback) => callback());
     }
 }
 
@@ -229,8 +233,8 @@ class MockElement {
 global.document = {
     getElementById: (id) => {
         const mockElements = {
-            'editor': new MockElement('div'),
-            'preview': new MockElement('div'),
+            editor: new MockElement('div'),
+            preview: new MockElement('div'),
             'toggle-preview': new MockElement('button')
         };
         return mockElements[id] || null;
@@ -285,7 +289,7 @@ class MockEditorCore {
 
     emit(eventType, data) {
         if (this.eventListeners.has(eventType)) {
-            this.eventListeners.get(eventType).forEach(callback => {
+            this.eventListeners.get(eventType).forEach((callback) => {
                 callback(data);
             });
         }
@@ -390,7 +394,8 @@ class Preview {
         }
 
         const scrollRatio = editorScrollTop / editorScrollHeight;
-        const previewScrollHeight = this.previewElement.scrollHeight - this.previewElement.clientHeight;
+        const previewScrollHeight =
+            this.previewElement.scrollHeight - this.previewElement.clientHeight;
 
         if (previewScrollHeight > 0) {
             this.disableScrollSync();
@@ -406,7 +411,8 @@ class Preview {
         }
 
         const previewScrollTop = this.previewElement.scrollTop;
-        const previewScrollHeight = this.previewElement.scrollHeight - this.previewElement.clientHeight;
+        const previewScrollHeight =
+            this.previewElement.scrollHeight - this.previewElement.clientHeight;
 
         if (previewScrollHeight <= 0) {
             return;
@@ -431,7 +437,8 @@ class Preview {
             const scrollRatio = this.getScrollRatio();
 
             // Set the innerHTML directly
-            this.previewElement.innerHTML = html || '<p><em>Start typing to see preview...</em></p>';
+            this.previewElement.innerHTML =
+                html || '<p><em>Start typing to see preview...</em></p>';
 
             this.processImages();
             this.processLinks();
@@ -441,7 +448,6 @@ class Preview {
             this.editorCore.emit('previewUpdated', {
                 html: html
             });
-
         } catch (error) {
             console.error('Error updating preview content:', error);
             this.showError('Failed to update preview');
@@ -467,13 +473,17 @@ class Preview {
         }
 
         window.requestAnimationFrame(() => {
-            const newScrollHeight = this.previewElement.scrollHeight - this.previewElement.clientHeight;
+            const newScrollHeight =
+                this.previewElement.scrollHeight - this.previewElement.clientHeight;
 
             if (newScrollHeight > 0) {
                 const newScrollTop = scrollRatio * newScrollHeight;
                 this.previewElement.scrollTop = newScrollTop;
             } else {
-                this.previewElement.scrollTop = Math.min(scrollTop, this.previewElement.scrollHeight);
+                this.previewElement.scrollTop = Math.min(
+                    scrollTop,
+                    this.previewElement.scrollHeight
+                );
             }
         });
     }
@@ -501,7 +511,7 @@ class Preview {
     processImages() {
         const images = this.previewElement.querySelectorAll('img');
 
-        images.forEach(img => {
+        images.forEach((img) => {
             if (img.dataset.processed) {
                 return;
             }
@@ -560,7 +570,7 @@ class Preview {
     processLinks() {
         const links = this.previewElement.querySelectorAll('a');
 
-        links.forEach(link => {
+        links.forEach((link) => {
             if (link.dataset.processed) {
                 return;
             }
@@ -569,10 +579,11 @@ class Preview {
             if (link.href && !link.href.startsWith('#')) {
                 link.setAttribute('rel', 'noopener noreferrer');
 
-                const isExternal = !link.href.startsWith(window.location.origin) &&
-                                 !link.href.startsWith('/') &&
-                                 !link.href.startsWith('./') &&
-                                 !link.href.startsWith('../');
+                const isExternal =
+                    !link.href.startsWith(window.location.origin) &&
+                    !link.href.startsWith('/') &&
+                    !link.href.startsWith('./') &&
+                    !link.href.startsWith('../');
 
                 if (isExternal) {
                     link.setAttribute('target', '_blank');
@@ -688,7 +699,8 @@ describe('Preview Integration Tests', () => {
 
     describe('Real-time Preview Updates (Requirement 4.1, 4.2)', () => {
         test('should update preview content in real-time when HTML is provided', () => {
-            const testHTML = '<h1>Test Header</h1><p>Test paragraph with <strong>bold</strong> text.</p>';
+            const testHTML =
+                '<h1>Test Header</h1><p>Test paragraph with <strong>bold</strong> text.</p>';
 
             preview.updateContent(testHTML);
 
@@ -699,13 +711,17 @@ describe('Preview Integration Tests', () => {
         test('should show default message when no content is provided', () => {
             preview.updateContent('');
 
-            expect(preview.previewElement.innerHTML).toBe('<p><em>Start typing to see preview...</em></p>');
+            expect(preview.previewElement.innerHTML).toBe(
+                '<p><em>Start typing to see preview...</em></p>'
+            );
         });
 
         test('should show default message when null content is provided', () => {
             preview.updateContent(null);
 
-            expect(preview.previewElement.innerHTML).toBe('<p><em>Start typing to see preview...</em></p>');
+            expect(preview.previewElement.innerHTML).toBe(
+                '<p><em>Start typing to see preview...</em></p>'
+            );
         });
 
         test('should emit previewUpdated event after content update', () => {
@@ -729,7 +745,10 @@ describe('Preview Integration Tests', () => {
 
             preview.updateContent('<p>Test</p>');
 
-            expect(mockConsole.error).toHaveBeenCalledWith('Error updating preview content:', expect.any(Error));
+            expect(mockConsole.error).toHaveBeenCalledWith(
+                'Error updating preview content:',
+                expect.any(Error)
+            );
             expect(preview.previewElement.innerHTML).toContain('Preview Error');
 
             // Restore original method
@@ -770,7 +789,8 @@ describe('Preview Integration Tests', () => {
 
     describe('Image Rendering (Requirement 4.2)', () => {
         test('should process images and add loading states', () => {
-            const htmlWithImages = '<p>Text with image: <img src="test.jpg" alt="Test"> more text</p>';
+            const htmlWithImages =
+                '<p>Text with image: <img src="test.jpg" alt="Test"> more text</p>';
 
             // Mock the querySelectorAll to return images for this test
             const mockImages = [new MockElement('img'), new MockElement('img')];
@@ -792,7 +812,7 @@ describe('Preview Integration Tests', () => {
             // Call processImages directly to test the functionality
             preview.processImages();
 
-            mockImages.forEach(img => {
+            mockImages.forEach((img) => {
                 expect(img.dataset.processed).toBe('true');
                 expect(img.style.opacity).toBe('0.5');
                 expect(img.style.transition).toBe('opacity 0.3s ease');
@@ -874,7 +894,7 @@ describe('Preview Integration Tests', () => {
             preview.updateContent(htmlWithImages);
 
             const images = preview.previewElement.querySelectorAll('img');
-            images.forEach(img => {
+            images.forEach((img) => {
                 if (!img.alt) {
                     img.alt = 'Image'; // This is what the actual code does
                 }
@@ -920,7 +940,8 @@ describe('Preview Integration Tests', () => {
 
     describe('Link Rendering (Requirement 4.2)', () => {
         test('should process links and add security attributes', () => {
-            const htmlWithLinks = '<p>Check out <a href="https://example.com">this link</a> and <a href="#section1">this anchor</a></p>';
+            const htmlWithLinks =
+                '<p>Check out <a href="https://example.com">this link</a> and <a href="#section1">this anchor</a></p>';
 
             preview.updateContent(htmlWithLinks);
 
@@ -945,7 +966,7 @@ describe('Preview Integration Tests', () => {
             // Call processLinks directly
             preview.processLinks();
 
-            links.forEach(link => {
+            links.forEach((link) => {
                 expect(link.dataset.processed).toBe('true');
                 if (link.href && !link.href.startsWith('#')) {
                     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
@@ -1035,14 +1056,14 @@ describe('Preview Integration Tests', () => {
 
             // Simulate mouseenter
             const mouseenterListeners = testLink.eventListeners.get('mouseenter') || [];
-            mouseenterListeners.forEach(listener => listener());
+            mouseenterListeners.forEach((listener) => listener());
 
             expect(preview.currentTooltip).toBeTruthy();
             expect(preview.currentTooltip.textContent).toBe(testLink.href);
 
             // Simulate mouseleave
             const mouseleaveListeners = testLink.eventListeners.get('mouseleave') || [];
-            mouseleaveListeners.forEach(listener => listener());
+            mouseleaveListeners.forEach((listener) => listener());
 
             expect(preview.currentTooltip).toBeNull();
         });
@@ -1052,7 +1073,7 @@ describe('Preview Integration Tests', () => {
             preview.updateContent(htmlWithLink);
 
             const links = preview.previewElement.querySelectorAll('a');
-            links.forEach(link => {
+            links.forEach((link) => {
                 if (!link.title && link.href) {
                     link.title = link.href; // This is what the actual code does
                 }
@@ -1213,7 +1234,9 @@ describe('Preview Integration Tests', () => {
 
             preview.clear();
 
-            expect(preview.previewElement.innerHTML).toBe('<p><em>Start typing to see preview...</em></p>');
+            expect(preview.previewElement.innerHTML).toBe(
+                '<p><em>Start typing to see preview...</em></p>'
+            );
         });
 
         test('should get current preview content', () => {

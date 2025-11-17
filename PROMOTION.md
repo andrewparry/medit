@@ -3,6 +3,7 @@
 ## 🎯 Target Audience
 
 ### Primary Audience
+
 - Developers who write documentation
 - Technical writers
 - Content creators
@@ -10,6 +11,7 @@
 - Open-source contributors
 
 ### Secondary Audience
+
 - Bloggers and writers
 - Note-takers
 - Markdown enthusiasts
@@ -69,24 +71,24 @@ See `BLOG_POST_DRAFT.md` below.
 ### Reddit Communities
 
 1. **r/opensource** - Post as "Show & Tell"
-   - Title: "[Show & Tell] Markdown Editor - Browser-based WYSIWYG editor with offline support"
-   - Include: features, tech stack, why you built it
+    - Title: "[Show & Tell] Markdown Editor - Browser-based WYSIWYG editor with offline support"
+    - Include: features, tech stack, why you built it
 
 2. **r/javascript** - Focus on technical implementation
-   - Title: "Built a modular markdown editor with vanilla JavaScript"
-   - Highlight: architecture, testing approach, no framework
+    - Title: "Built a modular markdown editor with vanilla JavaScript"
+    - Highlight: architecture, testing approach, no framework
 
 3. **r/SideProject** - Emphasize the journey
-   - Title: "Just released my markdown editor after 6 months of development"
-   - Include: challenges, learnings, future plans
+    - Title: "Just released my markdown editor after 6 months of development"
+    - Include: challenges, learnings, future plans
 
 4. **r/webdev** - Focus on web technologies
-   - Title: "Browser-based markdown editor using File System Access API"
-   - Highlight: modern web APIs, progressive enhancement
+    - Title: "Browser-based markdown editor using File System Access API"
+    - Highlight: modern web APIs, progressive enhancement
 
 5. **r/markdown** - Markdown-specific community
-   - Title: "Built a WYSIWYG markdown editor for the browser"
-   - Emphasize: markdown features, CommonMark compatibility
+    - Title: "Built a WYSIWYG markdown editor for the browser"
+    - Emphasize: markdown features, CommonMark compatibility
 
 ### Hacker News
 
@@ -104,10 +106,10 @@ See `BLOG_POST_DRAFT.md` below.
 ### Product Hunt
 
 - Create product page with:
-  - High-quality screenshots
-  - Demo GIF
-  - Clear value proposition
-  - Maker story
+    - High-quality screenshots
+    - Demo GIF
+    - Clear value proposition
+    - Maker story
 - Launch day: Tuesday-Thursday
 - Engage with comments actively
 
@@ -120,42 +122,42 @@ See `BLOG_POST_DRAFT.md` below.
 ### LinkedIn
 
 - Professional post focusing on:
-  - Technical challenges solved
-  - Open source contribution opportunity
-  - Skills demonstrated
+    - Technical challenges solved
+    - Open source contribution opportunity
+    - Skills demonstrated
 
 ## 📝 Blog Post Draft
 
 Create a detailed blog post covering:
 
 1. **Introduction**
-   - Problem: Need for simple, privacy-focused markdown editor
-   - Solution: Browser-based WYSIWYG editor
+    - Problem: Need for simple, privacy-focused markdown editor
+    - Solution: Browser-based WYSIWYG editor
 
 2. **Key Features**
-   - Overview of main features
-   - Screenshots/GIFs demonstrating each
+    - Overview of main features
+    - Screenshots/GIFs demonstrating each
 
 3. **Technical Deep Dive**
-   - Architecture decisions
-   - Modular design pattern
-   - Testing strategy
-   - Accessibility implementation
+    - Architecture decisions
+    - Modular design pattern
+    - Testing strategy
+    - Accessibility implementation
 
 4. **Challenges & Solutions**
-   - File System Access API implementation
-   - Test coverage for browser-only code
-   - Accessibility compliance
+    - File System Access API implementation
+    - Test coverage for browser-only code
+    - Accessibility compliance
 
 5. **What's Next**
-   - Future roadmap
-   - Call for contributors
-   - How to get involved
+    - Future roadmap
+    - Call for contributors
+    - How to get involved
 
 6. **Conclusion**
-   - Try it out
-   - Contribute on GitHub
-   - Feedback welcome
+    - Try it out
+    - Contribute on GitHub
+    - Feedback welcome
 
 ## 📊 Success Metrics
 
@@ -205,6 +207,7 @@ Track the following:
 ### Launch Day
 
 Morning:
+
 - [ ] Publish GitHub release
 - [ ] Deploy to GitHub Pages
 - [ ] Post to Hacker News (Show HN)
@@ -212,12 +215,14 @@ Morning:
 - [ ] Tweet announcement thread
 
 Afternoon:
+
 - [ ] Respond to comments on HN/Reddit
 - [ ] Post to r/SideProject, r/webdev
 - [ ] Publish blog post on Dev.to
 - [ ] Share on LinkedIn
 
 Evening:
+
 - [ ] Continue engagement
 - [ ] Monitor for issues
 - [ ] Thank early supporters
@@ -233,13 +238,13 @@ Evening:
 ### Week 2-4
 
 - [ ] Submit to awesome lists:
-  - awesome-markdown
-  - awesome-javascript
-  - awesome-webdev
+    - awesome-markdown
+    - awesome-javascript
+    - awesome-webdev
 - [ ] Register on software directories:
-  - AlternativeTo
-  - Slant
-  - SourceForge
+    - AlternativeTo
+    - Slant
+    - SourceForge
 - [ ] Reach out to tech bloggers/YouTubers
 - [ ] Continue community engagement
 
@@ -248,25 +253,29 @@ Evening:
 ### Response Templates
 
 **Thank you for feedback:**
+
 ```
-Thanks for the feedback! I really appreciate you taking the time to try it out. 
+Thanks for the feedback! I really appreciate you taking the time to try it out.
 [Specific response to their comment]
 Feel free to open an issue if you'd like to discuss this further!
 ```
 
 **Bug report:**
+
 ```
-Thanks for reporting this! I'll investigate and fix it as soon as possible. 
+Thanks for reporting this! I'll investigate and fix it as soon as possible.
 If you're interested in contributing, I'd be happy to guide you through it!
 ```
 
 **Feature request:**
+
 ```
-Great suggestion! This aligns well with [project goals/future plans]. 
+Great suggestion! This aligns well with [project goals/future plans].
 I've created an issue to track this: [link]
 ```
 
 **Contribution:**
+
 ```
 Amazing, thank you for contributing! 🎉
 [Specific praise for their contribution]
@@ -300,4 +309,3 @@ Consider:
 ---
 
 **Remember**: Authentic engagement > marketing speak. Be helpful, responsive, and genuinely interested in feedback!
-

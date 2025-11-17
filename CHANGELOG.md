@@ -22,10 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Undo/Redo** with full history management (Ctrl+Z, Ctrl+Y)
 - **Export functionality** for PDF, HTML, and plain text
 - **Enhanced code blocks** with syntax highlighting via Prism.js
-  - Support for 10+ programming languages
-  - Copy-to-clipboard functionality with visual feedback
-  - Language labels on code blocks
-  - Automatic language detection
+    - Support for 10+ programming languages
+    - Copy-to-clipboard functionality with visual feedback
+    - Language labels on code blocks
+    - Automatic language detection
 - **Text formatting** - Bold, italic, underline, strikethrough, inline code, blockquote, horizontal rules
 - **Headers** - All six levels (H1-H6) with keyboard shortcuts
 - **Lists** - Ordered, unordered, and task lists with smart numbering and nested list support
@@ -97,4 +97,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **1.0.0** - Initial public release with full feature set
 
 [1.0.0]: https://github.com/andrewparry/medit/releases/tag/v1.0.0
-

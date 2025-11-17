@@ -114,4 +114,3 @@ Download the source code archive from the [releases page](https://github.com/and
 **License**: MIT  
 **Author**: Andrew Parry  
 **Repository**: https://github.com/andrewparry/medit
-

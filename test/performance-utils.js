@@ -41,20 +41,31 @@ function generateLargeMarkdownContent(lines = 1000, options = {}) {
     }
 
     if (includeLists) {
-        contentTypes.push((i) => `- List item ${i}\n  - Nested item ${i}.1\n  - Nested item ${i}.2`);
-        contentTypes.push((i) => `1. Numbered item ${i}\n2. Numbered item ${i + 1}\n3. Numbered item ${i + 2}`);
+        contentTypes.push(
+            (i) => `- List item ${i}\n  - Nested item ${i}.1\n  - Nested item ${i}.2`
+        );
+        contentTypes.push(
+            (i) => `1. Numbered item ${i}\n2. Numbered item ${i + 1}\n3. Numbered item ${i + 2}`
+        );
     }
 
     if (includeLinks) {
-        contentTypes.push((i) => `This is a paragraph with a [link ${i}](http://example.com/${i}) in it.`);
+        contentTypes.push(
+            (i) => `This is a paragraph with a [link ${i}](http://example.com/${i}) in it.`
+        );
     }
 
     if (includeCode) {
-        contentTypes.push((i) => `Here is some \`inline code ${i}\` and a code block:\n\n\`\`\`javascript\nfunction test${i}() {\n  return ${i};\n}\n\`\`\``);
+        contentTypes.push(
+            (i) =>
+                `Here is some \`inline code ${i}\` and a code block:\n\n\`\`\`javascript\nfunction test${i}() {\n  return ${i};\n}\n\`\`\``
+        );
     }
 
     if (includeImages) {
-        contentTypes.push((i) => `![Image ${i}](http://example.com/image${i}.jpg "Image ${i} description")`);
+        contentTypes.push(
+            (i) => `![Image ${i}](http://example.com/image${i}.jpg "Image ${i} description")`
+        );
     }
 
     // Default content if no types specified
@@ -99,7 +110,7 @@ async function simulateRapidInput(element, text, delay = 1) {
         element.dispatchEvent(inputEvent);
 
         if (delay > 0) {
-            await new Promise(resolve => setTimeout(resolve, delay));
+            await new Promise((resolve) => setTimeout(resolve, delay));
         }
     }
 
@@ -175,8 +186,8 @@ async function runBenchmark(name, fn, options = {}) {
     }
 
     // Calculate statistics
-    const durations = results.map(r => r.duration);
-    const memoryDeltas = results.map(r => r.memoryDelta);
+    const durations = results.map((r) => r.duration);
+    const memoryDeltas = results.map((r) => r.memoryDelta);
 
     return {
         name,
@@ -200,7 +211,7 @@ function assertPerformance(actualDuration, maxExpectedDuration, operation) {
     if (actualDuration > maxExpectedDuration) {
         throw new Error(
             `Performance assertion failed for ${operation}: ` +
-            `Expected <= ${maxExpectedDuration}ms, but got ${actualDuration}ms`
+                `Expected <= ${maxExpectedDuration}ms, but got ${actualDuration}ms`
         );
     }
 }

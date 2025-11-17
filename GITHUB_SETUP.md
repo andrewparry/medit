@@ -16,20 +16,20 @@ Navigate to: **Settings > General**
 
 1. Click the gear icon ⚙️ next to "About"
 2. Fill in:
-   - **Description**: "A browser-based markdown WYSIWYG editor with real-time preview and offline support"
-   - **Website**: `https://andrewparry.github.io/medit/`
-   - **Topics**: Add the following tags:
-     - `markdown`
-     - `editor`
-     - `wysiwyg`
-     - `javascript`
-     - `browser-based`
-     - `offline`
-     - `markdown-editor`
-     - `text-editor`
-     - `accessibility`
-     - `wcag`
-     - `open-source`
+    - **Description**: "A browser-based markdown WYSIWYG editor with real-time preview and offline support"
+    - **Website**: `https://andrewparry.github.io/medit/`
+    - **Topics**: Add the following tags:
+        - `markdown`
+        - `editor`
+        - `wysiwyg`
+        - `javascript`
+        - `browser-based`
+        - `offline`
+        - `markdown-editor`
+        - `text-editor`
+        - `accessibility`
+        - `wcag`
+        - `open-source`
 3. Click "Save changes"
 
 ### Features Section
@@ -68,6 +68,7 @@ Navigate to: **Settings > Pages**
 ### Custom Domain (Optional)
 
 If you have a custom domain:
+
 1. Enter domain name (e.g., `editor.yourdomaincom`)
 2. Add DNS record as instructed
 3. Wait for DNS check to pass
@@ -76,6 +77,7 @@ If you have a custom domain:
 ### Verification
 
 After a few minutes:
+
 1. Visit: https://andrewparry.github.io/medit/
 2. Verify the editor loads correctly
 3. Test functionality
@@ -92,19 +94,22 @@ Navigate to: **Settings > Branches**
 #### Configure Protection Rules:
 
 **Require pull request before merging:**
+
 - [x] ✅ **Require pull request reviews before merging**
-  - Required approvals: 1
-  - [ ] Dismiss stale pull request approvals when new commits are pushed
-  - [ ] Require review from Code Owners (not set up yet)
+    - Required approvals: 1
+    - [ ] Dismiss stale pull request approvals when new commits are pushed
+    - [ ] Require review from Code Owners (not set up yet)
 
 **Require status checks before merging:**
+
 - [x] ✅ **Require status checks to pass before merging**
-  - [x] **Require branches to be up to date before merging**
-  - Search and add required checks:
-    - `CI` (from ci.yml workflow)
-    - `Lint` (from lint.yml workflow)
+    - [x] **Require branches to be up to date before merging**
+    - Search and add required checks:
+        - `CI` (from ci.yml workflow)
+        - `Lint` (from lint.yml workflow)
 
 **Other Settings:**
+
 - [x] ✅ **Require conversation resolution before merging**
 - [x] ✅ **Require signed commits** (optional but recommended)
 - [ ] ❌ **Require linear history** (optional)
@@ -121,6 +126,7 @@ Navigate to: **Issues > Labels**
 ### Default Labels to Keep
 
 Keep these default labels:
+
 - `bug` - Something isn't working
 - `documentation` - Improvements or additions to documentation
 - `duplicate` - This issue or pull request already exists
@@ -136,28 +142,28 @@ Keep these default labels:
 Click **New label** for each:
 
 1. **dependencies**
-   - Color: `#0366d6` (blue)
-   - Description: "Dependency updates"
+    - Color: `#0366d6` (blue)
+    - Description: "Dependency updates"
 
 2. **security**
-   - Color: `#d73a4a` (red)
-   - Description: "Security-related issue"
+    - Color: `#d73a4a` (red)
+    - Description: "Security-related issue"
 
 3. **performance**
-   - Color: `#d4c5f9` (purple)
-   - Description: "Performance improvements"
+    - Color: `#d4c5f9` (purple)
+    - Description: "Performance improvements"
 
 4. **accessibility**
-   - Color: `#0075ca` (blue)
-   - Description: "Accessibility improvements"
+    - Color: `#0075ca` (blue)
+    - Description: "Accessibility improvements"
 
 5. **triage**
-   - Color: `#fbca04` (yellow)
-   - Description: "Needs triage and categorization"
+    - Color: `#fbca04` (yellow)
+    - Description: "Needs triage and categorization"
 
 6. **testing**
-   - Color: `#1d76db` (blue)
-   - Description: "Related to testing"
+    - Color: `#1d76db` (blue)
+    - Description: "Related to testing"
 
 ## Step 5: Enable GitHub Discussions
 
@@ -189,6 +195,7 @@ Navigate to: **Settings > Code security and analysis**
 ### Configure Dependabot
 
 You already have `.github/dependabot.yml` configured, which will:
+
 - Check npm dependencies weekly
 - Check GitHub Actions weekly
 - Auto-create PRs with dependency updates
@@ -198,10 +205,11 @@ You already have `.github/dependabot.yml` configured, which will:
 Navigate to: **Settings > Environments**
 
 If `github-pages` environment exists:
+
 1. Click on it
 2. Configure:
-   - **Deployment branches**: Only `main` branch
-   - Add environment secret if needed (usually not required)
+    - **Deployment branches**: Only `main` branch
+    - Add environment secret if needed (usually not required)
 
 If it doesn't exist yet, it will be created automatically when Pages workflow runs.
 
@@ -210,6 +218,7 @@ If it doesn't exist yet, it will be created automatically when Pages workflow ru
 Navigate to: **Settings > Secrets and variables > Actions**
 
 Currently, no secrets are needed. Future additions might include:
+
 - Code coverage service tokens (Codecov)
 - Deployment keys
 - API keys for services
@@ -219,6 +228,7 @@ Currently, no secrets are needed. Future additions might include:
 Navigate to: **Insights > Community**
 
 Check the community standards:
+
 - [x] Description: ✅
 - [x] README: ✅
 - [x] Code of conduct: ✅
@@ -237,12 +247,14 @@ Navigate to: **Settings > General** (scroll to bottom)
 ### Social Preview Image
 
 Create an Open Graph image (1280x640 pixels) showing:
+
 - Project logo/icon
 - "Markdown Editor" title
 - Key features or screenshot
 - Clean, professional design
 
 Upload:
+
 1. Scroll to **Social preview** section
 2. Click **Edit**
 3. Upload your image
@@ -255,6 +267,7 @@ This image will be shown when the repo is shared on social media.
 Navigate to: **Settings > Webhooks**
 
 Add webhooks for:
+
 - Slack/Discord notifications
 - CI/CD systems
 - Analytics platforms
@@ -268,6 +281,7 @@ Not required for initial launch.
 Navigate to: **Insights > Traffic**
 
 This shows:
+
 - Views (visitors to your repo)
 - Clones (git clone operations)
 - Referring sites
@@ -293,21 +307,21 @@ After completing setup, verify:
 ## Post-Setup Tasks
 
 1. **Create Initial Discussion**
-   - Welcome message in General
-   - Ask for feedback
+    - Welcome message in General
+    - Ask for feedback
 
 2. **Pin Important Issues**
-   - Roadmap issue
-   - Known issues
-   - Feature requests
+    - Roadmap issue
+    - Known issues
+    - Feature requests
 
 3. **Create GitHub Project (Optional)**
-   - For release planning
-   - Feature tracking
+    - For release planning
+    - Feature tracking
 
 4. **Set Up GitHub Sponsors (Optional)**
-   - If accepting donations
-   - Link to sponsor page
+    - If accepting donations
+    - Link to sponsor page
 
 ## Common Issues & Solutions
 
@@ -320,7 +334,7 @@ After completing setup, verify:
 
 ### CI/CD Not Running
 
-- Check workflow files syntax (.github/workflows/*.yml)
+- Check workflow files syntax (.github/workflows/\*.yml)
 - Verify branch names in workflow triggers
 - Check Actions tab for error messages
 
@@ -341,4 +355,3 @@ After completing setup, verify:
 
 **Setup Status**: ✅ Ready for configuration  
 **Last Updated**: November 5, 2024
-

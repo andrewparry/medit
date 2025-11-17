@@ -20,14 +20,14 @@ We take the security of Markdown Editor seriously. If you believe you have found
 ### Please Do
 
 1. **Report via GitHub Security Advisories** (Preferred)
-   - Go to the [Security tab](https://github.com/andrewparry/medit/security) of this repository
-   - Click "Report a vulnerability"
-   - Fill out the form with details about the vulnerability
+    - Go to the [Security tab](https://github.com/andrewparry/medit/security) of this repository
+    - Click "Report a vulnerability"
+    - Fill out the form with details about the vulnerability
 
 2. **Report via GitHub Issues** (Alternative)
-   - If you cannot use Security Advisories, create a private issue
-   - Tag it with the "security" label
-   - Provide as much information as possible
+    - If you cannot use Security Advisories, create a private issue
+    - Tag it with the "security" label
+    - Provide as much information as possible
 
 ### What to Include in Your Report
 
@@ -58,45 +58,45 @@ Please include the following information in your report:
 ### General Usage
 
 1. **Keep Your Browser Updated**
-   - Use the latest version of Chrome, Firefox, Safari, or Edge
-   - Enable automatic browser updates
+    - Use the latest version of Chrome, Firefox, Safari, or Edge
+    - Enable automatic browser updates
 
 2. **Be Cautious with File Sources**
-   - Only open markdown files from trusted sources
-   - Be aware that malicious markdown files could contain harmful content
+    - Only open markdown files from trusted sources
+    - Be aware that malicious markdown files could contain harmful content
 
 3. **Review Permissions**
-   - The editor requests file system access when saving/opening files
-   - Always review what permissions you grant
+    - The editor requests file system access when saving/opening files
+    - Always review what permissions you grant
 
 ### Data Privacy
 
 1. **Local Storage**
-   - Auto-save uses browser's localStorage
-   - Data stays on your device
-   - Clear browser data to remove saved content
+    - Auto-save uses browser's localStorage
+    - Data stays on your device
+    - Clear browser data to remove saved content
 
 2. **No Server Communication**
-   - The editor works entirely offline
-   - No data is transmitted to external servers
-   - No analytics or tracking is performed
+    - The editor works entirely offline
+    - No data is transmitted to external servers
+    - No analytics or tracking is performed
 
 ### Known Security Measures
 
 This editor implements several security measures:
 
 1. **XSS Protection**
-   - HTML content is sanitized before rendering
-   - Preview uses a secure sanitizer (`sanitizer.js`)
-   - User input is properly escaped
+    - HTML content is sanitized before rendering
+    - Preview uses a secure sanitizer (`sanitizer.js`)
+    - User input is properly escaped
 
 2. **Content Security Policy**
-   - Consider using CSP headers when self-hosting
-   - Restrict inline script execution
+    - Consider using CSP headers when self-hosting
+    - Restrict inline script execution
 
 3. **File Type Validation**
-   - Only markdown files (.md, .markdown) are accepted
-   - File content is validated before processing
+    - Only markdown files (.md, .markdown) are accepted
+    - File content is validated before processing
 
 ## Security Disclosure Process
 
@@ -125,10 +125,10 @@ If you're self-hosting or deploying this editor:
 ### Content Security Policy Headers
 
 ```
-Content-Security-Policy: 
-    default-src 'self'; 
-    script-src 'self' https://cdnjs.cloudflare.com; 
-    style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; 
+Content-Security-Policy:
+    default-src 'self';
+    script-src 'self' https://cdnjs.cloudflare.com;
+    style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
     img-src 'self' data: https:;
 ```
 
@@ -162,4 +162,3 @@ For security-related questions or concerns:
 ---
 
 Thank you for helping keep Markdown Editor and its users safe!
-

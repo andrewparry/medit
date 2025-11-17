@@ -31,7 +31,8 @@ describe('Header formatting on trailing blank lines', () => {
             content = content.replace(/<\/p>/gi, '\n\n');
             content = content.replace(/<br\s*\/?>/gi, '\n');
 
-            content = content.replace(/&nbsp;/gi, ' ')
+            content = content
+                .replace(/&nbsp;/gi, ' ')
                 .replace(/&lt;/gi, '<')
                 .replace(/&gt;/gi, '>')
                 .replace(/&amp;/gi, '&')
@@ -78,7 +79,7 @@ describe('Header formatting on trailing blank lines', () => {
             let length = 0;
 
             if (node.childNodes && node.childNodes.length) {
-                node.childNodes.forEach(child => {
+                node.childNodes.forEach((child) => {
                     length += this.getNodeTextLength(child);
                 });
             }
@@ -128,14 +129,23 @@ describe('Header formatting on trailing blank lines', () => {
 
             if (!textBeforeCursor && range.startContainer) {
                 if (range.startContainer === this.editorElement) {
-                    return this.getAccumulatedTextLengthUpToChild(this.editorElement, range.startOffset);
+                    return this.getAccumulatedTextLengthUpToChild(
+                        this.editorElement,
+                        range.startOffset
+                    );
                 }
 
                 if (range.startContainer.nodeType === this.window.Node.ELEMENT_NODE) {
-                    const offsetWithin = this.getAccumulatedTextLengthUpToChild(range.startContainer, range.startOffset);
+                    const offsetWithin = this.getAccumulatedTextLengthUpToChild(
+                        range.startContainer,
+                        range.startOffset
+                    );
                     const parent = range.startContainer.parentNode;
                     if (parent) {
-                        const index = Array.prototype.indexOf.call(parent.childNodes, range.startContainer);
+                        const index = Array.prototype.indexOf.call(
+                            parent.childNodes,
+                            range.startContainer
+                        );
                         return this.getAccumulatedTextLengthUpToChild(parent, index) + offsetWithin;
                     }
                     return offsetWithin;
@@ -277,10 +287,11 @@ describe('Header formatting on trailing blank lines', () => {
 
             let newCursorPosInLine = cursorPosInLine;
 
-            const hasOtherHeaderFormatting = format.lineStart &&
+            const hasOtherHeaderFormatting =
+                format.lineStart &&
                 (currentLineContent.startsWith('# ') ||
-                 currentLineContent.startsWith('## ') ||
-                 currentLineContent.startsWith('### ')) &&
+                    currentLineContent.startsWith('## ') ||
+                    currentLineContent.startsWith('### ')) &&
                 !isAlreadyFormatted;
 
             if (isAlreadyFormatted) {
@@ -299,7 +310,8 @@ describe('Header formatting on trailing blank lines', () => {
 
             this.setEditorContent(lines.join('\n'));
 
-            const newLineStart = lines.slice(0, currentLine).join('\n').length + (currentLine > 0 ? 1 : 0);
+            const newLineStart =
+                lines.slice(0, currentLine).join('\n').length + (currentLine > 0 ? 1 : 0);
             const newCursorPos = newLineStart + newCursorPosInLine;
             this.setCursorPositionInText(newCursorPos);
         }
@@ -311,9 +323,12 @@ describe('Header formatting on trailing blank lines', () => {
         originalNode = global.Node;
         originalNodeFilter = global.NodeFilter;
 
-        currentDom = new JSDOM('<!doctype html><html><body><div id="editor" contenteditable="true"></div></body></html>', {
-            pretendToBeVisual: true
-        });
+        currentDom = new JSDOM(
+            '<!doctype html><html><body><div id="editor" contenteditable="true"></div></body></html>',
+            {
+                pretendToBeVisual: true
+            }
+        );
 
         global.window = currentDom.window;
         global.document = currentDom.window.document;
@@ -336,7 +351,8 @@ describe('Header formatting on trailing blank lines', () => {
         const editorElement = document.getElementById('editor');
         const harness = new FormattingHarness(editorElement, window);
 
-        editorElement.innerHTML = '<div># Hello world</div><div><br></div><div><br></div><div><br></div><div><br></div>';
+        editorElement.innerHTML =
+            '<div># Hello world</div><div><br></div><div><br></div><div><br></div><div><br></div>';
 
         const selection = window.getSelection();
         selection.removeAllRanges();

@@ -70,7 +70,12 @@
         }
 
         const last = state.historyStack[state.historyStack.length - 1];
-        if (last && last.value === snap.value && last.selectionStart === snap.selectionStart && last.selectionEnd === snap.selectionEnd) {
+        if (
+            last &&
+            last.value === snap.value &&
+            last.selectionStart === snap.selectionStart &&
+            last.selectionEnd === snap.selectionEnd
+        ) {
             return; // no change
         }
 
@@ -171,4 +176,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

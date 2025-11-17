@@ -20,9 +20,9 @@ class MockElement {
 
     get textContent() {
         if (this.children.length > 0) {
-            return this.children.map(child =>
-                child.nodeType === 3 ? child.textContent : child.textContent
-            ).join('');
+            return this.children
+                .map((child) => (child.nodeType === 3 ? child.textContent : child.textContent))
+                .join('');
         }
         return this._textContent;
     }
@@ -36,21 +36,23 @@ class MockElement {
 
     get innerHTML() {
         if (this.children.length > 0) {
-            return this.children.map(child => {
-                if (child.nodeType === 3) {
-                    return this.escapeHtml(child.textContent);
-                } else {
-                    const attrs = Array.from(child.attributes.entries())
-                        .map(([name, value]) => ` ${name}="${this.escapeHtml(value)}"`)
-                        .join('');
-                    const tagName = child.tagName.toLowerCase();
-                    if (child.children.length === 0 && !child.innerHTML) {
-                        return `<${tagName}${attrs}>${this.escapeHtml(child.textContent || '')}</${tagName}>`;
+            return this.children
+                .map((child) => {
+                    if (child.nodeType === 3) {
+                        return this.escapeHtml(child.textContent);
                     } else {
-                        return `<${tagName}${attrs}>${child.innerHTML}</${tagName}>`;
+                        const attrs = Array.from(child.attributes.entries())
+                            .map(([name, value]) => ` ${name}="${this.escapeHtml(value)}"`)
+                            .join('');
+                        const tagName = child.tagName.toLowerCase();
+                        if (child.children.length === 0 && !child.innerHTML) {
+                            return `<${tagName}${attrs}>${this.escapeHtml(child.textContent || '')}</${tagName}>`;
+                        } else {
+                            return `<${tagName}${attrs}>${child.innerHTML}</${tagName}>`;
+                        }
                     }
-                }
-            }).join('');
+                })
+                .join('');
         }
         return this._innerHTML;
     }
@@ -200,18 +202,40 @@ class MarkdownParser {
 
         // Allowed HTML tags for sanitization
         this.allowedTags = new Set([
-            'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-            'p', 'br', 'strong', 'em', 'code', 'pre',
-            'a', 'img', 'ul', 'ol', 'li', 'blockquote',
-            'hr', 'del', 'table', 'thead', 'tbody', 'tr', 'th', 'td'
+            'h1',
+            'h2',
+            'h3',
+            'h4',
+            'h5',
+            'h6',
+            'p',
+            'br',
+            'strong',
+            'em',
+            'code',
+            'pre',
+            'a',
+            'img',
+            'ul',
+            'ol',
+            'li',
+            'blockquote',
+            'hr',
+            'del',
+            'table',
+            'thead',
+            'tbody',
+            'tr',
+            'th',
+            'td'
         ]);
 
         // Allowed attributes for specific tags
         this.allowedAttributes = {
-            'a': ['href', 'title'],
-            'img': ['src', 'alt', 'title', 'width', 'height'],
-            'code': ['class'],
-            'pre': ['class']
+            a: ['href', 'title'],
+            img: ['src', 'alt', 'title', 'width', 'height'],
+            code: ['class'],
+            pre: ['class']
         };
     }
 
@@ -307,7 +331,10 @@ class MarkdownParser {
         markdown = markdown.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)');
 
         // Convert images
-        markdown = markdown.replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*\/?>/gi, '![$2]($1)');
+        markdown = markdown.replace(
+            /<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*\/?>/gi,
+            '![$2]($1)'
+        );
 
         // Convert lists
         markdown = markdown.replace(/<ul[^>]*>(.*?)<\/ul>/gis, (match, content) => {
@@ -398,7 +425,7 @@ class MarkdownParser {
             }
 
             // Remove disallowed attributes
-            attributesToRemove.forEach(name => child.removeAttribute(name));
+            attributesToRemove.forEach((name) => child.removeAttribute(name));
 
             // Recursively sanitize children
             this.sanitizeElement(child);
@@ -509,7 +536,7 @@ class MarkdownParser {
      * @returns {string} - HTML list
      */
     closeList(listType, items) {
-        const listItems = items.map(item => `<li>${item}</li>`).join('');
+        const listItems = items.map((item) => `<li>${item}</li>`).join('');
         return `<${listType}>${listItems}</${listType}>`;
     }
 
@@ -520,13 +547,23 @@ class MarkdownParser {
      */
     convertTables(html) {
         return html.replace(this.patterns.table, (match, header, rows) => {
-            const headerCells = header.split('|').map(cell => cell.trim()).filter(cell => cell);
-            const headerRow = `<tr>${headerCells.map(cell => `<th>${cell}</th>`).join('')}</tr>`;
+            const headerCells = header
+                .split('|')
+                .map((cell) => cell.trim())
+                .filter((cell) => cell);
+            const headerRow = `<tr>${headerCells.map((cell) => `<th>${cell}</th>`).join('')}</tr>`;
 
-            const bodyRows = rows.trim().split('\n').map(row => {
-                const cells = row.split('|').map(cell => cell.trim()).filter(cell => cell);
-                return `<tr>${cells.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
-            }).join('');
+            const bodyRows = rows
+                .trim()
+                .split('\n')
+                .map((row) => {
+                    const cells = row
+                        .split('|')
+                        .map((cell) => cell.trim())
+                        .filter((cell) => cell);
+                    return `<tr>${cells.map((cell) => `<td>${cell}</td>`).join('')}</tr>`;
+                })
+                .join('');
 
             return `<table><thead>${headerRow}</thead><tbody>${bodyRows}</tbody></table>`;
         });
@@ -541,19 +578,22 @@ class MarkdownParser {
         // Split by double line breaks to create paragraphs
         const paragraphs = html.split(/\n\s*\n/);
 
-        return paragraphs.map(paragraph => {
-            const trimmed = paragraph.trim();
-            if (!trimmed) {
-                return '';
-            }
+        return paragraphs
+            .map((paragraph) => {
+                const trimmed = paragraph.trim();
+                if (!trimmed) {
+                    return '';
+                }
 
-            // Don't wrap block elements in paragraphs
-            if (trimmed.match(/^<(h[1-6]|ul|ol|blockquote|pre|table|hr)/)) {
-                return trimmed;
-            }
+                // Don't wrap block elements in paragraphs
+                if (trimmed.match(/^<(h[1-6]|ul|ol|blockquote|pre|table|hr)/)) {
+                    return trimmed;
+                }
 
-            return `<p>${trimmed.replace(/\n/g, '<br />')}</p>`;
-        }).filter(p => p).join('\n\n');
+                return `<p>${trimmed.replace(/\n/g, '<br />')}</p>`;
+            })
+            .filter((p) => p)
+            .join('\n\n');
     }
 
     /**
@@ -686,7 +726,9 @@ describe('MarkdownParser Accuracy Tests', () => {
                 const markdown = '![Alt text](https://example.com/image.jpg)';
                 const html = parser.toHTML(markdown);
 
-                expect(html).toContain('<img src="https://example.com/image.jpg" alt="Alt text" />');
+                expect(html).toContain(
+                    '<img src="https://example.com/image.jpg" alt="Alt text" />'
+                );
             });
 
             test('should handle links with special characters in URL', () => {
@@ -807,7 +849,8 @@ describe('MarkdownParser Accuracy Tests', () => {
             });
 
             test('should preserve content inside code blocks', () => {
-                const markdown = '```\n**This should not be bold**\n*This should not be italic*\n```';
+                const markdown =
+                    '```\n**This should not be bold**\n*This should not be italic*\n```';
                 const html = parser.toHTML(markdown);
 
                 // Our implementation currently processes formatting inside code blocks
@@ -847,7 +890,9 @@ describe('MarkdownParser Accuracy Tests', () => {
                 const markdown = '> This is **bold** in a quote';
                 const html = parser.toHTML(markdown);
 
-                expect(html).toContain('<blockquote>This is <strong>bold</strong> in a quote</blockquote>');
+                expect(html).toContain(
+                    '<blockquote>This is <strong>bold</strong> in a quote</blockquote>'
+                );
             });
         });
 
@@ -1065,7 +1110,7 @@ describe('MarkdownParser Accuracy Tests', () => {
                 '1. numbered item'
             ];
 
-            testCases.forEach(markdown => {
+            testCases.forEach((markdown) => {
                 const html = parser.toHTML(markdown);
                 expect(html).toBeDefined();
                 expect(html).not.toBe('');

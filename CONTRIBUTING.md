@@ -34,9 +34,9 @@ We actively welcome your pull requests:
 
 1. Fork the repo and create your branch from `main`
 2. Follow the branch naming convention:
-   - `feature/your-feature-name` for new features
-   - `bugfix/issue-description` for bug fixes
-   - `docs/what-you-changed` for documentation updates
+    - `feature/your-feature-name` for new features
+    - `bugfix/issue-description` for bug fixes
+    - `docs/what-you-changed` for documentation updates
 3. Make your changes and ensure they follow our coding standards
 4. Add tests for any new functionality
 5. Update documentation as needed
@@ -171,10 +171,10 @@ describe('Feature Name', () => {
     test('should do something specific', () => {
         // Arrange
         const input = 'test content';
-        
+
         // Act
         const result = someFunction(input);
-        
+
         // Assert
         expect(result).toBe('expected output');
     });
@@ -260,4 +260,3 @@ By contributing to Markdown Editor, you agree that your contributions will be li
 ---
 
 Thank you for contributing! Your efforts help make this project better for everyone. 💙
-

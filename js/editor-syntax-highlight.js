@@ -60,7 +60,11 @@
                 if (language && window.Prism) {
                     if (window.Prism.languages[language]) {
                         try {
-                            highlightedCode = window.Prism.highlight(codeContent, window.Prism.languages[language], language);
+                            highlightedCode = window.Prism.highlight(
+                                codeContent,
+                                window.Prism.languages[language],
+                                language
+                            );
                         } catch (error) {
                             highlightedCode = utils.escapeHtml(codeContent);
                         }
@@ -101,7 +105,7 @@
         let html = '';
         parts.forEach((part) => {
             if (part.type === 'code') {
-                html += `${part.openingFence  }\n${  part.highlightedCode  }\n${  part.closingFence}`;
+                html += `${part.openingFence}\n${part.highlightedCode}\n${part.closingFence}`;
             } else {
                 html += utils.escapeHtml(part.content);
             }
@@ -155,4 +159,3 @@
 
     window.MarkdownEditor = MarkdownEditor;
 })();
-

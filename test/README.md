@@ -5,15 +5,18 @@ This directory contains comprehensive tests for the Markdown WYSIWYG Editor, inc
 ## Test Coverage
 
 ### Unit Tests
+
 The unit tests cover the following aspects of EditorCore state management as required by **Requirement 1.3**:
 
 ### State Initialization Tests
+
 - ✅ Correct default state structure initialization
-- ✅ Event listeners map initialization  
+- ✅ Event listeners map initialization
 - ✅ Markdown parser initialization
 - ✅ DOM element references setup
 
 ### State Updates Tests
+
 - ✅ Markdown content updates and dirty state tracking
 - ✅ Preview toggle state management
 - ✅ File information updates (name, save time, unsaved changes)
@@ -23,6 +26,7 @@ The unit tests cover the following aspects of EditorCore state management as req
 - ✅ Parsing state management
 
 ### Event System Functionality Tests
+
 - ✅ Event listener registration
 - ✅ Event emission to registered listeners
 - ✅ Event listener removal
@@ -31,17 +35,20 @@ The unit tests cover the following aspects of EditorCore state management as req
 - ✅ Built-in events (contentChange, previewToggle)
 
 ### State Consistency Tests
+
 - ✅ State consistency during multiple operations
 - ✅ State structure preservation after updates
 
 ## Running Tests
 
 ### Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### Run Tests
+
 ```bash
 # Run all tests once
 npm test
@@ -63,21 +70,25 @@ The tests use Jest as the testing framework and include:
 - **Error Handling**: Tests verify graceful error handling in event system
 
 ### End-to-End Integration Tests
+
 The end-to-end integration tests cover complete user workflows, performance, and accessibility compliance as required by **Requirements 6.1 and 1.1**:
 
 #### Complete User Workflows
+
 - ✅ Create → Edit → Save workflow testing
-- ✅ Open → Edit → Save existing file workflow  
+- ✅ Open → Edit → Save existing file workflow
 - ✅ Multi-step formatting operations
 - ✅ Preview toggle and content synchronization
 
 #### Performance Testing
+
 - ✅ Large document loading (10,000+ lines)
 - ✅ Rapid typing performance in large documents
 - ✅ Preview update efficiency with large content
 - ✅ Memory usage optimization validation
 
 #### Accessibility Compliance
+
 - ✅ ARIA labels and semantic HTML structure
 - ✅ Button accessibility attributes
 - ✅ Editor accessibility attributes
@@ -88,6 +99,7 @@ The end-to-end integration tests cover complete user workflows, performance, and
 - ✅ Alternative text and descriptions
 
 #### Cross-Browser Compatibility
+
 - ✅ Different user agent scenarios
 - ✅ File System Access API availability detection
 - ✅ localStorage availability handling
@@ -107,9 +119,11 @@ The end-to-end integration tests cover complete user workflows, performance, and
 ## Requirements Verification
 
 These tests verify compliance with **Requirement 1.3** from the requirements document:
+
 > "WHEN the user types text THEN the system SHALL maintain proper markdown structure in the background"
 
 The tests ensure that:
+
 1. State is properly initialized and maintained
 2. Content changes are tracked and events are emitted
 3. The event system works reliably for component communication

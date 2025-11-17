@@ -15,7 +15,8 @@ describe('Custom Accessible Dialogs', () => {
     let body;
 
     beforeEach(() => {
-        dom = new JSDOM(`
+        dom = new JSDOM(
+            `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -26,11 +27,13 @@ describe('Custom Accessible Dialogs', () => {
                 <textarea id="editor"></textarea>
             </body>
             </html>
-        `, {
-            url: 'http://localhost',
-            pretendToBeVisual: true,
-            resources: 'usable'
-        });
+        `,
+            {
+                url: 'http://localhost',
+                pretendToBeVisual: true,
+                resources: 'usable'
+            }
+        );
 
         window = dom.window;
         document = window.document;
@@ -54,145 +57,148 @@ describe('Custom Accessible Dialogs', () => {
         const editor = document.getElementById('editor');
         let activeDialog = null;
 
-        const alertDialog = (message, title = 'Notice') => new Promise((resolve) => {
-            const overlay = document.createElement('div');
-            overlay.className = 'dialog-overlay';
+        const alertDialog = (message, title = 'Notice') =>
+            new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'dialog-overlay';
 
-            const dialog = document.createElement('div');
-            dialog.className = 'dialog-surface';
-            dialog.setAttribute('role', 'dialog');
-            dialog.setAttribute('aria-modal', 'true');
-            dialog.setAttribute('aria-labelledby', 'dialog-title');
-            dialog.setAttribute('aria-describedby', 'dialog-message');
+                const dialog = document.createElement('div');
+                dialog.className = 'dialog-surface';
+                dialog.setAttribute('role', 'dialog');
+                dialog.setAttribute('aria-modal', 'true');
+                dialog.setAttribute('aria-labelledby', 'dialog-title');
+                dialog.setAttribute('aria-describedby', 'dialog-message');
 
-            const titleElement = document.createElement('h2');
-            titleElement.id = 'dialog-title';
-            titleElement.textContent = title;
-            dialog.appendChild(titleElement);
+                const titleElement = document.createElement('h2');
+                titleElement.id = 'dialog-title';
+                titleElement.textContent = title;
+                dialog.appendChild(titleElement);
 
-            const messageElement = document.createElement('p');
-            messageElement.id = 'dialog-message';
-            messageElement.textContent = message;
-            dialog.appendChild(messageElement);
+                const messageElement = document.createElement('p');
+                messageElement.id = 'dialog-message';
+                messageElement.textContent = message;
+                dialog.appendChild(messageElement);
 
-            const okButton = document.createElement('button');
-            okButton.textContent = 'OK';
-            okButton.addEventListener('click', () => {
-                body.removeChild(overlay);
-                activeDialog = null;
-                editor.focus();
-                resolve();
+                const okButton = document.createElement('button');
+                okButton.textContent = 'OK';
+                okButton.addEventListener('click', () => {
+                    body.removeChild(overlay);
+                    activeDialog = null;
+                    editor.focus();
+                    resolve();
+                });
+
+                dialog.appendChild(okButton);
+                overlay.appendChild(dialog);
+                body.appendChild(overlay);
+                activeDialog = overlay;
+                setTimeout(() => okButton.focus(), 10);
             });
 
-            dialog.appendChild(okButton);
-            overlay.appendChild(dialog);
-            body.appendChild(overlay);
-            activeDialog = overlay;
-            setTimeout(() => okButton.focus(), 10);
-        });
+        const confirmDialog = (message, title = 'Confirm', options = {}) =>
+            new Promise((resolve) => {
+                const { confirmLabel = 'OK', cancelLabel = 'Cancel' } = options;
+                const overlay = document.createElement('div');
+                overlay.className = 'dialog-overlay';
 
-        const confirmDialog = (message, title = 'Confirm', options = {}) => new Promise((resolve) => {
-            const { confirmLabel = 'OK', cancelLabel = 'Cancel' } = options;
-            const overlay = document.createElement('div');
-            overlay.className = 'dialog-overlay';
+                const dialog = document.createElement('div');
+                dialog.className = 'dialog-surface';
+                dialog.setAttribute('role', 'dialog');
+                dialog.setAttribute('aria-modal', 'true');
+                dialog.setAttribute('aria-labelledby', 'dialog-title');
+                dialog.setAttribute('aria-describedby', 'dialog-message');
 
-            const dialog = document.createElement('div');
-            dialog.className = 'dialog-surface';
-            dialog.setAttribute('role', 'dialog');
-            dialog.setAttribute('aria-modal', 'true');
-            dialog.setAttribute('aria-labelledby', 'dialog-title');
-            dialog.setAttribute('aria-describedby', 'dialog-message');
+                const titleElement = document.createElement('h2');
+                titleElement.id = 'dialog-title';
+                titleElement.textContent = title;
+                dialog.appendChild(titleElement);
 
-            const titleElement = document.createElement('h2');
-            titleElement.id = 'dialog-title';
-            titleElement.textContent = title;
-            dialog.appendChild(titleElement);
+                const messageElement = document.createElement('p');
+                messageElement.id = 'dialog-message';
+                messageElement.textContent = message;
+                dialog.appendChild(messageElement);
 
-            const messageElement = document.createElement('p');
-            messageElement.id = 'dialog-message';
-            messageElement.textContent = message;
-            dialog.appendChild(messageElement);
+                const confirmButton = document.createElement('button');
+                confirmButton.textContent = confirmLabel;
+                confirmButton.addEventListener('click', () => {
+                    body.removeChild(overlay);
+                    activeDialog = null;
+                    editor.focus();
+                    resolve(true);
+                });
 
-            const confirmButton = document.createElement('button');
-            confirmButton.textContent = confirmLabel;
-            confirmButton.addEventListener('click', () => {
-                body.removeChild(overlay);
-                activeDialog = null;
-                editor.focus();
-                resolve(true);
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = cancelLabel;
+                cancelButton.addEventListener('click', () => {
+                    body.removeChild(overlay);
+                    activeDialog = null;
+                    editor.focus();
+                    resolve(false);
+                });
+
+                dialog.appendChild(cancelButton);
+                dialog.appendChild(confirmButton);
+                overlay.appendChild(dialog);
+                body.appendChild(overlay);
+                activeDialog = overlay;
+                setTimeout(() => confirmButton.focus(), 10);
             });
 
-            const cancelButton = document.createElement('button');
-            cancelButton.textContent = cancelLabel;
-            cancelButton.addEventListener('click', () => {
-                body.removeChild(overlay);
-                activeDialog = null;
-                editor.focus();
-                resolve(false);
+        const promptDialog = (message, defaultValue = '', inputType = 'text', title = 'Input') =>
+            new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'dialog-overlay';
+
+                const dialog = document.createElement('div');
+                dialog.className = 'dialog-surface';
+                dialog.setAttribute('role', 'dialog');
+                dialog.setAttribute('aria-modal', 'true');
+                dialog.setAttribute('aria-labelledby', 'dialog-title');
+                dialog.setAttribute('aria-describedby', 'dialog-message');
+
+                const titleElement = document.createElement('h2');
+                titleElement.id = 'dialog-title';
+                titleElement.textContent = title;
+                dialog.appendChild(titleElement);
+
+                const form = document.createElement('form');
+                const label = document.createElement('label');
+                label.textContent = message;
+                const input = document.createElement('input');
+                input.type = inputType;
+                input.value = defaultValue;
+                label.appendChild(input);
+                form.appendChild(label);
+
+                const okButton = document.createElement('button');
+                okButton.type = 'submit';
+                okButton.textContent = 'OK';
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    body.removeChild(overlay);
+                    activeDialog = null;
+                    editor.focus();
+                    resolve(input.value.trim() || defaultValue || null);
+                });
+
+                const cancelButton = document.createElement('button');
+                cancelButton.type = 'button';
+                cancelButton.textContent = 'Cancel';
+                cancelButton.addEventListener('click', () => {
+                    body.removeChild(overlay);
+                    activeDialog = null;
+                    editor.focus();
+                    resolve(null);
+                });
+
+                form.appendChild(cancelButton);
+                form.appendChild(okButton);
+                dialog.appendChild(form);
+                overlay.appendChild(dialog);
+                body.appendChild(overlay);
+                activeDialog = overlay;
+                setTimeout(() => input.focus(), 10);
             });
-
-            dialog.appendChild(cancelButton);
-            dialog.appendChild(confirmButton);
-            overlay.appendChild(dialog);
-            body.appendChild(overlay);
-            activeDialog = overlay;
-            setTimeout(() => confirmButton.focus(), 10);
-        });
-
-        const promptDialog = (message, defaultValue = '', inputType = 'text', title = 'Input') => new Promise((resolve) => {
-            const overlay = document.createElement('div');
-            overlay.className = 'dialog-overlay';
-
-            const dialog = document.createElement('div');
-            dialog.className = 'dialog-surface';
-            dialog.setAttribute('role', 'dialog');
-            dialog.setAttribute('aria-modal', 'true');
-            dialog.setAttribute('aria-labelledby', 'dialog-title');
-            dialog.setAttribute('aria-describedby', 'dialog-message');
-
-            const titleElement = document.createElement('h2');
-            titleElement.id = 'dialog-title';
-            titleElement.textContent = title;
-            dialog.appendChild(titleElement);
-
-            const form = document.createElement('form');
-            const label = document.createElement('label');
-            label.textContent = message;
-            const input = document.createElement('input');
-            input.type = inputType;
-            input.value = defaultValue;
-            label.appendChild(input);
-            form.appendChild(label);
-
-            const okButton = document.createElement('button');
-            okButton.type = 'submit';
-            okButton.textContent = 'OK';
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                body.removeChild(overlay);
-                activeDialog = null;
-                editor.focus();
-                resolve(input.value.trim() || defaultValue || null);
-            });
-
-            const cancelButton = document.createElement('button');
-            cancelButton.type = 'button';
-            cancelButton.textContent = 'Cancel';
-            cancelButton.addEventListener('click', () => {
-                body.removeChild(overlay);
-                activeDialog = null;
-                editor.focus();
-                resolve(null);
-            });
-
-            form.appendChild(cancelButton);
-            form.appendChild(okButton);
-            dialog.appendChild(form);
-            overlay.appendChild(dialog);
-            body.appendChild(overlay);
-            activeDialog = overlay;
-            setTimeout(() => input.focus(), 10);
-        });
 
         return { alertDialog, confirmDialog, promptDialog };
     };
@@ -255,7 +261,7 @@ describe('Custom Accessible Dialogs', () => {
             });
 
             // Wait a bit for dialog to be created
-            await new Promise(resolve => setTimeout(resolve, 20));
+            await new Promise((resolve) => setTimeout(resolve, 20));
 
             const overlay = body.querySelector('.dialog-overlay');
             expect(overlay).not.toBeNull();
@@ -279,7 +285,7 @@ describe('Custom Accessible Dialogs', () => {
 
             const dialog = body.querySelector('.dialog-surface');
             const buttons = dialog.querySelectorAll('button');
-            const confirmButton = Array.from(buttons).find(b => b.textContent === 'OK');
+            const confirmButton = Array.from(buttons).find((b) => b.textContent === 'OK');
             confirmButton.click();
 
             const result = await promise;
@@ -292,7 +298,7 @@ describe('Custom Accessible Dialogs', () => {
 
             const dialog = body.querySelector('.dialog-surface');
             const buttons = dialog.querySelectorAll('button');
-            const cancelButton = Array.from(buttons).find(b => b.textContent === 'Cancel');
+            const cancelButton = Array.from(buttons).find((b) => b.textContent === 'Cancel');
             cancelButton.click();
 
             const result = await promise;
@@ -308,12 +314,12 @@ describe('Custom Accessible Dialogs', () => {
 
             const dialog = body.querySelector('.dialog-surface');
             const buttons = dialog.querySelectorAll('button');
-            const buttonTexts = Array.from(buttons).map(b => b.textContent);
+            const buttonTexts = Array.from(buttons).map((b) => b.textContent);
 
             expect(buttonTexts).toContain('Yes');
             expect(buttonTexts).toContain('No');
 
-            const yesButton = Array.from(buttons).find(b => b.textContent === 'Yes');
+            const yesButton = Array.from(buttons).find((b) => b.textContent === 'Yes');
             yesButton.click();
             await promise;
         });
@@ -354,7 +360,7 @@ describe('Custom Accessible Dialogs', () => {
 
             const form = body.querySelector('form');
             const buttons = form.querySelectorAll('button');
-            const cancelButton = Array.from(buttons).find(b => b.textContent === 'Cancel');
+            const cancelButton = Array.from(buttons).find((b) => b.textContent === 'Cancel');
             cancelButton.click();
 
             const result = await promise;
@@ -493,4 +499,3 @@ describe('Custom Accessible Dialogs', () => {
         });
     });
 });
-

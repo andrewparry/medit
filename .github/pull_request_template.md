@@ -25,9 +25,9 @@ Relates to #
 
 <!-- Describe the changes in detail -->
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Testing
 
@@ -35,9 +35,9 @@ Relates to #
 
 ### Test Configuration
 
-- Browser(s) tested: 
-- OS tested: 
-- Test approach: 
+- Browser(s) tested:
+- OS tested:
+- Test approach:
 
 ### Test Results
 
@@ -77,4 +77,3 @@ Relates to #
 - [ ] Documentation is updated
 - [ ] No breaking changes or clearly documented
 - [ ] Performance impact is acceptable
-

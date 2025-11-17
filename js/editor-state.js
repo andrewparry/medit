@@ -18,8 +18,8 @@
         isApplyingHistory: false,
         historyTimer: null,
         historyStack: [], // past states (oldest at 0, newest at end)
-        futureStack: [],   // redo states (most recent at end)
-        renderHtml: false  // Whether to render HTML inline or escape it
+        futureStack: [], // redo states (most recent at end)
+        renderHtml: false // Whether to render HTML inline or escape it
     };
 
     // Find/replace state
@@ -74,4 +74,3 @@
     // Update global namespace
     window.MarkdownEditor = MarkdownEditor;
 })();
-

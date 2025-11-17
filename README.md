@@ -29,26 +29,26 @@ A fully functional browser-based markdown WYSIWYG (What You See Is What You Get)
 ## Supported Markdown Features
 
 - **Headers**: All six levels (H1-H6) with keyboard shortcuts
-- **Text Formatting**: 
-  - Bold, italic, underline, strikethrough
-  - Inline code with backticks
-  - Blockquotes
-  - Horizontal rules
-- **Lists**: 
-  - Ordered (numbered) lists with smart numbering
-  - Unordered (bullet) lists
-  - Task lists (checkboxes) with `- [ ]` and `- [x]` syntax
-  - Nested lists with indentation support (Tab/Shift+Tab)
+- **Text Formatting**:
+    - Bold, italic, underline, strikethrough
+    - Inline code with backticks
+    - Blockquotes
+    - Horizontal rules
+- **Lists**:
+    - Ordered (numbered) lists with smart numbering
+    - Unordered (bullet) lists
+    - Task lists (checkboxes) with `- [ ]` and `- [x]` syntax
+    - Nested lists with indentation support (Tab/Shift+Tab)
 - **Links and Images**: Insert with dialog prompts or paste URLs
 - **Tables**: Insert markdown tables with customizable rows and columns
 - **Footnotes**: Insert footnote references and definitions
 - **Enhanced Code blocks with syntax highlighting**
-  - Support for 10+ programming languages (JavaScript, Python, HTML, CSS, JSON, Markdown, SQL, Bash, Java, C, C++, etc.)
-  - Language-specific syntax highlighting with Prism.js
-  - Copy-to-clipboard functionality with visual feedback
-  - Language labels displayed on code blocks
-  - Proper handling of special characters and indentation
-  - Automatic language detection via Prism autoloader
+    - Support for 10+ programming languages (JavaScript, Python, HTML, CSS, JSON, Markdown, SQL, Bash, Java, C, C++, etc.)
+    - Language-specific syntax highlighting with Prism.js
+    - Copy-to-clipboard functionality with visual feedback
+    - Language labels displayed on code blocks
+    - Proper handling of special characters and indentation
+    - Automatic language detection via Prism autoloader
 - **HTML Rendering**: Toggle HTML rendering in preview (Ctrl+Shift+H)
 - **CommonMark compatible output**: Standard markdown syntax throughout
 
@@ -63,20 +63,22 @@ The easiest way to start using the editor is to [try the online demo](https://an
 **Prerequisites:** A modern web browser (Chrome, Firefox, Safari, or Edge)
 
 1. **Clone or download the repository:**
-   ```bash
-   git clone https://github.com/andrewparry/medit.git
-   cd medit
-   ```
+
+    ```bash
+    git clone https://github.com/andrewparry/medit.git
+    cd medit
+    ```
 
 2. **Open the editor:**
-   - Simply open `index.html` in your web browser
-   - Or serve it using a local web server (recommended for development)
+    - Simply open `index.html` in your web browser
+    - Or serve it using a local web server (recommended for development)
 
 ### Using a Local Web Server (Recommended)
 
 For the best experience, especially when developing or testing, serve the files using a local web server:
 
 #### Option 1: Python (if you have Python installed)
+
 ```bash
 # Python 3
 python -m http.server 8000
@@ -86,6 +88,7 @@ python -m SimpleHTTPServer 8000
 ```
 
 #### Option 2: Node.js (if you have Node.js installed)
+
 ```bash
 # Install a simple HTTP server globally
 npm install -g http-server
@@ -95,6 +98,7 @@ http-server
 ```
 
 #### Option 3: PHP (if you have PHP installed)
+
 ```bash
 php -S localhost:8000
 ```
@@ -107,49 +111,49 @@ Then open your browser and navigate to `http://localhost:8000`
 
 1. **Creating Content**: Start typing in the editor pane. Use the formatting toolbar or keyboard shortcuts to apply formatting.
 
-2. **Opening Files**: 
-   - Click the "Open" button (📁) in the toolbar
-   - Or use Ctrl+O (Cmd+O on Mac)
-   - Select a markdown file from your computer
+2. **Opening Files**:
+    - Click the "Open" button (📁) in the toolbar
+    - Or use Ctrl+O (Cmd+O on Mac)
+    - Select a markdown file from your computer
 
 3. **Saving Files**:
-   - Click the "Save" button (💾) in the toolbar
-   - Or use Ctrl+S (Cmd+S on Mac)
-   - Choose a location and filename for your markdown file
+    - Click the "Save" button (💾) in the toolbar
+    - Or use Ctrl+S (Cmd+S on Mac)
+    - Choose a location and filename for your markdown file
 
 4. **Preview**: Click the eye icon (👁️) in the toolbar to toggle the live preview pane
 
-5. **List Indentation**: 
-   - Press Tab to indent list items (create nested lists)
-   - Press Shift+Tab to outdent list items
-   - Smart numbering automatically adjusts for nested lists
+5. **List Indentation**:
+    - Press Tab to indent list items (create nested lists)
+    - Press Shift+Tab to outdent list items
+    - Smart numbering automatically adjusts for nested lists
 
 ### Keyboard Shortcuts
 
-| Action | Windows/Linux | Mac |
-|--------|---------------|-----|
-| Bold | Ctrl+B | Cmd+B |
-| Italic | Ctrl+I | Cmd+I |
-| Inline Code | Ctrl+` | Cmd+` |
-| Link | Ctrl+K | Cmd+K |
-| Header 1 | Ctrl+1 | Cmd+1 |
-| Header 2 | Ctrl+2 | Cmd+2 |
-| Header 3 | Ctrl+3 | Cmd+3 |
-| Header 4 | Ctrl+4 | Cmd+4 |
-| Header 5 | Ctrl+5 | Cmd+5 |
-| Header 6 | Ctrl+6 | Cmd+6 |
-| Bullet List | Ctrl+Shift+8 | Cmd+Shift+8 |
-| Numbered List | Ctrl+Shift+7 | Cmd+Shift+7 |
-| Code Block | Ctrl+Shift+C | Cmd+Shift+C |
-| Toggle Preview | Ctrl+Shift+P | Cmd+Shift+P |
-| Toggle HTML Rendering | Ctrl+Shift+H | Cmd+Shift+H |
-| Find & Replace | Ctrl+F | Cmd+F |
-| Save File | Ctrl+S | Cmd+S |
-| Open File | Ctrl+O | Cmd+O |
-| New File | Ctrl+N | Cmd+N |
-| Undo | Ctrl+Z | Cmd+Z |
-| Redo | Ctrl+Y or Ctrl+Shift+Z | Cmd+Y or Cmd+Shift+Z |
-| Show Help | Ctrl+/ or F1 | Cmd+/ or F1 |
+| Action                | Windows/Linux          | Mac                  |
+| --------------------- | ---------------------- | -------------------- |
+| Bold                  | Ctrl+B                 | Cmd+B                |
+| Italic                | Ctrl+I                 | Cmd+I                |
+| Inline Code           | Ctrl+`                 | Cmd+`                |
+| Link                  | Ctrl+K                 | Cmd+K                |
+| Header 1              | Ctrl+1                 | Cmd+1                |
+| Header 2              | Ctrl+2                 | Cmd+2                |
+| Header 3              | Ctrl+3                 | Cmd+3                |
+| Header 4              | Ctrl+4                 | Cmd+4                |
+| Header 5              | Ctrl+5                 | Cmd+5                |
+| Header 6              | Ctrl+6                 | Cmd+6                |
+| Bullet List           | Ctrl+Shift+8           | Cmd+Shift+8          |
+| Numbered List         | Ctrl+Shift+7           | Cmd+Shift+7          |
+| Code Block            | Ctrl+Shift+C           | Cmd+Shift+C          |
+| Toggle Preview        | Ctrl+Shift+P           | Cmd+Shift+P          |
+| Toggle HTML Rendering | Ctrl+Shift+H           | Cmd+Shift+H          |
+| Find & Replace        | Ctrl+F                 | Cmd+F                |
+| Save File             | Ctrl+S                 | Cmd+S                |
+| Open File             | Ctrl+O                 | Cmd+O                |
+| New File              | Ctrl+N                 | Cmd+N                |
+| Undo                  | Ctrl+Z                 | Cmd+Z                |
+| Redo                  | Ctrl+Y or Ctrl+Shift+Z | Cmd+Y or Cmd+Shift+Z |
+| Show Help             | Ctrl+/ or F1           | Cmd+/ or F1          |
 
 ### Formatting Toolbar
 
@@ -166,10 +170,10 @@ The toolbar provides quick access to all formatting options:
 
 ### Additional Features
 
-- **Find & Replace**: 
-  - Press Ctrl+F (Cmd+F on Mac) to open find bar
-  - Options for case sensitivity, regex matching, and whole word matching
-  - Replace one or replace all functionality
+- **Find & Replace**:
+    - Press Ctrl+F (Cmd+F on Mac) to open find bar
+    - Options for case sensitivity, regex matching, and whole word matching
+    - Replace one or replace all functionality
 - **Filename Editing**: Click on the filename in the status bar to rename
 - **Resizable Panes**: Drag the resize handle between editor and preview to adjust split ratio
 - **Status Bar**: Shows filename, word count, character count, and auto-save status
@@ -180,18 +184,18 @@ The editor provides enhanced code block functionality:
 
 1. **Language Selection**: When inserting a code block, you'll be prompted to specify the programming language
 2. **Syntax Highlighting**: Automatic color coding for:
-   - JavaScript/TypeScript
-   - Python
-   - HTML/XML
-   - CSS
-   - JSON
-   - Markdown
-   - And more with generic highlighting for other languages
+    - JavaScript/TypeScript
+    - Python
+    - HTML/XML
+    - CSS
+    - JSON
+    - Markdown
+    - And more with generic highlighting for other languages
 3. **Copy Functionality**: Each code block includes a copy button that:
-   - Copies the raw code to your clipboard
-   - Provides visual feedback (button changes to "Copied!")
-   - Works with modern clipboard API and falls back for older browsers
-   - Announces actions to screen readers for accessibility
+    - Copies the raw code to your clipboard
+    - Provides visual feedback (button changes to "Copied!")
+    - Works with modern clipboard API and falls back for older browsers
+    - Announces actions to screen readers for accessibility
 4. **Language Labels**: Code blocks display the language name in the top-right corner
 5. **Proper Formatting**: Preserves indentation, whitespace, and special characters
 
@@ -282,17 +286,21 @@ The editor is built with a modular, event-driven architecture:
 ## Browser Compatibility
 
 ### Modern Browsers (Full Features)
+
 - Chrome 86+
 - Firefox 82+
 - Safari 14+
 - Edge 86+
 
 ### Legacy Browser Support
+
 The editor gracefully degrades for older browsers:
+
 - File operations fall back to traditional download/upload methods
 - Advanced features may be limited but core functionality remains
 
 ### Required Browser Features
+
 - ES6+ JavaScript support
 - CSS Grid and Flexbox
 - File API for file operations
@@ -319,24 +327,24 @@ Files are saved in standard markdown format (.md) and are compatible with any ma
 ### Common Issues
 
 1. **File operations not working**:
-   - Ensure you're using a modern browser
-   - Try refreshing the page
-   - Check browser console for errors
+    - Ensure you're using a modern browser
+    - Try refreshing the page
+    - Check browser console for errors
 
 2. **Formatting not applying**:
-   - Make sure text is selected for inline formatting
-   - Try using keyboard shortcuts instead of toolbar
-   - Check if cursor is positioned correctly
+    - Make sure text is selected for inline formatting
+    - Try using keyboard shortcuts instead of toolbar
+    - Check if cursor is positioned correctly
 
 3. **Preview not updating**:
-   - Toggle preview off and on again
-   - Check browser console for JavaScript errors
-   - Ensure content is valid markdown
+    - Toggle preview off and on again
+    - Check browser console for JavaScript errors
+    - Ensure content is valid markdown
 
 4. **Performance issues with large files**:
-   - The editor supports virtual scrolling for files over 1000 lines
-   - Consider breaking very large documents into smaller files
-   - Close other browser tabs to free up memory
+    - The editor supports virtual scrolling for files over 1000 lines
+    - Consider breaking very large documents into smaller files
+    - Close other browser tabs to free up memory
 
 ### Browser-Specific Issues
 
@@ -391,20 +399,19 @@ This project is open source and licensed under the MIT License. See the [LICENSE
 This project uses the following open source libraries:
 
 - **Prism.js** (v1.29.0) - MIT License
-  - Used for syntax highlighting in code blocks
-  - Loaded from CDN in production
-  
+    - Used for syntax highlighting in code blocks
+    - Loaded from CDN in production
 - **Jest** (v29.7.0) - MIT License
-  - Used for testing (development only)
-  
+    - Used for testing (development only)
 - **jsdom** (v22.1.0) - MIT License
-  - Used for DOM testing (development only)
+    - Used for DOM testing (development only)
 
 All third-party libraries are open source and MIT licensed, compatible with this project's license. For complete license information and attribution details, see the [NOTICE](NOTICE) file.
 
 ## Changelog
 
 ### Version 1.0.0
+
 - Initial release with full WYSIWYG editing capabilities
 - Local file management with browser API support
 - Real-time preview and formatting toolbar
@@ -416,6 +423,7 @@ All third-party libraries are open source and MIT licensed, compatible with this
 ## Support
 
 For issues, questions, or contributions:
+
 - Check the [Developer Guide](DEVELOPER_GUIDE.md) for implementation details
 - Review [Testing Instructions](TESTING_INSTRUCTIONS.md) for manual testing scenarios
 - Check the browser console for error messages

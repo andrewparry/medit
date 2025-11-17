@@ -111,4 +111,3 @@
     // Update global namespace
     window.MarkdownEditor = MarkdownEditor;
 })();
-

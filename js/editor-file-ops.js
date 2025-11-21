@@ -160,6 +160,17 @@
             return;
         }
 
+        // Clear autosave timer FIRST to prevent any pending autosave from saving empty content
+        clearTimeout(state.autosaveTimer);
+        state.autosaveTimer = null;
+
+        // Clear localStorage BEFORE clearing editor to prevent race condition
+        // where autosave might save empty content after editor is cleared
+        if (MarkdownEditor.autosave && MarkdownEditor.autosave.clearAutosaveDraft) {
+            MarkdownEditor.autosave.clearAutosaveDraft();
+        }
+
+        // Now clear the editor and update UI
         elements.editor.value = '';
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
             MarkdownEditor.preview.updatePreview();
@@ -172,17 +183,12 @@
             elements.fileNameDisplay.contentEditable = 'false';
             delete elements.fileNameDisplay.dataset.originalName;
         }
-        clearTimeout(state.autosaveTimer);
-        state.autosaveTimer = null;
         state.lastSavedContent = '';
         if (MarkdownEditor.stateManager) {
             MarkdownEditor.stateManager.markDirty(false);
         }
         if (elements.autosaveStatus) {
             elements.autosaveStatus.textContent = 'Ready';
-        }
-        if (MarkdownEditor.autosave && MarkdownEditor.autosave.clearAutosaveDraft) {
-            MarkdownEditor.autosave.clearAutosaveDraft();
         }
         utils.setSelection(0, 0);
 

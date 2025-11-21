@@ -211,14 +211,24 @@
         const storedContent = localStorage.getItem(constants.AUTOSAVE_KEY);
         const storedFilename = localStorage.getItem(constants.AUTOSAVE_FILENAME_KEY);
 
-        if (storedContent !== null && elements.editor) {
+        // Only restore if we have actual content (not null, not empty string)
+        // Empty string means the editor was cleared, so we shouldn't restore it
+        if (storedContent !== null && storedContent !== '' && elements.editor) {
             elements.editor.value = storedContent;
             if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
                 MarkdownEditor.preview.updatePreview();
             }
         }
 
-        if (storedFilename !== null && elements.fileNameDisplay) {
+        // Only restore filename if we have actual content to match
+        // If content is empty/null, use default filename
+        if (
+            storedFilename !== null &&
+            storedFilename !== '' &&
+            storedContent !== null &&
+            storedContent !== '' &&
+            elements.fileNameDisplay
+        ) {
             elements.fileNameDisplay.textContent = storedFilename;
         }
 

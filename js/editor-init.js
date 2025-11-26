@@ -353,9 +353,175 @@
     };
 
     /**
+     * Parse file path from URL hash
+     * Supports formats: #/path/to/file.md or #file:///path/to/file.md
+     */
+    const parseHashPath = () => {
+        const hash = location.hash;
+        // Return null if no hash or hash is just '#'
+        if (!hash || hash.length <= 1) {
+            return null;
+        }
+
+        try {
+            // Remove leading # and decode
+            const decoded = decodeURIComponent(hash.slice(1));
+            const trimmed = decoded.trim();
+            // Return null if empty or whitespace-only
+            return trimmed || null;
+        } catch (error) {
+            // If decoding fails, return raw hash without #
+            const trimmed = hash.slice(1).trim();
+            // Return null if empty or whitespace-only
+            return trimmed || null;
+        }
+    };
+
+    /**
+     * Validate if a path looks like a valid file path format
+     */
+    const isValidPathFormat = (path) => {
+        if (!path || !path.trim()) {
+            return false;
+        }
+        const trimmed = path.trim();
+        // Check if it matches expected formats: http://, https://, /, or file://
+        return (
+            trimmed.startsWith('http://') ||
+            trimmed.startsWith('https://') ||
+            trimmed.startsWith('/') ||
+            trimmed.startsWith('file://')
+        );
+    };
+
+    /**
+     * Load file from query parameter (path=...)
+     * Used when server.py serves files via /file endpoint
+     */
+    const loadFileFromQueryParam = async () => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const filePath = params.get('path');
+
+            if (!filePath || !filePath.trim()) {
+                return false;
+            }
+
+            // Check if required modules are available
+            if (!MarkdownEditor.fileOps || !MarkdownEditor.fileOps.loadFileContent) {
+                return false;
+            }
+
+            // Use the server's /file endpoint to load the file
+            const trimmedPath = filePath.trim();
+            const encodedPath = encodeURIComponent(trimmedPath);
+            const serverUrl = `/file?path=${encodedPath}`;
+
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Loading file...';
+            }
+
+            try {
+                const response = await fetch(serverUrl);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const content = await response.text();
+
+                // Validate file size
+                const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+                if (content.length > MAX_FILE_SIZE) {
+                    if (elements.autosaveStatus) {
+                        elements.autosaveStatus.textContent = 'File too large';
+                    }
+                    if (MarkdownEditor.dialogs) {
+                        await MarkdownEditor.dialogs.alertDialog(
+                            `File size exceeds 10MB limit. File is ${(content.length / 1024 / 1024).toFixed(2)}MB.`,
+                            'File Too Large'
+                        );
+                    }
+                    return false;
+                }
+
+                // Extract filename from path
+                const pathParts = filePath.trim().replace(/\\/g, '/').split('/');
+                const filename = pathParts[pathParts.length - 1] || 'Untitled.md';
+                const finalFilename =
+                    filename.endsWith('.md') || filename.endsWith('.markdown')
+                        ? filename
+                        : `${filename}.md`;
+
+                // Load the content into the editor using the existing loadFileContent function
+                if (MarkdownEditor.fileOps && MarkdownEditor.fileOps.loadFileContent) {
+                    MarkdownEditor.fileOps.loadFileContent(content, finalFilename, filePath.trim());
+                } else {
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                // Error loading file from server
+                if (elements.autosaveStatus) {
+                    elements.autosaveStatus.textContent = 'Failed to load file';
+                }
+                let errorMessage = 'Unable to load the file from the server.';
+                if (error.message) {
+                    errorMessage += ` ${error.message}`;
+                }
+                if (MarkdownEditor.dialogs) {
+                    await MarkdownEditor.dialogs.alertDialog(errorMessage, 'Error Loading File');
+                } else {
+                    alert(errorMessage);
+                }
+                return false;
+            }
+        } catch (error) {
+            // Unexpected error during query param loading
+            return false;
+        }
+    };
+
+    /**
+     * Load file from URL hash if present
+     */
+    const loadFileFromHash = async () => {
+        const filePath = parseHashPath();
+        if (!filePath) {
+            return false;
+        }
+
+        // Validate that the path looks like a valid file path before attempting to load
+        const trimmedPath = filePath.trim();
+        if (!trimmedPath) {
+            return false;
+        }
+
+        // Validate path format before attempting to load
+        if (!isValidPathFormat(trimmedPath)) {
+            // Silently skip invalid paths - don't show error for hash fragments that aren't file paths
+            return false;
+        }
+
+        // Check if fileOps module is available
+        if (!MarkdownEditor.fileOps || !MarkdownEditor.fileOps.loadFileFromPath) {
+            return false;
+        }
+
+        try {
+            const loaded = await MarkdownEditor.fileOps.loadFileFromPath(filePath);
+            return loaded;
+        } catch (error) {
+            // Error handling is done in loadFileFromPath
+            return false;
+        }
+    };
+
+    /**
      * Initialize the editor
      */
-    const initialize = () => {
+    const initialize = async () => {
         // Initialize DOM elements
         const elementsInitialized = MarkdownEditor.initElements();
         if (!elementsInitialized) {
@@ -387,9 +553,54 @@
                 console.error('Failed to restore HTML rendering preference', error);
             }
         }
+        // Try to load file from query parameter first (server.py /file endpoint)
+        // Then try URL hash, then restore autosave
+        // Priority: query param > hash > autosave
+        let fileLoaded = false;
+
+        // Check if there's a query parameter to load
+        const hasQueryParam = window.location.search && window.location.search.includes('path=');
+
+        try {
+            // First, try loading from query parameter (path=...)
+            // This is used when server.py serves files
+            if (hasQueryParam) {
+                const queryFileLoaded = await loadFileFromQueryParam();
+                if (queryFileLoaded) {
+                    fileLoaded = true;
+                }
+            }
+        } catch {
+            // Error during query param loading - continue with fallbacks
+        }
+
+        // If no file loaded from query param, try hash
+        if (!fileLoaded) {
+            try {
+                if (
+                    location.hash &&
+                    typeof location.hash === 'string' &&
+                    location.hash.length > 1
+                ) {
+                    // Additional check: ensure hash contains something meaningful (not just '#')
+                    const hashContent = location.hash.slice(1).trim();
+                    if (hashContent) {
+                        fileLoaded = await loadFileFromHash();
+                    }
+                }
+            } catch (error) {
+                // Silently ignore errors during hash loading - don't break normal initialization
+                // Errors are already handled in loadFileFromHash and loadFileFromPath
+            }
+        }
+
         if (MarkdownEditor.autosave) {
             MarkdownEditor.autosave.checkAutosaveStatus();
-            MarkdownEditor.autosave.restoreAutosave();
+            // Only restore autosave if no file was loaded from query param or hash
+            // This prevents overwriting loaded content
+            if (!fileLoaded) {
+                MarkdownEditor.autosave.restoreAutosave();
+            }
         }
         if (MarkdownEditor.syntaxHighlight) {
             MarkdownEditor.syntaxHighlight.initScrollSync();
@@ -447,7 +658,10 @@
     // Expose init API
     MarkdownEditor.init = {
         initialize,
-        bindEvents
+        bindEvents,
+        parseHashPath,
+        loadFileFromHash,
+        loadFileFromQueryParam
     };
 
     window.MarkdownEditor = MarkdownEditor;

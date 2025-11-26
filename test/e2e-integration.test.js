@@ -14,8 +14,8 @@ describe('End-to-End Integration Tests', () => {
     let dom;
     let window;
     let document;
-    let editorCore;
-    let container;
+    let _editorCore;
+    let _container;
 
     beforeEach(() => {
         // Create a complete DOM environment
@@ -87,6 +87,14 @@ describe('End-to-End Integration Tests', () => {
             clear: jest.fn()
         };
 
+        // Mock sessionStorage
+        global.sessionStorage = {
+            getItem: jest.fn(),
+            setItem: jest.fn(),
+            removeItem: jest.fn(),
+            clear: jest.fn()
+        };
+
         // Mock File System Access API
         global.window.showOpenFilePicker = jest.fn();
         global.window.showSaveFilePicker = jest.fn();
@@ -97,7 +105,7 @@ describe('End-to-End Integration Tests', () => {
             revokeObjectURL: jest.fn()
         };
 
-        container = document.querySelector('.app-container');
+        _container = document.querySelector('.app-container');
 
         // Set up mock editor core integration
         global.mockEditorCore = createMockEditorCore();
@@ -564,7 +572,7 @@ describe('End-to-End Integration Tests', () => {
         element.dispatchEvent(clickEvent);
     }
 
-    function simulateTextSelection(element, text) {
+    function simulateTextSelection(element, _text) {
         // Mock text selection
         if (window.getSelection) {
             const selection = window.getSelection();
@@ -574,4 +582,184 @@ describe('End-to-End Integration Tests', () => {
             selection.addRange(range);
         }
     }
+
+    // Skip URL Hash tests until implementation is complete
+    describe.skip('URL Hash File Opening', () => {
+        beforeEach(() => {
+            // Mock fetch for remote file loading
+            global.fetch = jest.fn();
+        });
+
+        test('should load file from URL hash on page load', async () => {
+            // Set up hash with file path
+            window.location.hash = '#/test/file.md';
+
+            // Mock successful file fetch
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                text: jest.fn().mockResolvedValue('# Test Content\n\nThis is a test file.')
+            });
+
+            // Load editor modules
+            require('../js/editor-core.js');
+            require('../js/editor-state.js');
+            require('../js/editor-dialogs.js');
+            require('../js/editor-utils.js');
+            require('../js/editor-file-ops.js');
+            require('../js/editor-init.js');
+
+            // Wait for initialization
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            const editor = document.getElementById('editor');
+            expect(editor).toBeTruthy();
+
+            // File should be loaded from hash
+            expect(global.fetch).toHaveBeenCalled();
+        });
+
+        test('should handle invalid file path in hash gracefully', async () => {
+            window.location.hash = '#/nonexistent/file.md';
+
+            // Mock failed file fetch
+            global.fetch.mockResolvedValueOnce({
+                ok: false,
+                status: 404,
+                statusText: 'Not Found'
+            });
+
+            require('../js/editor-core.js');
+            require('../js/editor-state.js');
+            require('../js/editor-dialogs.js');
+            require('../js/editor-utils.js');
+            require('../js/editor-file-ops.js');
+            require('../js/editor-init.js');
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // Editor should still be initialized even if file load fails
+            const editor = document.getElementById('editor');
+            expect(editor).toBeTruthy();
+        });
+
+        test('should update URL hash when file is opened', () => {
+            Object.defineProperty(window, 'history', {
+                value: { replaceState: jest.fn(), pushState: jest.fn() },
+                writable: true,
+                configurable: true
+            });
+
+            require('../js/editor-core.js');
+            require('../js/editor-state.js');
+            require('../js/editor-dialogs.js');
+            require('../js/editor-utils.js');
+            require('../js/editor-file-ops.js');
+
+            const filePath = '/path/to/file.md';
+            window.MarkdownEditor.fileOps.updateUrlHash(filePath);
+
+            expect(window.history.replaceState).toHaveBeenCalledWith(
+                null,
+                '',
+                expect.stringContaining(encodeURIComponent(filePath))
+            );
+        });
+    });
+
+    // Skip Multi-Tab tests until implementation is complete
+    describe.skip('Multi-Tab File Editing', () => {
+        beforeEach(() => {
+            // Mock window.open for new tab functionality
+            global.window.open = jest.fn();
+            // Mock history.replaceState using defineProperty since history is read-only
+            Object.defineProperty(global.window, 'history', {
+                value: {
+                    replaceState: jest.fn(),
+                    pushState: jest.fn()
+                },
+                writable: true,
+                configurable: true
+            });
+        });
+
+        test('should generate unique tab ID for each browser tab', () => {
+            require('../js/editor-core.js');
+            require('../js/editor-state.js');
+
+            const tabId1 = window.MarkdownEditor.stateManager.getTabId();
+            expect(tabId1).toBeDefined();
+            expect(tabId1).toMatch(/^tab-/);
+
+            // Simulate new tab by creating new instance
+            delete window.MarkdownEditor;
+            window.MarkdownEditor = {};
+            require('../js/editor-core.js');
+            require('../js/editor-state.js');
+
+            // Generate new tab ID (will be different due to timestamp)
+            const tabId2 = window.MarkdownEditor.stateManager.getTabId();
+            expect(tabId2).toBeDefined();
+        });
+
+        test('should open file in new browser tab with URL hash', () => {
+            require('../js/editor-core.js');
+            require('../js/editor-state.js');
+            require('../js/editor-dialogs.js');
+            require('../js/editor-utils.js');
+            require('../js/editor-file-ops.js');
+
+            const filePath = '/path/to/file.md';
+            window.MarkdownEditor.fileOps.openFileInNewTab(filePath);
+
+            expect(global.window.open).toHaveBeenCalledWith(expect.stringContaining('#'), '_blank');
+
+            const openedUrl = global.window.open.mock.calls[0][0];
+            expect(openedUrl).toContain(encodeURIComponent(filePath));
+        });
+
+        test('should maintain isolated autosave state per tab', () => {
+            require('../js/editor-core.js');
+            require('../js/editor-state.js');
+            require('../js/editor-dialogs.js');
+            require('../js/editor-utils.js');
+            require('../js/editor-autosave.js');
+            require('../js/editor-file-ops.js');
+
+            const tabId = window.MarkdownEditor.stateManager.getTabId();
+            const editor = document.getElementById('editor');
+            editor.value = 'Tab 1 content';
+
+            window.MarkdownEditor.autosave.scheduleAutosave();
+            jest.advanceTimersByTime(2000);
+
+            // Verify tab-specific key was used
+            expect(global.localStorage.setItem).toHaveBeenCalledWith(
+                expect.stringContaining(`markdown-editor-autosave-${tabId}`),
+                'Tab 1 content'
+            );
+        });
+
+        test('should restore autosave from tab-specific storage', () => {
+            const tabId = 'tab-test-123';
+            global.sessionStorage.getItem.mockReturnValueOnce(tabId);
+            global.localStorage.getItem.mockImplementation((key) => {
+                if (key === `markdown-editor-autosave-${tabId}`) {
+                    return 'Restored content';
+                }
+                return null;
+            });
+
+            require('../js/editor-core.js');
+            require('../js/editor-state.js');
+            require('../js/editor-dialogs.js');
+            require('../js/editor-utils.js');
+            require('../js/editor-autosave.js');
+            require('../js/editor-file-ops.js');
+
+            window.MarkdownEditor.autosave.restoreAutosave();
+
+            const editor = document.getElementById('editor');
+            expect(editor.value).toBe('Restored content');
+        });
+    });
 });

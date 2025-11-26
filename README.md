@@ -103,7 +103,31 @@ http-server
 php -S localhost:8000
 ```
 
-Then open your browser and navigate to `http://localhost:8000`
+#### Option 4: Custom Python Server (Recommended for opening files from anywhere)
+
+The repository includes a custom `server.py` that serves the editor and provides a `/file` endpoint to read files from anywhere on your disk:
+
+```bash
+# Start the server
+python3 server.py
+
+# Or make it executable and run directly
+./server.py
+```
+
+The server will start on `http://127.0.0.1:4173`
+
+**Opening files from anywhere on disk:**
+
+Use the `path` query parameter to open any markdown file:
+
+```
+http://127.0.0.1:4173/?path=/Users/andy/Documents/notes/myfile.md
+```
+
+This is especially useful when integrating with Automator or other tools that can pass file paths to the editor.
+
+Then open your browser and navigate to `http://localhost:8000` (or `http://127.0.0.1:4173` for the custom server)
 
 ## Usage
 
@@ -127,6 +151,42 @@ Then open your browser and navigate to `http://localhost:8000`
     - Press Tab to indent list items (create nested lists)
     - Press Shift+Tab to outdent list items
     - Smart numbering automatically adjusts for nested lists
+
+### Opening Files via URL Hash
+
+You can open files directly by including the file path in the URL hash:
+
+**Format**: `index.html#/path/to/file.md`
+
+**Examples**:
+
+- Local file (when served via web server): `index.html#/Users/andy/Notes/test.md`
+- Remote file: `index.html#https://example.com/document.md`
+- Absolute path: `index.html#/docs/readme.md`
+
+**Supported URL formats**:
+
+- `http://` and `https://` URLs for remote files
+- Absolute paths starting with `/` (relative to current origin)
+- File paths are automatically decoded and loaded on page load
+
+**Note**: `file://` URLs cannot be loaded directly due to browser security restrictions. Use the "Open File" button for local files, or serve the editor via a web server and use absolute paths.
+
+### Multi-Tab Editing
+
+The editor supports editing multiple files simultaneously in separate browser tabs:
+
+- **Each browser tab maintains isolated state**: Autosave, editor content, and file handles are separate per tab
+- **Open files in new tabs**: Use `MarkdownEditor.fileOps.openFileInNewTab(filePath)` programmatically, or open the editor with different URL hashes in new tabs
+- **Tab-specific autosave**: Each tab has its own autosave storage, preventing conflicts between tabs
+- **Independent file operations**: Save, open, and edit files independently in each tab
+
+**Example workflow**:
+
+1. Open `index.html#/file1.md` in one tab
+2. Open `index.html#/file2.md` in another tab
+3. Edit both files independently
+4. Each tab maintains its own autosave and state
 
 ### Keyboard Shortcuts
 

@@ -9,6 +9,14 @@
     const { elements, constants, state } = MarkdownEditor;
 
     /**
+     * Get tab-specific storage key
+     */
+    const getTabKey = (baseKey) => {
+        const tabId = state.tabId || 'default';
+        return `${baseKey}-${tabId}`;
+    };
+
+    /**
      * Schedule autosave operation
      */
     const scheduleAutosave = () => {
@@ -19,11 +27,10 @@
         clearTimeout(state.autosaveTimer);
         state.autosaveTimer = setTimeout(async () => {
             try {
-                localStorage.setItem(constants.AUTOSAVE_KEY, elements.editor.value);
-                localStorage.setItem(
-                    constants.AUTOSAVE_FILENAME_KEY,
-                    elements.fileNameDisplay.textContent.trim()
-                );
+                const autosaveKey = getTabKey(constants.AUTOSAVE_KEY);
+                const filenameKey = getTabKey(constants.AUTOSAVE_FILENAME_KEY);
+                localStorage.setItem(autosaveKey, elements.editor.value);
+                localStorage.setItem(filenameKey, elements.fileNameDisplay.textContent.trim());
                 if (elements.autosaveStatus) {
                     elements.autosaveStatus.textContent = 'Draft saved';
                 }
@@ -48,12 +55,11 @@
                         case 'clear':
                             if (clearAllAutosaveData()) {
                                 try {
+                                    const autosaveKey = getTabKey(constants.AUTOSAVE_KEY);
+                                    const filenameKey = getTabKey(constants.AUTOSAVE_FILENAME_KEY);
+                                    localStorage.setItem(autosaveKey, elements.editor.value);
                                     localStorage.setItem(
-                                        constants.AUTOSAVE_KEY,
-                                        elements.editor.value
-                                    );
-                                    localStorage.setItem(
-                                        constants.AUTOSAVE_FILENAME_KEY,
+                                        filenameKey,
                                         elements.fileNameDisplay.textContent.trim()
                                     );
                                     if (elements.autosaveStatus) {
@@ -120,23 +126,27 @@
             return;
         }
         try {
-            localStorage.removeItem(constants.AUTOSAVE_KEY);
-            localStorage.removeItem(constants.AUTOSAVE_FILENAME_KEY);
+            const autosaveKey = getTabKey(constants.AUTOSAVE_KEY);
+            const filenameKey = getTabKey(constants.AUTOSAVE_FILENAME_KEY);
+            localStorage.removeItem(autosaveKey);
+            localStorage.removeItem(filenameKey);
         } catch (error) {
             console.error('Clearing autosave failed', error);
         }
     };
 
     /**
-     * Clear all autosave data
+     * Clear all autosave data (for current tab)
      */
     const clearAllAutosaveData = () => {
         if (!window.localStorage) {
             return false;
         }
         try {
-            localStorage.removeItem(constants.AUTOSAVE_KEY);
-            localStorage.removeItem(constants.AUTOSAVE_FILENAME_KEY);
+            const autosaveKey = getTabKey(constants.AUTOSAVE_KEY);
+            const filenameKey = getTabKey(constants.AUTOSAVE_FILENAME_KEY);
+            localStorage.removeItem(autosaveKey);
+            localStorage.removeItem(filenameKey);
             return true;
         } catch (error) {
             console.error('Clearing all autosave data failed', error);
@@ -208,8 +218,10 @@
             return;
         }
 
-        const storedContent = localStorage.getItem(constants.AUTOSAVE_KEY);
-        const storedFilename = localStorage.getItem(constants.AUTOSAVE_FILENAME_KEY);
+        const autosaveKey = getTabKey(constants.AUTOSAVE_KEY);
+        const filenameKey = getTabKey(constants.AUTOSAVE_FILENAME_KEY);
+        const storedContent = localStorage.getItem(autosaveKey);
+        const storedFilename = localStorage.getItem(filenameKey);
 
         // Only restore if we have actual content (not null, not empty string)
         // Empty string means the editor was cleared, so we shouldn't restore it

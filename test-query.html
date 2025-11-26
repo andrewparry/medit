@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Test Query Parameter Loading</title>
+        <style>
+            body {
+                font-family: sans-serif;
+                padding: 20px;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            .test-link {
+                display: block;
+                margin: 10px 0;
+                padding: 10px;
+                background: #f0f0f0;
+                border-radius: 4px;
+            }
+            pre {
+                background: #333;
+                color: #fff;
+                padding: 10px;
+                overflow-x: auto;
+            }
+            .info {
+                background: #e3f2fd;
+                padding: 15px;
+                border-radius: 4px;
+                margin: 20px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Test Query Parameter Loading</h1>
+
+        <div class="info">
+            <h3>How to test:</h3>
+            <ol>
+                <li>Make sure the server is running: <code>python3 server.py</code></li>
+                <li>Click one of the test links below</li>
+                <li>Open browser DevTools Console (Cmd+Option+J) to see debug output</li>
+                <li>Check if the file loads correctly</li>
+            </ol>
+        </div>
+
+        <h2>Test Links:</h2>
+
+        <a
+            href="/?path=/Users/andy/Library/CloudStorage/OneDrive-Personal/Techhub/AI Bootcamps/Bootcamp.md"
+            class="test-link"
+        >
+            Test 1: Open Bootcamp.md from OneDrive
+        </a>
+
+        <a href="/?path=/Users/andy/Documents/projects/mdedit/README.md" class="test-link">
+            Test 2: Open README.md from project folder
+        </a>
+
+        <h2>Direct API Test:</h2>
+        <button onclick="testAPI()">Test /file endpoint directly</button>
+        <pre id="result">Click button to test...</pre>
+
+        <script>
+            async function testAPI() {
+                const path =
+                    '/Users/andy/Library/CloudStorage/OneDrive-Personal/Techhub/AI Bootcamps/Bootcamp.md';
+                const url = `/file?path=${encodeURIComponent(path)}`;
+                const resultEl = document.getElementById('result');
+
+                resultEl.textContent = `Fetching: ${url}\n\nPlease wait...`;
+
+                try {
+                    const response = await fetch(url);
+                    const content = await response.text();
+
+                    if (response.ok) {
+                        resultEl.textContent = `✓ SUCCESS!\nStatus: ${response.status}\nContent length: ${content.length} bytes\n\nFirst 500 chars:\n${content.substring(0, 500)}`;
+                    } else {
+                        resultEl.textContent = `✗ FAILED\nStatus: ${response.status}\nResponse:\n${content}`;
+                    }
+                } catch (error) {
+                    resultEl.textContent = `✗ ERROR\n${error.message}\n${error.stack}`;
+                }
+            }
+        </script>
+    </body>
+</html>

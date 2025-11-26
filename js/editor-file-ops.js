@@ -60,8 +60,11 @@
 
     /**
      * Load file content into editor (common logic for all file loading methods)
+     * @param {string} content - File content
+     * @param {string} filename - File name
+     * @param {string} filePath - Optional file path for URL hash update
      */
-    const loadFileContent = (content, filename) => {
+    const loadFileContent = (content, filename, filePath = null) => {
         elements.editor.value = content;
 
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
@@ -97,6 +100,11 @@
 
         if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
             MarkdownEditor.formatting.updateToolbarStates();
+        }
+
+        // Update URL hash if file path is provided
+        if (filePath) {
+            updateUrlHash(filePath);
         }
 
         // Close and clear find/replace UI
@@ -320,7 +328,9 @@
             }
 
             const content = await file.text();
-            loadFileContent(content, file.name);
+            // Try to construct file path from file handle name
+            const filePath = file.name;
+            loadFileContent(content, file.name, filePath);
         } catch (error) {
             if (elements.autosaveStatus) {
                 elements.autosaveStatus.textContent = 'Failed to open file';
@@ -328,6 +338,208 @@
             await dialogs.alertDialog(
                 'Unable to read the selected file. The file may be corrupted or inaccessible.',
                 'Error Opening File'
+            );
+        }
+    };
+
+    /**
+     * Extract filename from file path
+     */
+    const extractFilename = (filePath) => {
+        if (!filePath) {
+            return 'Untitled.md';
+        }
+        // Handle both forward and backslash paths
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        const parts = normalizedPath.split('/');
+        const filename = parts[parts.length - 1] || 'Untitled.md';
+        // Ensure .md extension
+        return filename.endsWith('.md') || filename.endsWith('.markdown')
+            ? filename
+            : `${filename}.md`;
+    };
+
+    /**
+     * Load file from file path (file:// or http/https)
+     */
+    const loadFileFromPath = async (filePath) => {
+        if (!filePath || !filePath.trim()) {
+            return false;
+        }
+
+        const trimmedPath = filePath.trim();
+
+        // Show loading status
+        if (elements.autosaveStatus) {
+            elements.autosaveStatus.textContent = 'Loading file...';
+        }
+
+        try {
+            // Handle file:// protocol (local files)
+            if (trimmedPath.startsWith('file://')) {
+                // For file:// URLs, we need to use File System Access API or file input
+                // Since we can't directly read file:// URLs due to browser security,
+                // we'll show an error and suggest using the file picker
+                if (elements.autosaveStatus) {
+                    elements.autosaveStatus.textContent = 'Cannot load file:// URLs directly';
+                }
+                await dialogs.alertDialog(
+                    'For security reasons, file:// URLs cannot be loaded directly. Please use the "Open File" button to select the file.',
+                    'File Protocol Not Supported'
+                );
+                return false;
+            }
+
+            // Handle http:// and https:// URLs (remote files)
+            if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
+                try {
+                    const response = await fetch(trimmedPath);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const content = await response.text();
+
+                    // Validate file size
+                    if (content.length > MAX_FILE_SIZE) {
+                        if (elements.autosaveStatus) {
+                            elements.autosaveStatus.textContent = 'File too large';
+                        }
+                        await dialogs.alertDialog(
+                            `File size exceeds 10MB limit. File is ${(content.length / 1024 / 1024).toFixed(2)}MB.`,
+                            'File Too Large'
+                        );
+                        return false;
+                    }
+
+                    // Extract filename from URL or use default
+                    const filename = extractFilename(trimmedPath);
+                    loadFileContent(content, filename, trimmedPath);
+
+                    return true;
+                } catch (error) {
+                    if (elements.autosaveStatus) {
+                        elements.autosaveStatus.textContent = 'Failed to load file';
+                    }
+                    let errorMessage = 'Unable to load the file from the URL.';
+                    if (error.message) {
+                        errorMessage += ` ${error.message}`;
+                    }
+                    await dialogs.alertDialog(errorMessage, 'Error Loading File');
+                    return false;
+                }
+            }
+
+            // Handle absolute paths (starting with /)
+            // These are treated as relative to the current page origin
+            if (trimmedPath.startsWith('/')) {
+                try {
+                    // Construct full URL from current origin
+                    const fullUrl = `${window.location.origin}${trimmedPath}`;
+                    const response = await fetch(fullUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const content = await response.text();
+
+                    // Validate file size
+                    if (content.length > MAX_FILE_SIZE) {
+                        if (elements.autosaveStatus) {
+                            elements.autosaveStatus.textContent = 'File too large';
+                        }
+                        await dialogs.alertDialog(
+                            `File size exceeds 10MB limit. File is ${(content.length / 1024 / 1024).toFixed(2)}MB.`,
+                            'File Too Large'
+                        );
+                        return false;
+                    }
+
+                    const filename = extractFilename(trimmedPath);
+                    loadFileContent(content, filename, trimmedPath);
+
+                    return true;
+                } catch (error) {
+                    if (elements.autosaveStatus) {
+                        elements.autosaveStatus.textContent = 'Failed to load file';
+                    }
+                    let errorMessage = 'Unable to load the file from the path.';
+                    if (error.message) {
+                        errorMessage += ` ${error.message}`;
+                    }
+                    await dialogs.alertDialog(errorMessage, 'Error Loading File');
+                    return false;
+                }
+            }
+
+            // Invalid path format
+            // Only show error if this was a user-initiated action, not automatic hash loading
+            // For hash loading, invalid paths are silently ignored
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Invalid file path';
+            }
+            // Don't show error dialog for invalid hash paths - they're handled silently
+            // Only show error if this was explicitly called (not from hash loading)
+            return false;
+        } catch (error) {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Failed to load file';
+            }
+            await dialogs.alertDialog(
+                'An unexpected error occurred while loading the file.',
+                'Error Loading File'
+            );
+            return false;
+        }
+    };
+
+    /**
+     * Update URL hash with file path
+     */
+    const updateUrlHash = (filePath) => {
+        if (!filePath) {
+            return;
+        }
+        try {
+            // Encode the path for URL hash
+            const encodedPath = encodeURIComponent(filePath);
+            // Update hash without triggering page reload
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, '', `#${encodedPath}`);
+            } else {
+                window.location.hash = encodedPath;
+            }
+        } catch (error) {
+            // Ignore errors updating hash
+        }
+    };
+
+    /**
+     * Open file in a new browser tab
+     * @param {string} filePath - File path to open in new tab
+     */
+    const openFileInNewTab = (filePath) => {
+        if (!filePath || !filePath.trim()) {
+            return;
+        }
+
+        try {
+            // Encode the file path for URL hash
+            const encodedPath = encodeURIComponent(filePath.trim());
+            // Get current page URL without hash
+            const currentUrl = window.location.href.split('#')[0];
+            // Construct new URL with file path in hash
+            const newUrl = `${currentUrl}#${encodedPath}`;
+            // Open in new tab
+            window.open(newUrl, '_blank');
+        } catch (error) {
+            // If opening fails, show error message
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Failed to open in new tab';
+            }
+            dialogs.alertDialog(
+                'Unable to open file in a new tab. Please check your browser pop-up settings.',
+                'Error Opening Tab'
             );
         }
     };
@@ -359,7 +571,8 @@
                 reader.readAsText(file);
             });
 
-            loadFileContent(content, file.name);
+            // For file input, we don't have a path, so pass null
+            loadFileContent(content, file.name, null);
         } catch (error) {
             if (elements.autosaveStatus) {
                 elements.autosaveStatus.textContent = 'Failed to open file';
@@ -963,6 +1176,10 @@ if (window.Prism) {
         handleNewDocument,
         loadFile,
         readFile,
+        loadFileFromPath,
+        loadFileContent,
+        updateUrlHash,
+        openFileInNewTab,
         saveFile,
         exportToHtml,
         exportToPlainText,

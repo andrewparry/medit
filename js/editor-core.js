@@ -58,7 +58,8 @@
         replaceAllBtn: null,
         toggleFindButton: null,
         toggleHtmlButton: null,
-        helpButton: null
+        helpButton: null,
+        toolbarIconWrapper: null
     };
 
     // Initialize DOM references
@@ -98,6 +99,7 @@
         els.toggleFindButton = document.getElementById('toggle-find');
         els.toggleHtmlButton = document.getElementById('toggle-html');
         els.helpButton = document.getElementById('help-button');
+        els.toolbarIconWrapper = document.getElementById('toolbar-icon-wrapper');
 
         // Check if critical elements exist
         if (!els.editor || !els.preview) {

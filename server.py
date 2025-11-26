@@ -6,6 +6,10 @@ import json
 
 ROOT = Path(__file__).parent  # your mdedit folder
 
+# Server version - keep in sync with package.json
+SERVER_VERSION = "1.1.0"
+SERVER_NAME = "Medit Server"
+
 class Handler(SimpleHTTPRequestHandler):
     # Serve static files (index.html, JS, CSS) from the repo
     def translate_path(self, path):
@@ -13,8 +17,29 @@ class Handler(SimpleHTTPRequestHandler):
         path = super().translate_path(path)
         return str(ROOT / Path(path).relative_to(Path.cwd()))
 
+    def end_headers(self):
+        # Add cache control headers to prevent caching during development
+        # This ensures browsers always get the latest JS/CSS files
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
+
     def do_GET(self):
         parsed = urlparse(self.path)
+
+        # Version endpoint: /version
+        if parsed.path == "/version":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            version_info = {
+                "version": SERVER_VERSION,
+                "name": SERVER_NAME
+            }
+            self.wfile.write(json.dumps(version_info).encode())
+            return
 
         # Our custom endpoint: /file?path=/absolute/path/to/file.md
         if parsed.path == "/file":

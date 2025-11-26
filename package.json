@@ -1,6 +1,6 @@
 {
   "name": "markdown-wysiwyg-editor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A browser-based markdown WYSIWYG editor with real-time preview, local file management, and offline functionality",
   "main": "index.html",
   "keywords": [

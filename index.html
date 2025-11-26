@@ -17,7 +17,14 @@
             <main class="editor-main" role="main">
                 <section class="toolbar-section" role="toolbar" aria-label="Formatting options">
                     <div class="toolbar" id="formatting-toolbar">
-                        <div class="toolbar-icon-wrapper">
+                        <div
+                            id="toolbar-icon-wrapper"
+                            class="toolbar-icon-wrapper"
+                            role="button"
+                            tabindex="0"
+                            aria-label="Show version information"
+                            title="About Medit"
+                        >
                             <img
                                 src="images/medit_icon.png"
                                 alt="Markdown Editor"
@@ -493,6 +500,7 @@
         <script src="js/editor-utils.js" defer></script>
         <script src="js/editor-dialogs.js" defer></script>
         <script src="js/editor-history.js" defer></script>
+        <script src="js/editor-version.js" defer></script>
 
         <!-- Feature modules -->
         <script src="js/editor-autosave.js" defer></script>

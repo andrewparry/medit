@@ -189,6 +189,20 @@
             elements.helpButton.addEventListener('click', MarkdownEditor.ui.openCheatSheet);
         }
 
+        // Toolbar icon (version info)
+        if (elements.toolbarIconWrapper && MarkdownEditor.version) {
+            elements.toolbarIconWrapper.addEventListener(
+                'click',
+                MarkdownEditor.version.showVersionDialog
+            );
+            elements.toolbarIconWrapper.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    MarkdownEditor.version.showVersionDialog();
+                }
+            });
+        }
+
         // Filename editing
         if (elements.fileNameDisplay && MarkdownEditor.utils) {
             elements.fileNameDisplay.addEventListener(

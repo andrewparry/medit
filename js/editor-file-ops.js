@@ -16,6 +16,9 @@
     let currentFileHandle = null;
     let currentDirectoryHandle = null;
 
+    // Track server file path for files opened via server (double-click workflow)
+    let serverFilePath = null;
+
     // Constants
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -25,6 +28,7 @@
     const resetFileHandles = () => {
         currentFileHandle = null;
         currentDirectoryHandle = null;
+        serverFilePath = null;
     };
 
     /**
@@ -60,11 +64,8 @@
 
     /**
      * Load file content into editor (common logic for all file loading methods)
-     * @param {string} content - File content
-     * @param {string} filename - File name
-     * @param {string} filePath - Optional file path for URL hash update
      */
-    const loadFileContent = (content, filename, filePath = null) => {
+    const loadFileContent = (content, filename) => {
         elements.editor.value = content;
 
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
@@ -102,11 +103,6 @@
             MarkdownEditor.formatting.updateToolbarStates();
         }
 
-        // Update URL hash if file path is provided
-        if (filePath) {
-            updateUrlHash(filePath);
-        }
-
         // Close and clear find/replace UI
         if (elements.findBar) {
             elements.findBar.hidden = true;
@@ -130,6 +126,91 @@
             elements.toggleFindButton.setAttribute('aria-pressed', 'false');
             elements.toggleFindButton.classList.remove('active');
         }
+    };
+
+    /**
+     * Load file from URL parameter (for server-based file opening)
+     * Called when the page is loaded with ?path=/path/to/file.md
+     */
+    const loadFileFromUrlParam = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const filePath = urlParams.get('path');
+
+        // Debug: log URL info
+        console.log('[mdedit] URL search:', window.location.search);
+        console.log('[mdedit] File path from URL:', filePath);
+
+        if (!filePath) {
+            return false;
+        }
+
+        try {
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Loading file...';
+            }
+
+            // Fetch file content from server
+            const response = await fetch(`/file?path=${encodeURIComponent(filePath)}`);
+
+            if (!response.ok) {
+                throw new Error(`Failed to load file: ${response.statusText}`);
+            }
+
+            const content = await response.text();
+
+            // Extract filename from path
+            const filename = filePath.split('/').pop() || 'Untitled.md';
+
+            // Store the server file path for saving back
+            serverFilePath = filePath;
+            console.log('[mdedit] Server file path set to:', serverFilePath);
+
+            // Reset file handles since this is a server-loaded file
+            currentFileHandle = null;
+            currentDirectoryHandle = null;
+
+            // Load the content into the editor
+            loadFileContent(content, filename);
+
+            // Clear the URL parameter without refreshing the page
+            // This prevents reloading the file if the user refreshes
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+
+            return true;
+        } catch (error) {
+            console.error('Failed to load file from URL:', error);
+            if (elements.autosaveStatus) {
+                elements.autosaveStatus.textContent = 'Failed to load file';
+            }
+            await dialogs.alertDialog(
+                `Unable to load the file: ${error.message}`,
+                'Error Loading File'
+            );
+            return false;
+        }
+    };
+
+    /**
+     * Save file via server POST endpoint
+     * Used when file was opened via server (double-click workflow)
+     */
+    const saveFileViaServer = async (content, filePath) => {
+        const response = await fetch(`/file?path=${encodeURIComponent(filePath)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain; charset=utf-8'
+            },
+            body: content
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Server error: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        return { success: true, path: result.path };
     };
 
     /**
@@ -328,9 +409,7 @@
             }
 
             const content = await file.text();
-            // Try to construct file path from file handle name
-            const filePath = file.name;
-            loadFileContent(content, file.name, filePath);
+            loadFileContent(content, file.name);
         } catch (error) {
             if (elements.autosaveStatus) {
                 elements.autosaveStatus.textContent = 'Failed to open file';
@@ -338,208 +417,6 @@
             await dialogs.alertDialog(
                 'Unable to read the selected file. The file may be corrupted or inaccessible.',
                 'Error Opening File'
-            );
-        }
-    };
-
-    /**
-     * Extract filename from file path
-     */
-    const extractFilename = (filePath) => {
-        if (!filePath) {
-            return 'Untitled.md';
-        }
-        // Handle both forward and backslash paths
-        const normalizedPath = filePath.replace(/\\/g, '/');
-        const parts = normalizedPath.split('/');
-        const filename = parts[parts.length - 1] || 'Untitled.md';
-        // Ensure .md extension
-        return filename.endsWith('.md') || filename.endsWith('.markdown')
-            ? filename
-            : `${filename}.md`;
-    };
-
-    /**
-     * Load file from file path (file:// or http/https)
-     */
-    const loadFileFromPath = async (filePath) => {
-        if (!filePath || !filePath.trim()) {
-            return false;
-        }
-
-        const trimmedPath = filePath.trim();
-
-        // Show loading status
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = 'Loading file...';
-        }
-
-        try {
-            // Handle file:// protocol (local files)
-            if (trimmedPath.startsWith('file://')) {
-                // For file:// URLs, we need to use File System Access API or file input
-                // Since we can't directly read file:// URLs due to browser security,
-                // we'll show an error and suggest using the file picker
-                if (elements.autosaveStatus) {
-                    elements.autosaveStatus.textContent = 'Cannot load file:// URLs directly';
-                }
-                await dialogs.alertDialog(
-                    'For security reasons, file:// URLs cannot be loaded directly. Please use the "Open File" button to select the file.',
-                    'File Protocol Not Supported'
-                );
-                return false;
-            }
-
-            // Handle http:// and https:// URLs (remote files)
-            if (trimmedPath.startsWith('http://') || trimmedPath.startsWith('https://')) {
-                try {
-                    const response = await fetch(trimmedPath);
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-
-                    const content = await response.text();
-
-                    // Validate file size
-                    if (content.length > MAX_FILE_SIZE) {
-                        if (elements.autosaveStatus) {
-                            elements.autosaveStatus.textContent = 'File too large';
-                        }
-                        await dialogs.alertDialog(
-                            `File size exceeds 10MB limit. File is ${(content.length / 1024 / 1024).toFixed(2)}MB.`,
-                            'File Too Large'
-                        );
-                        return false;
-                    }
-
-                    // Extract filename from URL or use default
-                    const filename = extractFilename(trimmedPath);
-                    loadFileContent(content, filename, trimmedPath);
-
-                    return true;
-                } catch (error) {
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = 'Failed to load file';
-                    }
-                    let errorMessage = 'Unable to load the file from the URL.';
-                    if (error.message) {
-                        errorMessage += ` ${error.message}`;
-                    }
-                    await dialogs.alertDialog(errorMessage, 'Error Loading File');
-                    return false;
-                }
-            }
-
-            // Handle absolute paths (starting with /)
-            // These are treated as relative to the current page origin
-            if (trimmedPath.startsWith('/')) {
-                try {
-                    // Construct full URL from current origin
-                    const fullUrl = `${window.location.origin}${trimmedPath}`;
-                    const response = await fetch(fullUrl);
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-
-                    const content = await response.text();
-
-                    // Validate file size
-                    if (content.length > MAX_FILE_SIZE) {
-                        if (elements.autosaveStatus) {
-                            elements.autosaveStatus.textContent = 'File too large';
-                        }
-                        await dialogs.alertDialog(
-                            `File size exceeds 10MB limit. File is ${(content.length / 1024 / 1024).toFixed(2)}MB.`,
-                            'File Too Large'
-                        );
-                        return false;
-                    }
-
-                    const filename = extractFilename(trimmedPath);
-                    loadFileContent(content, filename, trimmedPath);
-
-                    return true;
-                } catch (error) {
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = 'Failed to load file';
-                    }
-                    let errorMessage = 'Unable to load the file from the path.';
-                    if (error.message) {
-                        errorMessage += ` ${error.message}`;
-                    }
-                    await dialogs.alertDialog(errorMessage, 'Error Loading File');
-                    return false;
-                }
-            }
-
-            // Invalid path format
-            // Only show error if this was a user-initiated action, not automatic hash loading
-            // For hash loading, invalid paths are silently ignored
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Invalid file path';
-            }
-            // Don't show error dialog for invalid hash paths - they're handled silently
-            // Only show error if this was explicitly called (not from hash loading)
-            return false;
-        } catch (error) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Failed to load file';
-            }
-            await dialogs.alertDialog(
-                'An unexpected error occurred while loading the file.',
-                'Error Loading File'
-            );
-            return false;
-        }
-    };
-
-    /**
-     * Update URL hash with file path
-     */
-    const updateUrlHash = (filePath) => {
-        if (!filePath) {
-            return;
-        }
-        try {
-            // Encode the path for URL hash
-            const encodedPath = encodeURIComponent(filePath);
-            // Update hash without triggering page reload
-            if (window.history && window.history.replaceState) {
-                window.history.replaceState(null, '', `#${encodedPath}`);
-            } else {
-                window.location.hash = encodedPath;
-            }
-        } catch (error) {
-            // Ignore errors updating hash
-        }
-    };
-
-    /**
-     * Open file in a new browser tab
-     * @param {string} filePath - File path to open in new tab
-     */
-    const openFileInNewTab = (filePath) => {
-        if (!filePath || !filePath.trim()) {
-            return;
-        }
-
-        try {
-            // Encode the file path for URL hash
-            const encodedPath = encodeURIComponent(filePath.trim());
-            // Get current page URL without hash
-            const currentUrl = window.location.href.split('#')[0];
-            // Construct new URL with file path in hash
-            const newUrl = `${currentUrl}#${encodedPath}`;
-            // Open in new tab
-            window.open(newUrl, '_blank');
-        } catch (error) {
-            // If opening fails, show error message
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Failed to open in new tab';
-            }
-            dialogs.alertDialog(
-                'Unable to open file in a new tab. Please check your browser pop-up settings.',
-                'Error Opening Tab'
             );
         }
     };
@@ -571,8 +448,7 @@
                 reader.readAsText(file);
             });
 
-            // For file input, we don't have a path, so pass null
-            loadFileContent(content, file.name, null);
+            loadFileContent(content, file.name);
         } catch (error) {
             if (elements.autosaveStatus) {
                 elements.autosaveStatus.textContent = 'Failed to open file';
@@ -772,6 +648,38 @@
             }
 
             let filename = elements.fileNameDisplay.textContent.trim();
+            const content = elements.editor.value;
+
+            // Debug: log save info
+            console.log('[mdedit] Saving - serverFilePath:', serverFilePath);
+
+            // If we have a server file path, save directly to the original location
+            if (serverFilePath) {
+                try {
+                    console.log('[mdedit] Attempting server save to:', serverFilePath);
+                    await saveFileViaServer(content, serverFilePath);
+
+                    state.lastSavedContent = content;
+                    if (MarkdownEditor.stateManager) {
+                        MarkdownEditor.stateManager.markDirty(false);
+                    }
+                    if (elements.autosaveStatus) {
+                        elements.autosaveStatus.textContent = `Saved ${filename}`;
+                    }
+                    if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
+                        MarkdownEditor.autosave.scheduleAutosave();
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('[mdedit] Server save failed:', error);
+                    console.error('[mdedit] Error details:', error.message);
+                    // Fall through to other save methods
+                    if (elements.autosaveStatus) {
+                        elements.autosaveStatus.textContent =
+                            'Server save failed, trying local save...';
+                    }
+                }
+            }
 
             // Prompt for filename if it's untitled
             if (!filename || filename === 'Untitled.md') {
@@ -794,8 +702,6 @@
             elements.fileNameDisplay.textContent = normalizedName;
             elements.fileNameDisplay.contentEditable = 'false';
             delete elements.fileNameDisplay.dataset.originalName;
-
-            const content = elements.editor.value;
 
             // Use File System Access API if available
             if (supportsFileSystemAccess) {
@@ -1175,11 +1081,8 @@ if (window.Prism) {
         resetEditorState,
         handleNewDocument,
         loadFile,
+        loadFileFromUrlParam,
         readFile,
-        loadFileFromPath,
-        loadFileContent,
-        updateUrlHash,
-        openFileInNewTab,
         saveFile,
         exportToHtml,
         exportToPlainText,

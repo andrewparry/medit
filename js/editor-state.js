@@ -7,31 +7,6 @@
 
     const MarkdownEditor = window.MarkdownEditor || {};
 
-    // Generate unique tab ID for this browser tab instance
-    // This ensures each browser tab has isolated state
-    const generateTabId = () => {
-        if (!window.sessionStorage) {
-            // Fallback to timestamp-based ID if sessionStorage not available
-            return `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        }
-
-        // Try to get existing tab ID from sessionStorage
-        let tabId = sessionStorage.getItem('markdown-editor-tab-id');
-        if (!tabId) {
-            // Generate new tab ID
-            tabId = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            try {
-                sessionStorage.setItem('markdown-editor-tab-id', tabId);
-            } catch (error) {
-                // If sessionStorage fails, use timestamp-based ID
-                tabId = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            }
-        }
-        return tabId;
-    };
-
-    const currentTabId = generateTabId();
-
     // Initialize state object
     MarkdownEditor.state = {
         autosaveTimer: null,
@@ -44,8 +19,7 @@
         historyTimer: null,
         historyStack: [], // past states (oldest at 0, newest at end)
         futureStack: [], // redo states (most recent at end)
-        renderHtml: false, // Whether to render HTML inline or escape it
-        tabId: currentTabId // Unique identifier for this browser tab
+        renderHtml: false // Whether to render HTML inline or escape it
     };
 
     // Find/replace state
@@ -94,13 +68,6 @@
             MarkdownEditor.searchState.freshQuery = false;
             MarkdownEditor.searchState.matches = [];
             MarkdownEditor.searchState.current = -1;
-        },
-
-        /**
-         * Get current tab ID
-         */
-        getTabId: () => {
-            return MarkdownEditor.state.tabId;
         }
     };
 

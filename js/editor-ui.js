@@ -34,14 +34,49 @@
     /**
      * Toggle between dark and light themes
      * Applies theme, updates status message, and persists preference
+     * Preserves cursor position and scroll state during theme switch
      *
      * @returns {void}
      * @example
      * toggleDarkMode(); // Switches theme and saves preference
      */
     const toggleDarkMode = () => {
+        // Save cursor position, scroll state, and focus state before theme change
+        let savedSelection = null;
+        let savedScrollTop = 0;
+        let savedScrollLeft = 0;
+        let hadFocus = false;
+
+        if (elements.editor && MarkdownEditor.utils) {
+            savedSelection = MarkdownEditor.utils.getSelection();
+            savedScrollTop = elements.editor.scrollTop;
+            savedScrollLeft = elements.editor.scrollLeft;
+            hadFocus = document.activeElement === elements.editor;
+        }
+
         const isDark = !document.body.classList.contains('theme-dark');
         applyTheme(isDark);
+
+        // Restore cursor position, scroll state, and focus after theme change
+        if (savedSelection && elements.editor && MarkdownEditor.utils) {
+            // Use setTimeout to restore focus after the button click event completes
+            setTimeout(() => {
+                if (hadFocus) {
+                    elements.editor.focus();
+                    // Remove focus from the dark mode toggle button
+                    if (
+                        elements.darkModeToggle &&
+                        document.activeElement === elements.darkModeToggle
+                    ) {
+                        elements.darkModeToggle.blur();
+                    }
+                }
+                elements.editor.setSelectionRange(savedSelection.start, savedSelection.end);
+                elements.editor.scrollTop = savedScrollTop;
+                elements.editor.scrollLeft = savedScrollLeft;
+            }, 0);
+        }
+
         if (MarkdownEditor.statusManager) {
             MarkdownEditor.statusManager.showInfo(isDark ? 'Dark mode on' : 'Dark mode off');
         }

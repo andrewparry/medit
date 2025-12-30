@@ -10,9 +10,14 @@
 
     /**
      * Show an alert dialog with a message and OK button
+     * Creates accessible modal dialog with proper ARIA attributes
+     *
      * @param {string} message - The message to display
-     * @param {string} title - Optional title for the dialog
-     * @returns {Promise<void>} - Resolves when dialog is closed
+     * @param {string} [title='Notice'] - Optional title for the dialog
+     * @returns {Promise<void>} Resolves when dialog is closed
+     *
+     * @example
+     * await alertDialog('File saved successfully', 'Success');
      */
     const alertDialog = (message, title = 'Notice') =>
         new Promise((resolve) => {
@@ -89,11 +94,21 @@
         });
 
     /**
-     * Show a confirmation dialog with Yes/No or OK/Cancel buttons
+     * Show a confirmation dialog with customizable buttons
+     * Creates accessible modal dialog with confirm/cancel options
+     *
      * @param {string} message - The message to display
-     * @param {string} title - Optional title for the dialog
-     * @param {Object} options - Options for button labels
-     * @returns {Promise<boolean>} - Resolves with true if confirmed, false if cancelled
+     * @param {string} [title='Confirm'] - Optional title for the dialog
+     * @param {Object} [options={}] - Button label options
+     * @param {string} [options.confirmLabel='OK'] - Label for confirm button
+     * @param {string} [options.cancelLabel='Cancel'] - Label for cancel button
+     * @returns {Promise<boolean>} True if confirmed, false if cancelled
+     *
+     * @example
+     * const confirmed = await confirmDialog('Delete file?', 'Confirm', {
+     *   confirmLabel: 'Delete',
+     *   cancelLabel: 'Keep'
+     * });
      */
     const confirmDialog = (message, title = 'Confirm', options = {}) =>
         new Promise((resolve) => {
@@ -173,12 +188,17 @@
         });
 
     /**
-     * Show a prompt dialog with an input field
+     * Show a prompt dialog with a single input field
+     * Creates accessible modal dialog with text input
+     *
      * @param {string} message - The message/label to display
-     * @param {string} defaultValue - Default value for the input
-     * @param {string} inputType - Type of input (text, url, etc.)
-     * @param {string} title - Optional title for the dialog
-     * @returns {Promise<string|null>} - Resolves with input value or null if cancelled
+     * @param {string} [defaultValue=''] - Default value for the input
+     * @param {string} [inputType='text'] - Type of input (text, url, number, etc.)
+     * @param {string} [title='Input'] - Optional title for the dialog
+     * @returns {Promise<string|null>} Input value or null if cancelled
+     *
+     * @example
+     * const filename = await promptDialog('Enter filename', 'Untitled.md', 'text', 'Save As');
      */
     const promptDialog = (message, defaultValue = '', inputType = 'text', title = 'Input') =>
         new Promise((resolve) => {
@@ -293,10 +313,25 @@
         });
 
     /**
-     * Show a multi-field prompt dialog
-     * @param {Array<{label: string, defaultValue: string, inputType: string, required: boolean}>} fields - Array of field definitions
-     * @param {string} title - Dialog title
-     * @returns {Promise<Object<string, string>|null>} - Resolves with object of field values or null if cancelled
+     * Show a multi-field prompt dialog with multiple inputs
+     * Creates accessible modal dialog with multiple input fields and optional suggestions
+     *
+     * @param {Array<Object>} fields - Array of field definitions
+     * @param {string} fields[].label - Label for the field
+     * @param {string} fields[].defaultValue - Default value
+     * @param {string} fields[].inputType - Input type (text, url, number)
+     * @param {string} fields[].key - Key for the returned value object
+     * @param {boolean} [fields[].required=true] - Whether field is required
+     * @param {string} [fields[].helperText] - Optional helper text
+     * @param {Array<string>} [fields[].suggestions] - Optional suggestion buttons
+     * @param {string} [title='Input'] - Dialog title
+     * @returns {Promise<Object|null>} Object with field values keyed by field.key, or null if cancelled
+     *
+     * @example
+     * const result = await multiPromptDialog([
+     *   {label: 'URL', key: 'url', inputType: 'url', defaultValue: 'https://'},
+     *   {label: 'Text', key: 'text', inputType: 'text', defaultValue: ''}
+     * ], 'Insert Link');
      */
     const multiPromptDialog = (fields, title = 'Input') =>
         new Promise((resolve) => {
@@ -527,8 +562,14 @@
         });
 
     /**
-     * Show unsaved changes dialog
-     * @returns {Promise<string>} - Resolves with 'save', 'discard', or 'cancel'
+     * Show unsaved changes dialog with save/discard/cancel options
+     * Used when user tries to start new document or open file with unsaved changes
+     *
+     * @returns {Promise<string>} 'save', 'discard', or 'cancel'
+     *
+     * @example
+     * const choice = await showUnsavedChangesDialog();
+     * if (choice === 'save') await saveFile();
      */
     const showUnsavedChangesDialog = () =>
         new Promise((resolve) => {
@@ -601,8 +642,15 @@
         });
 
     /**
-     * Show a dialog when localStorage quota is exceeded
-     * @returns {Promise<string>} - Resolves with 'clear', 'disable', or 'ignore'
+     * Show dialog when localStorage quota is exceeded
+     * Offers options to clear old drafts, disable autosave, or continue without autosave
+     * Only shows once per session to avoid annoying user
+     *
+     * @returns {Promise<string>} 'clear', 'disable', or 'ignore'
+     *
+     * @example
+     * const choice = await showQuotaExceededDialog();
+     * if (choice === 'clear') clearAllAutosaveData();
      */
     const showQuotaExceededDialog = () =>
         new Promise((resolve) => {
@@ -697,8 +745,14 @@
         });
 
     /**
-     * Show export options dialog
-     * @returns {Promise<string|null>} - Resolves with export format or null if cancelled
+     * Show export options dialog with format choices
+     * Presents HTML, PDF/Print, and Plain Text export options
+     *
+     * @returns {Promise<string|null>} Export format ('html', 'pdf', 'txt') or null if cancelled
+     *
+     * @example
+     * const format = await showExportDialog();
+     * if (format === 'html') await exportToHtml();
      */
     const showExportDialog = () =>
         new Promise((resolve) => {

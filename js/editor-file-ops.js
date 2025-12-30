@@ -20,7 +20,11 @@
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     /**
-     * Reset file handles
+     * Reset file handles and clear persisted file state
+     * Clears active file handle so next save triggers "Save As"
+     * Called when starting new document
+     *
+     * @returns {void}
      */
     const resetFileHandles = () => {
         // Clearing the active handle ensures subsequent "Save" triggers "Save As"
@@ -38,7 +42,11 @@
     };
 
     /**
-     * Validate file before reading
+     * Validate file before reading (extension and size checks)
+     * Ensures file is markdown (.md or .markdown) and under 10MB
+     *
+     * @param {File} file - File object to validate
+     * @returns {Promise<boolean>} True if valid, false otherwise
      */
     const validateFile = async (file) => {
         // Validate file extension
@@ -240,7 +248,13 @@
     };
 
     /**
-     * Handle new document
+     * Handle new document creation
+     * Checks for unsaved changes, prompts user if needed, then resets editor
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await handleNewDocument(); // Creates new blank document
      */
     const handleNewDocument = async () => {
         const hasUnsavedChanges =
@@ -263,7 +277,13 @@
     };
 
     /**
-     * Load file
+     * Load file from disk using File System Access API or file input fallback
+     * Checks for unsaved changes, validates file, and loads content into editor
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await loadFile(); // Ctrl+O - opens file picker
      */
     const loadFile = async () => {
         if (state.dirty) {
@@ -501,7 +521,13 @@
     };
 
     /**
-     * Save file
+     * Save file to disk using File System Access API or download fallback
+     * Prompts for filename if untitled, handles file handle persistence
+     *
+     * @returns {Promise<boolean>} True if saved successfully, false otherwise
+     *
+     * @example
+     * await saveFile(); // Ctrl+S - saves file
      */
     const saveFile = async () => {
         if (!elements.editor || !elements.fileNameDisplay || !elements.saveButton) {
@@ -584,7 +610,14 @@
     };
 
     /**
-     * Export to HTML
+     * Export document as standalone HTML file
+     * Renders markdown to HTML with syntax highlighting and styling
+     * Downloads as .html file with embedded CSS
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await exportToHtml(); // Exports as HTML
      */
     const exportToHtml = async () => {
         if (!elements.editor || !elements.fileNameDisplay) {
@@ -746,7 +779,13 @@ if (window.Prism) {
     };
 
     /**
-     * Export to PDF
+     * Export document as PDF via browser print dialog
+     * Opens new window with rendered markdown and triggers print
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await exportToPdf(); // Opens print dialog for PDF
      */
     const exportToPdf = async () => {
         if (!elements.editor) {
@@ -873,7 +912,13 @@ if (window.Prism) {
     };
 
     /**
-     * Handle export
+     * Handle export by showing format selection dialog
+     * Routes to appropriate export function based on user choice
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await handleExport(); // Shows export options dialog
      */
     const handleExport = async () => {
         const exportFormat = await dialogs.showExportDialog();

@@ -10,6 +10,13 @@
 
     /**
      * Apply syntax highlighting to code blocks in editor overlay
+     * Uses Prism.js to highlight code blocks with language-specific colors
+     * Syncs scroll position between editor and highlight overlay
+     *
+     * @returns {void}
+     *
+     * @example
+     * updateSyntaxHighlights(); // Called after editor content changes
      */
     const updateSyntaxHighlights = () => {
         if (!elements.editorHighlights || !window.Prism) {

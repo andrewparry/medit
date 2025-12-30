@@ -9,7 +9,14 @@
     const { elements, state, utils, history, searchState } = MarkdownEditor;
 
     /**
-     * Build search regex based on find options
+     * Build search regex based on find options (case, regex mode, whole word)
+     * Constructs appropriate regex pattern based on user's search preferences
+     *
+     * @param {string} query - Search query string
+     * @returns {RegExp|null} Compiled regex or null if invalid
+     *
+     * @example
+     * const regex = buildSearchRegex('hello'); // Creates case-insensitive regex
      */
     const buildSearchRegex = (query) => {
         if (!query) {
@@ -30,7 +37,10 @@
     };
 
     /**
-     * Clear preview highlights
+     * Clear all find/search highlights from preview pane
+     * Removes <mark> elements and normalizes text nodes
+     *
+     * @returns {void}
      */
     const clearPreviewHighlights = () => {
         if (!elements.preview) {
@@ -243,7 +253,16 @@
     };
 
     /**
-     * Find in editor
+     * Find next/previous match in editor
+     * Searches from current position, wraps around if needed
+     * Updates match counter and highlights current match
+     *
+     * @param {number} [direction=1] - Search direction: 1 for forward, -1 for backward
+     * @returns {boolean} True if match found, false otherwise
+     *
+     * @example
+     * findInEditor(1); // Find next
+     * findInEditor(-1); // Find previous
      */
     const findInEditor = (direction = 1) => {
         const query = elements.findInput?.value || '';
@@ -302,7 +321,14 @@
     };
 
     /**
-     * Replace one occurrence
+     * Replace current selection if it matches search query
+     * If selection doesn't match, finds next match first
+     * Updates preview, counters, and triggers autosave
+     *
+     * @returns {boolean} True if replacement occurred, false otherwise
+     *
+     * @example
+     * replaceOne(); // Replaces current match
      */
     const replaceOne = () => {
         const query = elements.findInput?.value || '';
@@ -380,7 +406,14 @@
     };
 
     /**
-     * Replace all occurrences
+     * Replace all occurrences of search query in document
+     * Handles regex mode, case sensitivity, and whole word matching
+     * Updates preview, counters, and triggers autosave
+     *
+     * @returns {number} Number of replacements made
+     *
+     * @example
+     * const count = replaceAll(); // Replaces all matches
      */
     const replaceAll = () => {
         const query = elements.findInput?.value || '';
@@ -488,7 +521,13 @@
     };
 
     /**
-     * Open find bar
+     * Open find/replace bar and focus find input
+     * Shows find bar, focuses input, and updates highlights
+     *
+     * @returns {void}
+     *
+     * @example
+     * openFind(); // Ctrl+F - opens find bar
      */
     const openFind = () => {
         if (!elements.findBar || !elements.findInput) {
@@ -509,7 +548,14 @@
     };
 
     /**
-     * Close find bar
+     * Close find/replace bar and restore editor focus
+     * Optionally clears search fields and restores syntax highlighting
+     *
+     * @param {boolean} [clearFields=false] - Whether to clear search/replace inputs
+     * @returns {void}
+     *
+     * @example
+     * closeFind(true); // Close and clear fields
      */
     const closeFind = (clearFields = false) => {
         if (!elements.findBar) {

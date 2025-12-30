@@ -9,7 +9,13 @@
     const { elements, state } = MarkdownEditor;
 
     /**
-     * Handle input in editor
+     * Handle input events in the editor textarea
+     * Updates preview, counters, toolbar states, and triggers autosave
+     * Debounces history recording and auto-renumbers ordered lists
+     *
+     * @returns {void}
+     * @example
+     * editor.addEventListener('input', handleInput);
      */
     const handleInput = () => {
         if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
@@ -48,7 +54,13 @@
     };
 
     /**
-     * Bind all events
+     * Bind all event listeners for the editor
+     * Sets up toolbar clicks, keyboard shortcuts, file operations, find/replace, etc.
+     * Should be called once during initialization after DOM elements are ready
+     *
+     * @returns {void}
+     * @example
+     * bindEvents(); // Sets up all event handlers
      */
     const bindEvents = () => {
         // Toolbar events
@@ -353,7 +365,13 @@
     };
 
     /**
-     * Initialize the editor
+     * Initialize the markdown editor application
+     * Sets up DOM elements, restores state, initializes all modules, and binds events
+     * Called automatically when DOM is ready
+     *
+     * @returns {Promise<void>}
+     * @example
+     * await initialize(); // Starts the editor
      */
     const initialize = async () => {
         // Initialize DOM elements

@@ -9,7 +9,11 @@
     const { elements, constants, state } = MarkdownEditor;
 
     /**
-     * Apply theme
+     * Apply theme (dark or light) to the editor interface
+     * Updates body classes and dark mode toggle button state
+     *
+     * @param {boolean} isDark - True for dark theme, false for light theme
+     * @returns {void}
      */
     const applyTheme = (isDark) => {
         document.body.classList.toggle('theme-dark', isDark);
@@ -28,7 +32,12 @@
     };
 
     /**
-     * Toggle dark mode
+     * Toggle between dark and light themes
+     * Applies theme, updates status message, and persists preference
+     *
+     * @returns {void}
+     * @example
+     * toggleDarkMode(); // Switches theme and saves preference
      */
     const toggleDarkMode = () => {
         const isDark = !document.body.classList.contains('theme-dark');
@@ -42,7 +51,12 @@
     };
 
     /**
-     * Toggle HTML rendering mode
+     * Toggle HTML rendering mode in preview (render vs escape HTML tags)
+     * Updates button state, persists preference, and refreshes preview
+     *
+     * @returns {void}
+     * @example
+     * toggleHtmlRendering(); // Ctrl+Shift+H - toggles HTML rendering
      */
     const toggleHtmlRendering = () => {
         if (!elements.toggleHtmlButton || !state) {
@@ -86,7 +100,12 @@
     };
 
     /**
-     * Initialize theme
+     * Initialize theme from localStorage or default
+     * Restores user's theme preference from previous session
+     *
+     * @returns {void}
+     * @example
+     * initializeTheme(); // Called during startup
      */
     const initializeTheme = () => {
         let isDark = document.body.classList.contains('theme-dark');
@@ -102,7 +121,13 @@
     };
 
     /**
-     * Initialize resize handle
+     * Initialize resize handle for editor/preview split pane
+     * Sets up drag handlers for mouse, touch, pointer, and keyboard events
+     * Restores saved split ratio from localStorage
+     *
+     * @returns {void}
+     * @example
+     * initializeResize(); // Called during startup
      */
     const initializeResize = () => {
         if (
@@ -340,7 +365,13 @@
     };
 
     /**
-     * Handle formatting action
+     * Handle formatting action from toolbar or keyboard shortcut
+     * Routes action to appropriate formatting function
+     *
+     * @param {string} action - Formatting action name (e.g., 'bold', 'italic', 'h1')
+     * @returns {Promise<void>}
+     * @example
+     * await handleFormatting('bold'); // Applies bold formatting
      */
     const handleFormatting = async (action) => {
         switch (action) {
@@ -455,7 +486,13 @@
     };
 
     /**
-     * Handle toolbar click
+     * Handle click events on formatting toolbar buttons
+     * Extracts format action from button's data-format attribute
+     *
+     * @param {MouseEvent} event - Click event from toolbar
+     * @returns {void}
+     * @example
+     * toolbar.addEventListener('click', handleToolbarClick);
      */
     const handleToolbarClick = (event) => {
         const target = event.target.closest('button[data-format]');
@@ -467,7 +504,14 @@
     };
 
     /**
-     * Handle keyboard shortcuts
+     * Handle keyboard shortcuts for formatting and commands
+     * Processes Ctrl/Cmd combinations for formatting, file ops, and navigation
+     * Handles Tab/Shift+Tab for list indentation and Enter for smart lists
+     *
+     * @param {KeyboardEvent} event - Keyboard event
+     * @returns {void}
+     * @example
+     * document.addEventListener('keydown', handleShortcut);
      */
     const handleShortcut = (event) => {
         const key = event.key.toLowerCase();
@@ -660,7 +704,13 @@
     };
 
     /**
-     * Recompute find bar offset
+     * Recompute find bar offset based on toolbar height
+     * Updates CSS custom property for proper find bar positioning
+     * Called on window resize and initialization
+     *
+     * @returns {void}
+     * @example
+     * recomputeFindBarOffset(); // Updates find bar position
      */
     const recomputeFindBarOffset = () => {
         const toolbarEl = document.querySelector('.toolbar-section');
@@ -672,7 +722,13 @@
     };
 
     /**
-     * Open cheat sheet window with all commands and shortcuts
+     * Open cheat sheet window with all commands and keyboard shortcuts
+     * Creates a new window with comprehensive documentation of all features
+     * Uses Blob URL to avoid popup blockers
+     *
+     * @returns {void}
+     * @example
+     * openCheatSheet(); // Opens help window
      */
     const openCheatSheet = () => {
         // Use Blob URL approach for cleaner HTML

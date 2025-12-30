@@ -9,7 +9,19 @@
     const { elements, utils, history, state } = MarkdownEditor;
 
     /**
-     * Replace the current textarea selection while optionally restoring a custom selection range
+     * Replace the current textarea selection while preserving scroll position
+     * Core formatting function used by all text manipulation operations
+     * Handles history, preview updates, autosave, and scroll position preservation
+     *
+     * @param {string} text - Text to insert at selection
+     * @param {number|{start: number, end: number}} [selectionRange] - New selection position
+     *   If number: cursor position relative to insertion start
+     *   If object: {start, end} positions relative to insertion start
+     * @returns {void}
+     *
+     * @example
+     * replaceSelection('**bold**', 8); // Inserts and places cursor after
+     * replaceSelection('text', {start: 0, end: 4}); // Inserts and selects all
      */
     const replaceSelection = (text, selectionRange) => {
         if (!elements.editor) {
@@ -97,7 +109,17 @@
     };
 
     /**
-     * Detect formatting at cursor position
+     * Detect active formatting at cursor position or selection
+     * Checks for bold, italic, headers, lists, code blocks, tables, etc.
+     * Used to update toolbar button states
+     *
+     * @returns {Object} Object with boolean properties for each format type
+     *   Properties: bold, italic, underline, strikethrough, code, blockquote, hr,
+     *   h1-h6, ul, ol, checkbox, codeBlock, table, footnote
+     *
+     * @example
+     * const fmt = detectFormatting();
+     * if (fmt.bold) console.log('Cursor is in bold text');
      */
     const detectFormatting = () => {
         if (!elements.editor) {
@@ -378,7 +400,14 @@
     };
 
     /**
-     * Update toolbar button states based on detected formatting
+     * Update toolbar button states based on detected formatting at cursor
+     * Adds/removes 'active' class and sets aria-pressed attributes
+     * Called on selection change, keyup, and mouseup events
+     *
+     * @returns {void}
+     *
+     * @example
+     * updateToolbarStates(); // Updates all toolbar button states
      */
     const updateToolbarStates = () => {
         if (!elements.toolbar) {
@@ -567,7 +596,17 @@
     };
 
     /**
-     * Apply inline formatting (bold, italic, strikethrough, code)
+     * Apply or remove inline formatting (bold, italic, underline, strikethrough, code)
+     * Toggles formatting if already applied, wraps selection or word at cursor
+     *
+     * @param {string} prefix - Opening marker (e.g., '**' for bold)
+     * @param {string} suffix - Closing marker (e.g., '**' for bold)
+     * @returns {void}
+     *
+     * @example
+     * applyInlineFormat('**', '**'); // Toggle bold
+     * applyInlineFormat('*', '*'); // Toggle italic
+     * applyInlineFormat('`', '`'); // Toggle inline code
      */
     const applyInlineFormat = (prefix, suffix) => {
         const { start, end, value } = utils.getSelection();
@@ -832,7 +871,15 @@
     };
 
     /**
-     * Apply heading formatting
+     * Apply or toggle heading formatting to selected lines
+     * Toggles heading if already at same level, preserves list markers
+     *
+     * @param {number} level - Heading level (1-6)
+     * @returns {void}
+     *
+     * @example
+     * applyHeading(1); // Ctrl+1 - Apply H1
+     * applyHeading(2); // Ctrl+2 - Apply H2
      */
     const applyHeading = (level) => {
         if (!elements.editor) {
@@ -994,7 +1041,13 @@
     };
 
     /**
-     * Apply blockquote formatting
+     * Apply or remove blockquote formatting to selected lines
+     * Toggles blockquote markers (>) on all selected lines
+     *
+     * @returns {void}
+     *
+     * @example
+     * applyBlockquote(); // Adds or removes '> ' prefix
      */
     const applyBlockquote = () => {
         if (!elements.editor) {
@@ -1133,7 +1186,16 @@
     };
 
     /**
-     * Toggle bullet/numbered list markers
+     * Toggle bullet or numbered list markers on selected lines
+     * Adds or removes list markers, smart numbering for ordered lists
+     * Auto-renumbers ordered lists after modification
+     *
+     * @param {string} type - List type: 'ul' for unordered, 'ol' for ordered
+     * @returns {void}
+     *
+     * @example
+     * toggleList('ul'); // Ctrl+Shift+8 - Toggle bullet list
+     * toggleList('ol'); // Ctrl+Shift+7 - Toggle numbered list
      */
     const toggleList = (type) => {
         if (!elements.editor) {
@@ -1442,9 +1504,14 @@
     };
 
     /**
-     * Toggle checkbox list markers
-     * If cursor is on a checkbox line, toggle its state
-     * Otherwise, add/remove checkbox markers from selected lines
+     * Toggle checkbox list markers on selected lines
+     * If cursor is on checkbox line, toggles its state ([ ] <-> [x])
+     * Otherwise, adds or removes checkbox markers from selected lines
+     *
+     * @returns {void}
+     *
+     * @example
+     * toggleCheckboxList(); // Adds/removes task list checkboxes
      */
     const toggleCheckboxList = () => {
         if (!elements.editor) {
@@ -1635,7 +1702,14 @@
     };
 
     /**
-     * Apply code block formatting
+     * Apply or remove code block formatting (fenced with ```)
+     * Wraps selection in triple backticks, prompts for language if needed
+     * Removes code block if cursor is inside one
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await applyCodeBlock(); // Wraps in ```language...```
      */
     const applyCodeBlock = async () => {
         if (!elements.editor) {
@@ -1720,6 +1794,13 @@
 
     /**
      * Indent list items (add 2 spaces of indentation)
+     * Increases nesting level for list items, handles Tab key in lists
+     * Auto-renumbers ordered lists after indentation
+     *
+     * @returns {void}
+     *
+     * @example
+     * indentListItem(); // Tab - increases indent
      */
     const indentListItem = () => {
         if (!elements.editor) {
@@ -1853,7 +1934,14 @@
     };
 
     /**
-     * Renumber ordered list items starting from a given line
+     * Renumber ordered list items starting from cursor position
+     * Ensures sequential numbering (1. 2. 3. etc.) for ordered lists
+     * Handles nested lists with different indentation levels
+     *
+     * @returns {void}
+     *
+     * @example
+     * renumberOrderedList(); // Fixes numbering in current list
      */
     const renumberOrderedList = () => {
         if (!elements.editor) {
@@ -2064,9 +2152,13 @@
 
     /**
      * Handle Enter key in lists for smart continuation
-     * Returns true if handled, false otherwise
+     * Auto-continues lists, creates new items, or exits list on double-enter
+     * Handles bullet lists, numbered lists, and task lists
      *
-     * FIX: Improved cursor position detection and content splitting for better reliability
+     * @returns {boolean} True if Enter was handled (list context), false otherwise
+     *
+     * @example
+     * handleEnterInList(); // Called on Enter keypress in editor
      */
     const handleEnterInList = () => {
         if (!elements.editor) {

@@ -9,7 +9,15 @@
     const { elements, constants, state, utils } = MarkdownEditor;
 
     /**
-     * Get a snapshot of the current editor state
+     * Get a snapshot of the current editor state for history tracking
+     * Captures editor content, selection position, and scroll position
+     *
+     * @returns {{value: string, selectionStart: number, selectionEnd: number, scrollTop: number}|null}
+     *   Snapshot object or null if editor is not available
+     *
+     * @example
+     * const snapshot = getEditorSnapshot();
+     * // Later restore with applyEditorSnapshot(snapshot)
      */
     const getEditorSnapshot = () => {
         if (!elements.editor) {
@@ -24,7 +32,16 @@
     };
 
     /**
-     * Apply a snapshot to the editor
+     * Apply a saved snapshot to restore editor state
+     * Restores content, selection, scroll position, and updates preview/counters
+     * Sets isApplyingHistory flag to prevent recording this change in history
+     *
+     * @param {{value: string, selectionStart: number, selectionEnd: number, scrollTop: number}} snapshot
+     *   Snapshot object from getEditorSnapshot()
+     * @returns {void}
+     *
+     * @example
+     * applyEditorSnapshot(previousSnapshot); // Restores to previous state
      */
     const applyEditorSnapshot = (snapshot) => {
         if (!snapshot || !elements.editor) {
@@ -57,7 +74,15 @@
     };
 
     /**
-     * Push current state to history stack
+     * Push current editor state to history stack for undo capability
+     * Avoids duplicate consecutive snapshots and enforces history limit
+     * Clears redo stack when new changes are made
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Called after user makes a change
+     * pushHistory(); // Saves current state for undo
      */
     const pushHistory = () => {
         if (state.isApplyingHistory) {
@@ -89,7 +114,14 @@
     };
 
     /**
-     * Push history with debounce
+     * Push history with debounce to avoid excessive snapshots during typing
+     * Waits for HISTORY_DEBOUNCE milliseconds (300ms) of inactivity before saving
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Called on every keystroke
+     * pushHistoryDebounced(); // Only saves after 300ms pause
      */
     const pushHistoryDebounced = () => {
         if (state.isApplyingHistory) {
@@ -101,7 +133,14 @@
     };
 
     /**
-     * Undo last change
+     * Undo the last change by restoring previous editor state
+     * Moves current state to redo stack and applies previous state from history stack
+     * Updates toolbar states and recalculates find matches if active
+     *
+     * @returns {void}
+     *
+     * @example
+     * undo(); // Ctrl+Z - restores previous state
      */
     const undo = () => {
         if (state.historyStack.length === 0) {
@@ -127,7 +166,14 @@
     };
 
     /**
-     * Redo last undone change
+     * Redo the last undone change by restoring next editor state
+     * Moves current state back to history stack and applies next state from redo stack
+     * Updates toolbar states and recalculates find matches if active
+     *
+     * @returns {void}
+     *
+     * @example
+     * redo(); // Ctrl+Y or Ctrl+Shift+Z - restores undone state
      */
     const redo = () => {
         if (state.futureStack.length === 0) {
@@ -153,7 +199,15 @@
     };
 
     /**
-     * Initialize history with current editor state
+     * Initialize history system with current editor state as baseline
+     * Creates initial snapshot and clears redo stack
+     * Should be called when opening a file or starting new document
+     *
+     * @returns {void}
+     *
+     * @example
+     * // After loading a file
+     * initHistory(); // Sets baseline for undo/redo
      */
     const initHistory = () => {
         const snap = getEditorSnapshot();

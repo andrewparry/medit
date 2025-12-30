@@ -9,7 +9,15 @@
     const { elements, state } = MarkdownEditor;
 
     /**
-     * Toggle checkbox in markdown source based on line number
+     * Toggle checkbox state in markdown source based on line number
+     * Called when user clicks a checkbox in the preview pane
+     * Finds the checkbox on the specified line and toggles between [ ] and [x]
+     *
+     * @param {number} lineNumber - 1-based line number where checkbox is located
+     * @returns {void}
+     *
+     * @example
+     * toggleCheckboxByLine(5); // Toggles checkbox on line 5
      */
     const toggleCheckboxByLine = (lineNumber) => {
         if (!elements.editor || !MarkdownEditor.formatting) {
@@ -44,7 +52,15 @@
     };
 
     /**
-     * Update preview with current markdown content
+     * Update preview pane with rendered markdown content
+     * Parses markdown, sanitizes HTML, applies syntax highlighting, and adds copy buttons
+     * Makes checkboxes in preview clickable to toggle state in source
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Called after editor content changes
+     * updatePreview(); // Re-renders preview
      */
     const updatePreview = () => {
         if (!elements.editor || !elements.preview) {
@@ -138,7 +154,14 @@
     };
 
     /**
-     * Toggle preview visibility
+     * Toggle preview pane visibility
+     * Shows/hides preview pane, adjusts resize handle, and persists preference
+     * Triggers window resize event to update layout
+     *
+     * @returns {void}
+     *
+     * @example
+     * togglePreview(); // Ctrl+Shift+P - shows/hides preview
      */
     const togglePreview = () => {
         if (!elements.togglePreviewButton || !elements.editorContainer) {
@@ -185,7 +208,14 @@
     };
 
     /**
-     * Initialize preview state from localStorage
+     * Initialize preview state from localStorage on startup
+     * Restores preview visibility preference from previous session
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Called during initialization
+     * initializePreviewState(); // Restores preview visibility
      */
     const initializePreviewState = () => {
         if (window.localStorage) {

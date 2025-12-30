@@ -9,7 +9,15 @@
     const { elements, constants, state } = MarkdownEditor;
 
     /**
-     * Schedule autosave operation
+     * Schedule autosave operation to save editor content to localStorage
+     * Saves after AUTOSAVE_INTERVAL (1500ms) delay, canceling any pending save
+     * Handles quota exceeded errors with user dialog options
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Called after user types
+     * scheduleAutosave(); // Will save after 1.5 seconds
      */
     const scheduleAutosave = () => {
         if (!window.localStorage || state.autosaveDisabled) {
@@ -99,7 +107,14 @@
     };
 
     /**
-     * Persist theme preference to localStorage
+     * Persist theme preference (dark/light) to localStorage
+     * Allows theme to be restored on next session
+     *
+     * @param {boolean} isDark - True for dark theme, false for light theme
+     * @returns {void}
+     *
+     * @example
+     * persistThemePreference(true); // Save dark theme preference
      */
     const persistThemePreference = (isDark) => {
         if (!window.localStorage) {
@@ -114,6 +129,13 @@
 
     /**
      * Clear autosave draft from localStorage
+     * Removes both content and filename from storage
+     * Called when starting new document or after successful save
+     *
+     * @returns {void}
+     *
+     * @example
+     * clearAutosaveDraft(); // Removes draft from localStorage
      */
     const clearAutosaveDraft = () => {
         if (!window.localStorage) {
@@ -128,7 +150,15 @@
     };
 
     /**
-     * Clear all autosave data
+     * Clear all autosave data from localStorage
+     * Removes content and filename, used when storage quota is exceeded
+     *
+     * @returns {boolean} True if successful, false if error occurred
+     *
+     * @example
+     * if (clearAllAutosaveData()) {
+     *   console.log('Autosave data cleared');
+     * }
      */
     const clearAllAutosaveData = () => {
         if (!window.localStorage) {
@@ -145,7 +175,14 @@
     };
 
     /**
-     * Disable autosave
+     * Disable autosave functionality
+     * Sets disabled flag, persists to localStorage, and cancels pending saves
+     * User can re-enable manually if desired
+     *
+     * @returns {void}
+     *
+     * @example
+     * disableAutosave(); // Turns off autosave permanently
      */
     const disableAutosave = () => {
         state.autosaveDisabled = true;
@@ -164,7 +201,13 @@
     };
 
     /**
-     * Enable autosave
+     * Enable autosave functionality
+     * Clears disabled flag and removes from localStorage
+     *
+     * @returns {void}
+     *
+     * @example
+     * enableAutosave(); // Re-enables autosave
      */
     const enableAutosave = () => {
         state.autosaveDisabled = false;
@@ -181,7 +224,14 @@
     };
 
     /**
-     * Check autosave status from localStorage
+     * Check autosave status from localStorage on startup
+     * Restores disabled state if user previously disabled autosave
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Called during initialization
+     * checkAutosaveStatus(); // Restores user preference
      */
     const checkAutosaveStatus = () => {
         if (!window.localStorage) {
@@ -201,7 +251,15 @@
     };
 
     /**
-     * Restore autosaved content
+     * Restore autosaved content from localStorage on startup
+     * Loads both content and filename if available
+     * Only restores non-empty content to avoid overwriting with blank state
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Called during initialization
+     * restoreAutosave(); // Recovers unsaved work
      */
     const restoreAutosave = () => {
         if (!window.localStorage) {

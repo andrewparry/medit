@@ -9,12 +9,28 @@
     const { elements } = MarkdownEditor;
 
     /**
-     * Normalize whitespace in text
+     * Normalize whitespace in text by collapsing multiple spaces into single spaces
+     * Useful for word counting and text processing
+     *
+     * @param {string} text - Text to normalize
+     * @returns {string} Text with normalized whitespace (single spaces, trimmed)
+     *
+     * @example
+     * normalizeWhitespace("hello  world\n\nthere") // "hello world there"
      */
     const normalizeWhitespace = (text) => text.replace(/\s+/g, ' ').trim();
 
     /**
-     * Strip markdown formatting from text
+     * Strip markdown formatting from text to get plain text content
+     * Removes all markdown syntax including code blocks, links, formatting, headers, etc.
+     * Used primarily for word counting and character counting
+     *
+     * @param {string} markdown - Markdown text to strip
+     * @returns {string} Plain text with all markdown syntax removed
+     *
+     * @example
+     * stripMarkdown("# Hello **world**") // "Hello world"
+     * stripMarkdown("[link](url)") // "link"
      */
     const stripMarkdown = (markdown) => {
         if (!markdown || typeof markdown !== 'string') {
@@ -42,7 +58,15 @@
     };
 
     /**
-     * Update word and character counters
+     * Update word and character counter displays in the UI
+     * Strips markdown formatting and counts words/characters in plain text
+     * Updates the wordCountDisplay and charCountDisplay elements
+     *
+     * @returns {void}
+     *
+     * @example
+     * // Called after editor content changes
+     * updateCounters(); // Updates "150 words / 892 characters"
      */
     const updateCounters = () => {
         if (!elements.editor) {
@@ -64,7 +88,15 @@
     };
 
     /**
-     * Get line offsets for multi-line operations
+     * Calculate character offsets for each line in a multi-line text
+     * Returns an array where each index corresponds to the starting character position of that line
+     * Used for cursor position calculations during formatting operations
+     *
+     * @param {Array<string>} lines - Array of text lines (from text.split('\n'))
+     * @returns {Array<number>} Array of character offsets for each line start position
+     *
+     * @example
+     * getLineOffsets(["hello", "world"]) // [0, 6] (line 0 at pos 0, line 1 at pos 6)
      */
     const getLineOffsets = (lines) => {
         const offsets = [];
@@ -80,7 +112,17 @@
     };
 
     /**
-     * Get current selection from editor
+     * Get current selection information from the editor textarea
+     * Returns selection start/end positions and the full editor value
+     *
+     * @returns {{start: number, end: number, value: string}} Selection object with:
+     *   - start: Selection start position (character index)
+     *   - end: Selection end position (character index)
+     *   - value: Full editor content
+     *
+     * @example
+     * const {start, end, value} = getSelection();
+     * const selectedText = value.slice(start, end);
      */
     const getSelection = () => {
         if (!elements.editor) {
@@ -94,7 +136,17 @@
     };
 
     /**
-     * Set selection range in editor
+     * Set selection range in editor while preserving scroll position
+     * Focuses the editor and sets the selection, then restores scroll position
+     * Uses requestAnimationFrame to ensure scroll position is maintained across browser reflows
+     *
+     * @param {number} start - Selection start position (character index)
+     * @param {number} end - Selection end position (character index)
+     * @returns {void}
+     *
+     * @example
+     * setSelection(0, 5); // Select first 5 characters
+     * setSelection(10, 10); // Place cursor at position 10
      */
     const setSelection = (start, end) => {
         if (!elements.editor) {
@@ -127,7 +179,15 @@
     };
 
     /**
-     * Handle filename editing
+     * Enable inline editing of the filename display
+     * Makes the filename contentEditable, focuses it, and selects all text
+     * Stores the original name for potential cancellation
+     *
+     * @returns {void}
+     *
+     * @example
+     * // User clicks on filename display
+     * handleFilenameEdit(); // Filename becomes editable
      */
     const handleFilenameEdit = () => {
         if (!elements.fileNameDisplay) {
@@ -145,7 +205,16 @@
     };
 
     /**
-     * Finalize filename editing
+     * Finalize filename editing and save the new name
+     * Trims whitespace, ensures filename is not empty (defaults to "Untitled.md")
+     * Disables contentEditable and triggers autosave
+     * Called on blur or when user presses Enter
+     *
+     * @returns {void}
+     *
+     * @example
+     * // User finishes editing filename
+     * finalizeFilename(); // Saves and locks filename
      */
     const finalizeFilename = () => {
         if (!elements.fileNameDisplay) {
@@ -164,14 +233,32 @@
     };
 
     /**
-     * Escape HTML special characters
+     * Escape HTML special characters to prevent XSS and ensure proper display
+     * Converts &, <, and > to their HTML entity equivalents
+     *
+     * @param {string} s - String to escape
+     * @returns {string} HTML-safe string with special characters escaped
+     *
+     * @example
+     * escapeHtml("<script>alert('xss')</script>") // "&lt;script&gt;alert('xss')&lt;/script&gt;"
      */
     const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     /**
      * Check if a string is a valid URL
-     * Supports http://, https://, ftp://, and common protocols
-     * Also supports URLs without protocol (e.g., www.example.com, example.com)
+     * Supports URLs with protocols (http://, https://, ftp://, etc.)
+     * Also supports URLs without protocol (www.example.com, example.com)
+     * Validates localhost and IP addresses
+     *
+     * @param {string} text - Text to validate as URL
+     * @returns {boolean} True if text is a valid URL, false otherwise
+     *
+     * @example
+     * isValidUrl("https://example.com") // true
+     * isValidUrl("www.example.com") // true
+     * isValidUrl("example.com") // true
+     * isValidUrl("not a url") // false
+     * isValidUrl("localhost:3000") // true
      */
     const isValidUrl = (text) => {
         if (!text || typeof text !== 'string') {

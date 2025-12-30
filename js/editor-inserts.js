@@ -9,7 +9,14 @@
     const { elements, utils, dialogs, formatting } = MarkdownEditor;
 
     /**
-     * Insert a link
+     * Insert a markdown link at cursor position
+     * Shows dialog to get link text and URL, validates URL format
+     * Prevents insertion inside code blocks
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await insertLink(); // Ctrl+K - shows link dialog
      */
     const insertLink = async () => {
         const { start, end, value } = utils.getSelection();
@@ -109,7 +116,13 @@
     };
 
     /**
-     * Insert an image
+     * Insert a markdown image at cursor position
+     * Shows dialog to get alt text and image URL
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await insertImage(); // Shows image dialog
      */
     const insertImage = async () => {
         const result = await dialogs.multiPromptDialog(
@@ -148,7 +161,14 @@
     };
 
     /**
-     * Insert a horizontal rule (or remove it if cursor is on one - toggle behavior)
+     * Insert or remove a horizontal rule (toggle behavior)
+     * If cursor is on an HR line (---, ***, ___), removes it
+     * Otherwise, inserts a new horizontal rule with proper spacing
+     *
+     * @returns {void}
+     *
+     * @example
+     * insertHorizontalRule(); // Inserts or removes HR
      */
     const insertHorizontalRule = () => {
         if (!elements.editor) {
@@ -238,7 +258,14 @@
     };
 
     /**
-     * Insert a footnote (or remove if cursor is on a footnote reference)
+     * Insert or remove a footnote (toggle behavior)
+     * If cursor is on footnote reference, removes it and definition (if no other refs)
+     * Otherwise, shows dialog to create new footnote with identifier and text
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await insertFootnote(); // Inserts or removes footnote
      */
     const insertFootnote = async () => {
         if (!elements.editor) {
@@ -479,7 +506,14 @@
     };
 
     /**
-     * Insert a table
+     * Insert a markdown table at cursor position
+     * Shows dialog to configure rows, columns, and header row
+     * Prevents insertion inside code blocks
+     *
+     * @returns {Promise<void>}
+     *
+     * @example
+     * await insertTable(); // Shows table configuration dialog
      */
     const insertTable = async () => {
         if (!elements.editor || !elements.autosaveStatus) {

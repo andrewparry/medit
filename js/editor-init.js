@@ -27,8 +27,8 @@
         if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
             MarkdownEditor.formatting.updateToolbarStates();
         }
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = 'Saving draft...';
+        if (MarkdownEditor.statusManager) {
+            MarkdownEditor.statusManager.showOperation('Saving draft...');
         }
         if (MarkdownEditor.stateManager) {
             MarkdownEditor.stateManager.markDirty(
@@ -140,14 +140,8 @@
                     MarkdownEditor.formatting.replaceSelection(linkMarkdown, linkMarkdown.length);
 
                     // Show brief status message
-                    if (elements.autosaveStatus) {
-                        const originalStatus = elements.autosaveStatus.textContent;
-                        elements.autosaveStatus.textContent = 'Link created';
-                        setTimeout(() => {
-                            if (elements.autosaveStatus) {
-                                elements.autosaveStatus.textContent = originalStatus;
-                            }
-                        }, 2000);
+                    if (MarkdownEditor.statusManager) {
+                        MarkdownEditor.statusManager.showInfo('Link created');
                     }
                 }
                 // If not a URL, allow default paste behavior
@@ -270,8 +264,8 @@
                 event.key === MarkdownEditor.constants.AUTOSAVE_KEY &&
                 event.newValue !== elements.editor.value
             ) {
-                if (elements.autosaveStatus) {
-                    elements.autosaveStatus.textContent = 'Remote change detected';
+                if (MarkdownEditor.statusManager) {
+                    MarkdownEditor.statusManager.showWarning('Remote change detected');
                 }
             }
         });
@@ -472,10 +466,12 @@
 
         // Set status bar message.
         // If we successfully reconnected to an on-disk file, reflect that subtly.
-        if (elements.autosaveStatus && !MarkdownEditor.state.autosaveDisabled) {
-            elements.autosaveStatus.textContent = restoredDiskHandleName
+        if (MarkdownEditor.statusManager && !MarkdownEditor.state.autosaveDisabled) {
+            const message = restoredDiskHandleName
                 ? `Ready (disk: ${restoredDiskHandleName})`
                 : 'Ready';
+            MarkdownEditor.statusManager.setDefaultMessage(message);
+            MarkdownEditor.statusManager.showReady();
         }
 
         // Initialize history

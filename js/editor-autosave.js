@@ -32,8 +32,8 @@
                     constants.AUTOSAVE_FILENAME_KEY,
                     elements.fileNameDisplay.textContent.trim()
                 );
-                if (elements.autosaveStatus) {
-                    elements.autosaveStatus.textContent = 'Draft saved';
+                if (MarkdownEditor.statusManager) {
+                    MarkdownEditor.statusManager.showSuccess('Draft saved');
                 }
                 state.quotaExceededShown = false;
             } catch (error) {
@@ -45,8 +45,10 @@
                     error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
                     error.code === 22
                 ) {
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = 'Storage full - autosave unavailable';
+                    if (MarkdownEditor.statusManager) {
+                        MarkdownEditor.statusManager.showWarning(
+                            'Storage full - autosave unavailable'
+                        );
                     }
 
                     // Show dialog with options
@@ -64,42 +66,46 @@
                                         constants.AUTOSAVE_FILENAME_KEY,
                                         elements.fileNameDisplay.textContent.trim()
                                     );
-                                    if (elements.autosaveStatus) {
-                                        elements.autosaveStatus.textContent =
-                                            'Draft saved (cleared old data)';
+                                    if (MarkdownEditor.statusManager) {
+                                        MarkdownEditor.statusManager.showSuccess(
+                                            'Draft saved (cleared old data)'
+                                        );
                                     }
                                 } catch (retryError) {
                                     disableAutosave();
-                                    if (elements.autosaveStatus) {
-                                        elements.autosaveStatus.textContent =
-                                            'Autosave disabled - storage full';
+                                    if (MarkdownEditor.statusManager) {
+                                        MarkdownEditor.statusManager.showError(
+                                            'Autosave disabled - storage full'
+                                        );
                                     }
                                 }
                             } else {
                                 disableAutosave();
-                                if (elements.autosaveStatus) {
-                                    elements.autosaveStatus.textContent =
-                                        'Autosave disabled - unable to clear storage';
+                                if (MarkdownEditor.statusManager) {
+                                    MarkdownEditor.statusManager.showError(
+                                        'Autosave disabled - unable to clear storage'
+                                    );
                                 }
                             }
                             break;
                         case 'disable':
                             disableAutosave();
-                            if (elements.autosaveStatus) {
-                                elements.autosaveStatus.textContent = 'Autosave disabled';
+                            if (MarkdownEditor.statusManager) {
+                                MarkdownEditor.statusManager.showWarning('Autosave disabled');
                             }
                             break;
                         case 'ignore':
                         default:
-                            if (elements.autosaveStatus) {
-                                elements.autosaveStatus.textContent =
-                                    'Autosave unavailable - storage full';
+                            if (MarkdownEditor.statusManager) {
+                                MarkdownEditor.statusManager.showWarning(
+                                    'Autosave unavailable - storage full'
+                                );
                             }
                             break;
                     }
                 } else {
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = 'Autosave unavailable';
+                    if (MarkdownEditor.statusManager) {
+                        MarkdownEditor.statusManager.showWarning('Autosave unavailable');
                     }
                 }
             }
@@ -195,8 +201,11 @@
         }
         clearTimeout(state.autosaveTimer);
         state.autosaveTimer = null;
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = 'Autosave disabled';
+        if (MarkdownEditor.statusManager) {
+            MarkdownEditor.statusManager.showPersistent(
+                'Autosave disabled',
+                MarkdownEditor.statusManager.PRIORITY.WARNING
+            );
         }
     };
 
@@ -218,8 +227,8 @@
                 console.error('Failed to remove autosave disabled state', error);
             }
         }
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = 'Ready';
+        if (MarkdownEditor.statusManager) {
+            MarkdownEditor.statusManager.showReady();
         }
     };
 
@@ -241,8 +250,11 @@
             const disabled = localStorage.getItem(constants.AUTOSAVE_DISABLED_KEY);
             if (disabled === 'true') {
                 state.autosaveDisabled = true;
-                if (elements.autosaveStatus) {
-                    elements.autosaveStatus.textContent = 'Autosave disabled';
+                if (MarkdownEditor.statusManager) {
+                    MarkdownEditor.statusManager.showPersistent(
+                        'Autosave disabled',
+                        MarkdownEditor.statusManager.PRIORITY.WARNING
+                    );
                 }
             }
         } catch (error) {

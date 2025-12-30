@@ -8,7 +8,7 @@ This is a **pure client-side application** - no server required!
 
 ```bash
 # Option 1: Open directly in browser (simplest)
-open index.html
+open medit.html
 
 # Option 2: Use a local server (optional, for development)
 npx http-server -p 8080
@@ -16,7 +16,7 @@ npx http-server -p 8080
 python -m http.server 8080
 ```
 
-**Note:** The editor works perfectly by opening `index.html` directly. A local server is only needed if you want to test service workers or other features that require a server context.
+**Note:** The editor works perfectly by opening `medit.html` directly. A local server is only needed if you want to test service workers or other features that require a server context.
 
 ### Running Tests
 
@@ -42,7 +42,7 @@ npm test -- --coverage
 
 ```
 mdedit/
-├── index.html              # Main HTML entry point
+├── medit.html              # Main HTML entry point
 ├── styles.css              # All styles (light/dark theme)
 ├── js/                     # Modular JavaScript architecture
 │   ├── editor-core.js     # Core editor orchestrator

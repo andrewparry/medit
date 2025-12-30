@@ -428,6 +428,11 @@
             MarkdownEditor.autosave.restoreAutosave();
         }
 
+        // Update document title to reflect restored filename
+        if (MarkdownEditor.utils && MarkdownEditor.utils.updateDocumentTitle) {
+            MarkdownEditor.utils.updateDocumentTitle();
+        }
+
         // Best-effort restoration of the last on-disk file handle (Chromium-only).
         // We DO NOT prompt on startup because permission prompts require user gesture.
         // If permission is already granted, this reconnects "Save" to the same file.

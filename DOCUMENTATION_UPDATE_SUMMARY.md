@@ -143,7 +143,7 @@ All documentation has been reviewed for:
 Users and developers now have:
 
 - Clear understanding that no server is required
-- Simplified installation process (just open index.html)
+- Simplified installation process (just open medit.html)
 - Better understanding of the architecture
 - Clear deployment options for static hosting
 - Confidence in the privacy-focused design

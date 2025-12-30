@@ -189,20 +189,6 @@
             elements.helpButton.addEventListener('click', MarkdownEditor.ui.openCheatSheet);
         }
 
-        // Toolbar icon (version info)
-        if (elements.toolbarIconWrapper && MarkdownEditor.version) {
-            elements.toolbarIconWrapper.addEventListener(
-                'click',
-                MarkdownEditor.version.showVersionDialog
-            );
-            elements.toolbarIconWrapper.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    MarkdownEditor.version.showVersionDialog();
-                }
-            });
-        }
-
         // Filename editing
         if (elements.fileNameDisplay && MarkdownEditor.utils) {
             elements.fileNameDisplay.addEventListener(
@@ -369,7 +355,7 @@
     /**
      * Initialize the editor
      */
-    const initialize = async () => {
+    const initialize = () => {
         // Initialize DOM elements
         const elementsInitialized = MarkdownEditor.initElements();
         if (!elementsInitialized) {
@@ -401,27 +387,9 @@
                 console.error('Failed to restore HTML rendering preference', error);
             }
         }
-
-        // Check if a file path was passed via URL parameter (double-click workflow)
-        // If so, load that file instead of restoring autosave
-        let fileLoadedFromUrl = false;
-        console.log('[mdedit] Checking for URL file parameter...');
-        console.log('[mdedit] MarkdownEditor.fileOps available:', !!MarkdownEditor.fileOps);
-        console.log(
-            '[mdedit] loadFileFromUrlParam available:',
-            !!(MarkdownEditor.fileOps && MarkdownEditor.fileOps.loadFileFromUrlParam)
-        );
-        if (MarkdownEditor.fileOps && MarkdownEditor.fileOps.loadFileFromUrlParam) {
-            fileLoadedFromUrl = await MarkdownEditor.fileOps.loadFileFromUrlParam();
-            console.log('[mdedit] File loaded from URL:', fileLoadedFromUrl);
-        }
-
-        // Only restore autosave if we didn't load a file from URL
-        if (!fileLoadedFromUrl && MarkdownEditor.autosave) {
+        if (MarkdownEditor.autosave) {
             MarkdownEditor.autosave.checkAutosaveStatus();
             MarkdownEditor.autosave.restoreAutosave();
-        } else if (MarkdownEditor.autosave) {
-            MarkdownEditor.autosave.checkAutosaveStatus();
         }
         if (MarkdownEditor.syntaxHighlight) {
             MarkdownEditor.syntaxHighlight.initScrollSync();

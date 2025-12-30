@@ -103,6 +103,11 @@
             elements.fileNameDisplay.textContent = filename;
         }
 
+        // Update browser tab title
+        if (utils.updateDocumentTitle) {
+            utils.updateDocumentTitle();
+        }
+
         state.lastSavedContent = elements.editor.value;
 
         if (MarkdownEditor.stateManager) {
@@ -210,6 +215,12 @@
             elements.fileNameDisplay.contentEditable = 'false';
             delete elements.fileNameDisplay.dataset.originalName;
         }
+
+        // Update browser tab title
+        if (utils.updateDocumentTitle) {
+            utils.updateDocumentTitle();
+        }
+
         state.lastSavedContent = '';
         if (MarkdownEditor.stateManager) {
             MarkdownEditor.stateManager.markDirty(false);
@@ -473,6 +484,11 @@
         // Update filename display with the actual saved name
         if (elements.fileNameDisplay && fileHandle && fileHandle.name) {
             elements.fileNameDisplay.textContent = fileHandle.name;
+        }
+
+        // Update browser tab title
+        if (utils.updateDocumentTitle) {
+            utils.updateDocumentTitle();
         }
 
         state.lastSavedContent = content;

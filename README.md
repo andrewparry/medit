@@ -6,7 +6,7 @@
 [![GitHub release](https://img.shields.io/github/release/andrewparry/medit.svg)](https://github.com/andrewparry/medit/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-A fully functional browser-based markdown WYSIWYG (What You See Is What You Get) editor that allows users to create, edit, and save markdown files locally. The editor provides a seamless editing experience with real-time preview capabilities and local file management.
+A fully functional **client-side** markdown WYSIWYG (What You See Is What You Get) editor that runs entirely in your browser. Create, edit, and save markdown files locally with no server required. The editor provides a seamless editing experience with real-time preview capabilities and local file management using modern browser APIs.
 
 **✨ [Try it online](https://andrewparry.github.io/medit/) ✨**
 
@@ -14,8 +14,9 @@ A fully functional browser-based markdown WYSIWYG (What You See Is What You Get)
 
 - **WYSIWYG Editing**: Visual markdown editing with comprehensive formatting toolbar
 - **Real-time Preview**: Live preview pane showing rendered markdown with synchronized scrolling
-- **Local File Management**: Open and save markdown files directly to your computer
-- **Offline Functionality**: Works entirely in the browser without server connectivity
+- **Local File Management**: Open and save markdown files directly to your computer using File System Access API
+- **Pure Client-Side**: Works entirely in the browser - no server required, no data transmission
+- **Offline Functionality**: Full functionality without internet connectivity once loaded
 - **Keyboard Shortcuts**: Extensive keyboard shortcuts for all common operations (Ctrl+B, Ctrl+I, Ctrl+K, etc.)
 - **Accessibility Support**: Full keyboard navigation and screen reader support
 - **Responsive Design**: Works on desktop and mobile devices
@@ -62,6 +63,8 @@ The easiest way to start using the editor is to [try the online demo](https://an
 
 **Prerequisites:** A modern web browser (Chrome, Firefox, Safari, or Edge)
 
+**No server required!** This is a pure client-side application that runs entirely in your browser.
+
 1. **Clone or download the repository:**
 
     ```bash
@@ -70,40 +73,40 @@ The easiest way to start using the editor is to [try the online demo](https://an
     ```
 
 2. **Open the editor:**
-    - Simply open `index.html` in your web browser
-    - Or serve it using a local web server (recommended for development)
+    - Simply open `index.html` directly in your web browser
+    - Or double-click `index.html` in your file explorer
+    - That's it! No installation or server setup needed.
 
-### Using a Local Web Server (Recommended)
+### Using a Local Web Server (Optional - For Development)
 
-For the best experience, especially when developing or testing, serve the files using a local web server:
+While not required, you can optionally use a local web server during development:
 
-#### Option 1: Python (if you have Python installed)
+#### Option 1: Python (if installed)
 
 ```bash
 # Python 3
 python -m http.server 8000
-
-# Python 2
-python -m SimpleHTTPServer 8000
 ```
 
-#### Option 2: Node.js (if you have Node.js installed)
+#### Option 2: Node.js (if installed)
 
 ```bash
-# Install a simple HTTP server globally
+# Install http-server globally
 npm install -g http-server
 
 # Serve the files
-http-server
+http-server -p 8000
 ```
 
-#### Option 3: PHP (if you have PHP installed)
+#### Option 3: PHP (if installed)
 
 ```bash
 php -S localhost:8000
 ```
 
-Then open your browser and navigate to `http://localhost:8000`
+Then navigate to `http://localhost:8000`
+
+**Note:** A local server is only needed for development testing. End users can simply open `index.html` directly.
 
 ## Usage
 
@@ -308,12 +311,32 @@ The editor gracefully degrades for older browsers:
 
 ## File System Access
 
-The editor uses modern browser APIs for file operations:
+The editor uses modern browser APIs for file operations - **no server communication required**:
 
-1. **File System Access API** (Chrome 86+, Edge 86+): Direct file system access
+1. **File System Access API** (Chrome 86+, Edge 86+): Direct file system access for seamless open/save
 2. **Traditional File API** (All browsers): Fallback using file input and downloads
 
-Files are saved in standard markdown format (.md) and are compatible with any markdown editor or processor.
+All file operations happen **locally in your browser**. Files are saved in standard markdown format (.md) and are compatible with any markdown editor or processor.
+
+## 🚀 Deployment
+
+This is a **static web application** that can be deployed to any static hosting service:
+
+### GitHub Pages (Recommended)
+
+Already configured! Just push to the `main` branch and GitHub Actions will automatically deploy to GitHub Pages.
+
+### Other Static Hosting Options
+
+Deploy to any of these services with zero configuration:
+
+- **Netlify**: Drag and drop the project folder or connect your Git repository
+- **Vercel**: Connect your GitHub repository for automatic deployments
+- **Cloudflare Pages**: Fast global CDN with Git integration
+- **AWS S3 + CloudFront**: Enterprise-grade static hosting
+- **Any web server**: Simply upload the files to your web server's public directory
+
+**No build step required** - just serve the files as-is!
 
 ## Privacy and Security
 

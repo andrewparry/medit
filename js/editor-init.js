@@ -355,7 +355,7 @@
     /**
      * Initialize the editor
      */
-    const initialize = () => {
+    const initialize = async () => {
         // Initialize DOM elements
         const elementsInitialized = MarkdownEditor.initElements();
         if (!elementsInitialized) {

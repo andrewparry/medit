@@ -24,40 +24,44 @@
 ```
 🎉 Introducing Markdown Editor v1.0.0!
 
-A browser-based WYSIWYG markdown editor with:
+A pure client-side WYSIWYG markdown editor - no server required!
 ✨ Real-time preview
 🎨 Dark mode
-💾 Local file management
+💾 Local file management (File System Access API)
 ⌨️ Full keyboard shortcuts
 ♿ WCAG 2.1 AA compliant
+🔒 100% private - runs entirely in your browser
 
 Try it now → https://andrewparry.github.io/medit/
 
-#markdown #opensource #webdev #javascript
+#markdown #opensource #webdev #javascript #clientside
 ```
 
 ### Medium Version (Reddit, Hacker News)
 
 ```
-Show HN: Markdown Editor - Browser-based WYSIWYG editor with offline support
+Show HN: Markdown Editor - Pure client-side WYSIWYG editor with no backend
 
-I built a fully-featured markdown WYSIWYG editor that runs entirely in the browser with no server required.
+I built a fully-featured markdown WYSIWYG editor that runs entirely in the browser - no server, no backend, no data transmission.
 
 Key features:
+- Pure client-side - just open index.html in your browser
 - Real-time preview with synchronized scrolling
-- Syntax highlighting for code blocks (10+ languages)
-- Local file management using modern browser APIs
+- Syntax highlighting for code blocks (10+ languages via Prism.js)
+- Local file management using File System Access API (with fallbacks)
 - Auto-save to localStorage
 - Dark mode
 - Full keyboard navigation and screen reader support (WCAG 2.1 AA)
 - 340 comprehensive tests
 
-It's completely open source (MIT) and privacy-focused - no data leaves your browser.
+It's completely open source (MIT) and privacy-focused - all operations happen locally in your browser.
 
 Try it: https://andrewparry.github.io/medit/
 Source: https://github.com/andrewparry/medit
 
-Tech stack: Vanilla JavaScript, modular architecture, Prism.js for syntax highlighting.
+Tech stack: Vanilla JavaScript, modular architecture, File System Access API, Prism.js for syntax highlighting.
+
+Deploy anywhere - it's just static files!
 
 I'd love to hear your feedback!
 ```

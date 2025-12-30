@@ -76,10 +76,12 @@ Please include the following information in your report:
     - Data stays on your device
     - Clear browser data to remove saved content
 
-2. **No Server Communication**
-    - The editor works entirely offline
-    - No data is transmitted to external servers
+2. **Pure Client-Side - No Server Communication**
+    - The editor is 100% client-side - no backend required
+    - Works entirely offline once loaded
+    - No data is transmitted to any servers
     - No analytics or tracking is performed
+    - All file operations happen locally in your browser
 
 ### Known Security Measures
 

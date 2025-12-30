@@ -115,9 +115,9 @@ git push origin v1.0.0
 
 **General:**
 
-- Description: "A browser-based markdown WYSIWYG editor with real-time preview and offline support"
+- Description: "A pure client-side markdown WYSIWYG editor with real-time preview - no server required"
 - Website: https://andrewparry.github.io/medit/
-- Topics: `markdown`, `editor`, `wysiwyg`, `javascript`, `browser`, `offline`, `markdown-editor`, `text-editor`, `accessibility`
+- Topics: `markdown`, `editor`, `wysiwyg`, `javascript`, `client-side`, `static`, `offline`, `markdown-editor`, `text-editor`, `accessibility`, `file-system-access-api`, `no-backend`
 
 **Features:**
 

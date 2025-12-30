@@ -49,24 +49,31 @@ We actively welcome your pull requests:
 ### Prerequisites
 
 - A modern web browser (Chrome, Firefox, Safari, or Edge)
-- Node.js 14+ and npm (for running tests)
+- Node.js 14+ and npm (for running tests only)
 - Git
 
 ### Getting Started
+
+This is a **pure client-side application** - no server setup required!
 
 ```bash
 # Clone your fork
 git clone https://github.com/YOUR-USERNAME/medit.git
 cd medit
 
-# Install dependencies
+# Install dependencies (for testing only)
 npm install
 
-# Open the editor in your browser
-# Simply open index.html or use a local server:
+# Open the editor
+# Option 1: Simply open index.html in your browser (easiest)
+open index.html
+
+# Option 2: Use a local server (optional, for development)
 python -m http.server 8000
 # Then navigate to http://localhost:8000
 ```
+
+**Note:** The editor works by simply opening `index.html` - no build step or server required!
 
 ### Running Tests
 
@@ -111,11 +118,13 @@ const applyInlineFormat = (prefix, suffix, placeholder) => {
 
 ### Modular Architecture
 
-The codebase uses a modular IIFE pattern. Each module:
+The codebase uses a modular IIFE pattern for a **pure client-side architecture**:
 
-- Is self-contained in its own file
+- Each module is self-contained in its own file
 - Uses the `MarkdownEditor` namespace
 - Exposes only necessary public APIs
+- No server-side code - all operations happen in the browser
+- File operations use the File System Access API with fallbacks
 - Follows the existing pattern in `js/` directory
 
 ### File Organization

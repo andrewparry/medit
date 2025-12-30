@@ -1,18 +1,22 @@
 {
   "name": "markdown-wysiwyg-editor",
   "version": "1.0.0",
-  "description": "A browser-based markdown WYSIWYG editor with real-time preview, local file management, and offline functionality",
+  "description": "A pure client-side markdown WYSIWYG editor with real-time preview, local file management, and offline functionality. No server required - runs entirely in your browser using the File System Access API.",
   "main": "index.html",
   "keywords": [
     "markdown",
     "editor",
     "wysiwyg",
     "browser-based",
+    "client-side",
+    "static",
     "offline",
     "markdown-editor",
     "text-editor",
     "javascript",
-    "html5"
+    "html5",
+    "file-system-access-api",
+    "no-backend"
   ],
   "author": "Andrew Parry",
   "license": "MIT",
@@ -25,6 +29,7 @@
   },
   "homepage": "https://github.com/andrewparry/medit#readme",
   "scripts": {
+    "start": "npx http-server -p 8080 -c-1",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

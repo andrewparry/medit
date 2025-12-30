@@ -4,13 +4,19 @@
 
 ### Running the Editor
 
+This is a **pure client-side application** - no server required!
+
 ```bash
-# Open in browser
+# Option 1: Open directly in browser (simplest)
 open index.html
 
-# Or use a local server
+# Option 2: Use a local server (optional, for development)
 npx http-server -p 8080
+# or
+python -m http.server 8080
 ```
+
+**Note:** The editor works perfectly by opening `index.html` directly. A local server is only needed if you want to test service workers or other features that require a server context.
 
 ### Running Tests
 
@@ -35,16 +41,22 @@ npm test -- --coverage
 ### File Structure
 
 ```
-markdown-wysiwyg-editor/
-├── index.html              # Main HTML file
+mdedit/
+├── index.html              # Main HTML entry point
 ├── styles.css              # All styles (light/dark theme)
-├── js/
-│   ├── editor.js          # Core editor logic ⭐
+├── js/                     # Modular JavaScript architecture
+│   ├── editor-core.js     # Core editor orchestrator
+│   ├── editor-state.js    # State management
+│   ├── editor-file-ops.js # File operations (File System Access API)
+│   ├── editor-storage-fsa.js # File System Access API wrapper
 │   ├── marked-lite.js     # Markdown parser
-│   └── sanitizer.js       # HTML sanitizer
-├── test/                  # Test files
-└── coverage/              # Test coverage reports
+│   ├── sanitizer.js       # HTML sanitizer
+│   └── ...                # Other modules
+├── test/                   # Test files
+└── coverage/               # Test coverage reports
 ```
+
+**Architecture Note:** This is a pure client-side application. All file operations use the browser's File System Access API (with fallbacks for older browsers). No server-side code is required.
 
 ### Core Components
 
@@ -77,12 +89,14 @@ const state = {
 - `updateCounters()` - Updates word/character count
 - `stripMarkdown(markdown)` - Removes Markdown syntax
 
-**File Operations:**
+**File Operations (Client-Side Only):**
 
-- `saveFile()` - Downloads .md file
-- `loadFile()` - Opens file picker
-- `readFile(file)` - Reads selected file
-- `handleNewDocument()` - Creates new document
+- `saveFile()` - Saves file using File System Access API or fallback download
+- `loadFile()` - Opens file picker using browser APIs
+- `readFile(file)` - Reads selected file from local filesystem
+- `handleNewDocument()` - Creates new document in memory
+
+**Note:** All file operations happen in the browser using native APIs. No server communication occurs.
 
 **Persistence:**
 
@@ -487,33 +501,39 @@ const smoothUpdate = () => {
 
 ### Supported Browsers
 
-- ✅ Chrome 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Edge 90+
+- ✅ Chrome 86+ (Full File System Access API support)
+- ✅ Edge 86+ (Full File System Access API support)
+- ✅ Firefox 88+ (Fallback file operations)
+- ✅ Safari 14+ (Fallback file operations)
 
-### Required APIs
+### Required Browser APIs
 
-- `localStorage` - For persistence
-- `FileReader` - For file opening
-- `Blob` & `URL.createObjectURL` - For file saving
+**Core APIs:**
+
+- `localStorage` - For auto-save and state persistence
+- `FileReader` - For reading local files
+- `Blob` & `URL.createObjectURL` - For file downloads (fallback)
 - `textarea.setSelectionRange` - For cursor positioning
 
-### Fallbacks
+**Modern APIs (with fallbacks):**
+
+- `File System Access API` - For direct file system access (Chrome/Edge 86+)
+- Falls back to traditional file input/download for other browsers
+
+### Fallback Strategy
 
 ```javascript
-// Check localStorage availability
-if (!window.localStorage) {
-    console.warn('localStorage not available, autosave disabled');
-    return;
-}
-
-// Check File API
-if (!window.FileReader) {
-    console.warn('FileReader not available, file opening disabled');
-    return;
+// Check for File System Access API
+if ('showOpenFilePicker' in window) {
+    // Use modern File System Access API
+    await window.showOpenFilePicker();
+} else {
+    // Fall back to traditional file input
+    fileInput.click();
 }
 ```
+
+The editor gracefully degrades to ensure functionality across all modern browsers.
 
 ---
 

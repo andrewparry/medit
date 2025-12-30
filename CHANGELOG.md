@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Pure client-side architecture** - no server required, runs entirely in the browser
 - **Complete WYSIWYG markdown editor** with visual formatting toolbar
 - **Real-time preview** pane with synchronized scrolling
-- **Local file management** using File System Access API with fallbacks
-- **Offline functionality** - works entirely in browser without server
+- **Local file management** using File System Access API with fallbacks for older browsers
+- **Offline functionality** - full functionality without internet connectivity
 - **Comprehensive keyboard shortcuts** for all formatting operations
 - **Full accessibility support** with ARIA labels and keyboard navigation
 - **Responsive design** for desktop and mobile devices
@@ -75,8 +76,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - XSS protection via HTML sanitizer
 - Content validation for all user inputs
 - Proper escaping in preview rendering
-- No data transmission to external servers
-- Local-only storage
+- **100% client-side** - no data transmission to any servers
+- Local-only storage using browser APIs
+- Privacy-focused design - all operations happen in your browser
 
 ## [Unreleased]
 

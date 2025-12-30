@@ -12,12 +12,9 @@
     const supportsFileSystemAccess =
         'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
 
-    // Track file handles for File System Access API
-    let currentFileHandle = null;
-    let currentDirectoryHandle = null;
-
-    // Track server file path for files opened via server (double-click workflow)
-    let serverFilePath = null;
+    // File System Access API storage layer (Chromium-only disk editing)
+    // Centralizes handle management, permissions, and best-effort persistence.
+    const storageFSA = MarkdownEditor.storageFSA;
 
     // Constants
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -26,9 +23,18 @@
      * Reset file handles
      */
     const resetFileHandles = () => {
-        currentFileHandle = null;
-        currentDirectoryHandle = null;
-        serverFilePath = null;
+        // Clearing the active handle ensures subsequent "Save" triggers "Save As"
+        // unless the user opens a file again.
+        if (storageFSA && storageFSA.clearCurrentFileHandle) {
+            storageFSA.clearCurrentFileHandle();
+        }
+
+        // We also clear persisted state so a "New document" doesn't silently stay
+        // connected to a previous on-disk file after a reload.
+        if (storageFSA && storageFSA.persistCurrentFileHandle) {
+            // Best-effort; ignore failures (private mode / policy can block persistence).
+            storageFSA.persistCurrentFileHandle().catch(() => {});
+        }
     };
 
     /**
@@ -63,7 +69,16 @@
     };
 
     /**
-     * Load file content into editor (common logic for all file loading methods)
+     * Load file content into editor (common logic for all file loading methods).
+     *
+     * This function is intentionally side-effectful:
+     * - Updates editor value
+     * - Refreshes preview, counters, toolbar state
+     * - Resets history baseline
+     * - Clears find/replace state
+     *
+     * Keeping this centralized reduces "partially updated UI" bugs when multiple
+     * open workflows exist (picker, drag-drop, etc.).
      */
     const loadFileContent = (content, filename) => {
         elements.editor.value = content;
@@ -126,91 +141,6 @@
             elements.toggleFindButton.setAttribute('aria-pressed', 'false');
             elements.toggleFindButton.classList.remove('active');
         }
-    };
-
-    /**
-     * Load file from URL parameter (for server-based file opening)
-     * Called when the page is loaded with ?path=/path/to/file.md
-     */
-    const loadFileFromUrlParam = async () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const filePath = urlParams.get('path');
-
-        // Debug: log URL info
-        console.log('[mdedit] URL search:', window.location.search);
-        console.log('[mdedit] File path from URL:', filePath);
-
-        if (!filePath) {
-            return false;
-        }
-
-        try {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Loading file...';
-            }
-
-            // Fetch file content from server
-            const response = await fetch(`/file?path=${encodeURIComponent(filePath)}`);
-
-            if (!response.ok) {
-                throw new Error(`Failed to load file: ${response.statusText}`);
-            }
-
-            const content = await response.text();
-
-            // Extract filename from path
-            const filename = filePath.split('/').pop() || 'Untitled.md';
-
-            // Store the server file path for saving back
-            serverFilePath = filePath;
-            console.log('[mdedit] Server file path set to:', serverFilePath);
-
-            // Reset file handles since this is a server-loaded file
-            currentFileHandle = null;
-            currentDirectoryHandle = null;
-
-            // Load the content into the editor
-            loadFileContent(content, filename);
-
-            // Clear the URL parameter without refreshing the page
-            // This prevents reloading the file if the user refreshes
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, '', newUrl);
-
-            return true;
-        } catch (error) {
-            console.error('Failed to load file from URL:', error);
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Failed to load file';
-            }
-            await dialogs.alertDialog(
-                `Unable to load the file: ${error.message}`,
-                'Error Loading File'
-            );
-            return false;
-        }
-    };
-
-    /**
-     * Save file via server POST endpoint
-     * Used when file was opened via server (double-click workflow)
-     */
-    const saveFileViaServer = async (content, filePath) => {
-        const response = await fetch(`/file?path=${encodeURIComponent(filePath)}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain; charset=utf-8'
-            },
-            body: content
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Server error: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        return { success: true, path: result.path };
     };
 
     /**
@@ -350,44 +280,42 @@
         setButtonLoading(elements.openButton, true);
 
         try {
-            // Try File System Access API first if available
-            if (supportsFileSystemAccess) {
+            // Chromium-only preferred path: File System Access API.
+            // We still keep a graceful fallback to the hidden file input if the picker is
+            // unavailable (older Chromium, policies) or if the user denies.
+            if (supportsFileSystemAccess && storageFSA && storageFSA.pickOpenFileHandle) {
                 try {
-                    const [fileHandle] = await window.showOpenFilePicker({
-                        types: [
-                            {
-                                description: 'Markdown files',
-                                accept: {
-                                    'text/markdown': ['.md', '.markdown']
-                                }
-                            }
-                        ],
-                        multiple: false
-                    });
-
+                    const fileHandle = await storageFSA.pickOpenFileHandle();
                     const file = await fileHandle.getFile();
-                    currentFileHandle = fileHandle;
 
-                    // Get the directory handle for future saves
-                    try {
-                        currentDirectoryHandle = await fileHandle.getParent();
-                    } catch (e) {
-                        // Parent directory might not be accessible in all cases
-                        // This is expected in some browsers/environments
-                    }
-
-                    await readFileFromHandle(file);
-                    return;
-                } catch (error) {
-                    if (error.name === 'AbortError') {
+                    // UI-first validation so we can show the exact dialog users expect.
+                    if (!(await validateFile(file))) {
                         return;
                     }
-                    // Fall back to traditional file input if File System Access API fails
-                    // This handles permission errors or unsupported browsers
+
+                    // Read content and update editor.
+                    const content = await file.text();
+
+                    // Establish "Save" target and persist best-effort for next session.
+                    if (storageFSA.setCurrentFileHandle) {
+                        storageFSA.setCurrentFileHandle(fileHandle);
+                    }
+                    if (storageFSA.persistCurrentFileHandle) {
+                        storageFSA.persistCurrentFileHandle().catch(() => {});
+                    }
+
+                    loadFileContent(content, file.name);
+                    return;
+                } catch (error) {
+                    // AbortError is the expected "user cancelled picker" outcome.
+                    if (error && error.name === 'AbortError') {
+                        return;
+                    }
+                    // Otherwise fall back (some enterprise policies block the API).
                 }
             }
 
-            // Fall back to traditional file input
+            // Fallback: standard file input (cannot write back to disk in-place).
             elements.fileInput.click();
         } finally {
             setButtonLoading(elements.openButton, false);
@@ -476,105 +404,54 @@
     /**
      * Determine save options for File System Access API
      */
-    const determineSaveOptions = async (normalizedName, isTrulyNewFile) => {
-        const saveOptions = {
-            suggestedName: normalizedName,
-            types: [
-                {
-                    description: 'Markdown files',
-                    accept: {
-                        'text/markdown': ['.md']
-                    }
-                }
-            ]
-        };
-
-        // Set default directory:
-        // - For truly new files (never opened): use downloads folder
-        // - For files that were opened (have file handle): use the directory where it was opened from
-        if (isTrulyNewFile) {
-            // New file: default to downloads folder
-            saveOptions.startIn = 'downloads';
-        } else {
-            // We have a file handle (file was opened) - try to get directory
-            let directoryHandle = currentDirectoryHandle;
-
-            // If we don't have a directory handle stored, try to get it from the file handle
-            if (!directoryHandle && currentFileHandle) {
-                try {
-                    directoryHandle = await currentFileHandle.getParent();
-                    currentDirectoryHandle = directoryHandle; // Cache it for next time
-                } catch (e) {
-                    // Parent directory might not be accessible in all cases
-                    // This is expected in some browsers/environments
-                }
-            }
-
-            // Use the directory handle if we have it
-            if (directoryHandle) {
-                saveOptions.startIn = directoryHandle;
-            }
-            // If we still don't have a directory handle, don't set startIn
-            // Browser will default to last location (which might be Downloads)
-            // This can happen if file was opened via traditional file input
-        }
-
-        return saveOptions;
-    };
-
     /**
      * Save file using File System Access API
      */
     const saveFileWithFileSystemAccess = async (content, normalizedName) => {
-        let fileHandle = currentFileHandle;
-        const isTrulyNewFile = !currentFileHandle;
+        if (!storageFSA) {
+            throw new Error('File System Access storage is not initialized.');
+        }
 
-        // Compare names case-insensitively and ignore .md extension differences
-        const currentFileName = currentFileHandle ? currentFileHandle.name.toLowerCase() : '';
-        const normalizedFileName = normalizedName.toLowerCase();
-        const nameMatches =
-            currentFileHandle &&
-            (currentFileName === normalizedFileName ||
-                currentFileName.replace(/\.md$/, '') === normalizedFileName.replace(/\.md$/, ''));
+        // Current handle determines whether we can "Save" without prompting.
+        let fileHandle =
+            typeof storageFSA.getCurrentFileHandle === 'function'
+                ? storageFSA.getCurrentFileHandle()
+                : null;
 
-        // If we have a file handle and the name matches, save directly (no dialog - avoids permission text)
+        // If the display name matches the handle name, we treat this as a plain Save.
+        // If it differs, we treat it as Save As (since renaming via DOM does not rename files on disk).
+        const handleName = fileHandle && typeof fileHandle.name === 'string' ? fileHandle.name : '';
+        const nameMatches = fileHandle && handleName.toLowerCase() === normalizedName.toLowerCase();
+
         if (fileHandle && nameMatches) {
-            const writable = await fileHandle.createWritable();
-            await writable.write(content);
-            await writable.close();
+            await storageFSA.writeTextToHandle(fileHandle, content);
+        } else {
+            // New file or user changed the displayed name -> Save As.
+            // `startIn`:
+            // - For new files: default to downloads to avoid surprising folder choices.
+            // - For existing files: omit and let Chromium pick the most recent location.
+            const isTrulyNewFile = !fileHandle;
+            const startIn = isTrulyNewFile ? 'downloads' : undefined;
 
-            state.lastSavedContent = content;
-            if (MarkdownEditor.stateManager) {
-                MarkdownEditor.stateManager.markDirty(false);
+            fileHandle = await storageFSA.pickSaveFileHandle({
+                suggestedName: normalizedName,
+                startIn
+            });
+
+            if (storageFSA.setCurrentFileHandle) {
+                storageFSA.setCurrentFileHandle(fileHandle);
             }
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = `Saved ${normalizedName}`;
-            }
-            if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
-                MarkdownEditor.autosave.scheduleAutosave();
-            }
-            return { success: true, filename: normalizedName };
+
+            await storageFSA.writeTextToHandle(fileHandle, content);
         }
 
-        // Show save dialog for new files or when name changed
-        const saveOptions = await determineSaveOptions(normalizedName, isTrulyNewFile);
-        fileHandle = await window.showSaveFilePicker(saveOptions);
-        currentFileHandle = fileHandle;
-
-        // Update directory handle if we can get it
-        try {
-            currentDirectoryHandle = await fileHandle.getParent();
-        } catch (e) {
-            // Parent directory might not be accessible in all cases
-            // This is expected in some browsers/environments
+        // Best-effort persistence so next session can reconnect without repicking.
+        if (storageFSA.persistCurrentFileHandle) {
+            storageFSA.persistCurrentFileHandle().catch(() => {});
         }
-
-        const writable = await fileHandle.createWritable();
-        await writable.write(content);
-        await writable.close();
 
         // Update filename display with the actual saved name
-        if (elements.fileNameDisplay) {
+        if (elements.fileNameDisplay && fileHandle && fileHandle.name) {
             elements.fileNameDisplay.textContent = fileHandle.name;
         }
 
@@ -583,13 +460,13 @@
             MarkdownEditor.stateManager.markDirty(false);
         }
         if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = `Saved ${fileHandle.name}`;
+            elements.autosaveStatus.textContent = `Saved ${elements.fileNameDisplay.textContent.trim()}`;
         }
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
         }
 
-        return { success: true, filename: fileHandle.name };
+        return { success: true, filename: elements.fileNameDisplay.textContent.trim() };
     };
 
     /**
@@ -649,37 +526,6 @@
 
             let filename = elements.fileNameDisplay.textContent.trim();
             const content = elements.editor.value;
-
-            // Debug: log save info
-            console.log('[mdedit] Saving - serverFilePath:', serverFilePath);
-
-            // If we have a server file path, save directly to the original location
-            if (serverFilePath) {
-                try {
-                    console.log('[mdedit] Attempting server save to:', serverFilePath);
-                    await saveFileViaServer(content, serverFilePath);
-
-                    state.lastSavedContent = content;
-                    if (MarkdownEditor.stateManager) {
-                        MarkdownEditor.stateManager.markDirty(false);
-                    }
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = `Saved ${filename}`;
-                    }
-                    if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
-                        MarkdownEditor.autosave.scheduleAutosave();
-                    }
-                    return true;
-                } catch (error) {
-                    console.error('[mdedit] Server save failed:', error);
-                    console.error('[mdedit] Error details:', error.message);
-                    // Fall through to other save methods
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent =
-                            'Server save failed, trying local save...';
-                    }
-                }
-            }
 
             // Prompt for filename if it's untitled
             if (!filename || filename === 'Untitled.md') {
@@ -1081,7 +927,6 @@ if (window.Prism) {
         resetEditorState,
         handleNewDocument,
         loadFile,
-        loadFileFromUrlParam,
         readFile,
         saveFile,
         exportToHtml,

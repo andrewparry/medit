@@ -42,8 +42,8 @@
     const toggleDarkMode = () => {
         const isDark = !document.body.classList.contains('theme-dark');
         applyTheme(isDark);
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = isDark ? 'Dark mode on' : 'Dark mode off';
+        if (MarkdownEditor.statusManager) {
+            MarkdownEditor.statusManager.showInfo(isDark ? 'Dark mode on' : 'Dark mode off');
         }
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.persistThemePreference) {
             MarkdownEditor.autosave.persistThemePreference(isDark);
@@ -73,15 +73,10 @@
             : 'Enable HTML rendering (Ctrl+Shift+H)';
 
         // Update status message
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = isEnabled
-                ? 'HTML rendering enabled'
-                : 'HTML rendering disabled';
-            setTimeout(() => {
-                if (elements.autosaveStatus && !MarkdownEditor.state.dirty) {
-                    elements.autosaveStatus.textContent = 'Draft saved';
-                }
-            }, 2000);
+        if (MarkdownEditor.statusManager) {
+            MarkdownEditor.statusManager.showInfo(
+                isEnabled ? 'HTML rendering enabled' : 'HTML rendering disabled'
+            );
         }
 
         // Persist preference

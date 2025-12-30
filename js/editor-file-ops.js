@@ -51,8 +51,8 @@
     const validateFile = async (file) => {
         // Validate file extension
         if (!/\.(md|markdown)$/i.test(file.name)) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Only Markdown files can be opened';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showError('Only Markdown files can be opened');
             }
             await dialogs.alertDialog(
                 'Please choose a Markdown (.md or .markdown) file.',
@@ -63,8 +63,8 @@
 
         // Validate file size
         if (file.size > MAX_FILE_SIZE) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'File too large';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showError('File too large');
             }
             await dialogs.alertDialog(
                 `File size exceeds 10MB limit. Selected file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`,
@@ -109,8 +109,8 @@
             MarkdownEditor.stateManager.markDirty(false);
         }
 
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = `Opened ${filename}`;
+        if (MarkdownEditor.statusManager) {
+            MarkdownEditor.statusManager.showSuccess(`Opened ${filename}`);
         }
 
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
@@ -214,8 +214,8 @@
         if (MarkdownEditor.stateManager) {
             MarkdownEditor.stateManager.markDirty(false);
         }
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = 'Ready';
+        if (MarkdownEditor.statusManager) {
+            MarkdownEditor.statusManager.showReady();
         }
         utils.setSelection(0, 0);
 
@@ -352,15 +352,15 @@
         }
 
         try {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Opening file...';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showOperation('Opening file...');
             }
 
             const content = await file.text();
             loadFileContent(content, file.name);
         } catch (error) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Failed to open file';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showError('Failed to open file');
             }
             await dialogs.alertDialog(
                 'Unable to read the selected file. The file may be corrupted or inaccessible.',
@@ -381,8 +381,8 @@
         setButtonLoading(elements.openButton, true);
 
         try {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Opening file...';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showOperation('Opening file...');
             }
 
             // Reset file handles for traditional file input
@@ -398,8 +398,8 @@
 
             loadFileContent(content, file.name);
         } catch (error) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Failed to open file';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showError('Failed to open file');
             }
             await dialogs.alertDialog(
                 'Unable to read the selected file. The file may be corrupted or inaccessible.',
@@ -479,8 +479,10 @@
         if (MarkdownEditor.stateManager) {
             MarkdownEditor.stateManager.markDirty(false);
         }
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = `Saved ${elements.fileNameDisplay.textContent.trim()}`;
+        if (MarkdownEditor.statusManager) {
+            MarkdownEditor.statusManager.showSuccess(
+                `Saved ${elements.fileNameDisplay.textContent.trim()}`
+            );
         }
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
@@ -510,8 +512,8 @@
         if (MarkdownEditor.stateManager) {
             MarkdownEditor.stateManager.markDirty(false);
         }
-        if (elements.autosaveStatus) {
-            elements.autosaveStatus.textContent = `Saved ${normalizedName}`;
+        if (MarkdownEditor.statusManager) {
+            MarkdownEditor.statusManager.showSuccess(`Saved ${normalizedName}`);
         }
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
@@ -537,8 +539,8 @@
         // Check if there are unsaved changes - if not, do nothing
         const hasUnsavedChanges = elements.editor.value !== state.lastSavedContent;
         if (!hasUnsavedChanges) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'No changes to save';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showInfo('No changes to save');
             }
             return false;
         }
@@ -546,8 +548,8 @@
         setButtonLoading(elements.saveButton, true);
 
         try {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Saving...';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showOperation('Saving...');
             }
 
             let filename = elements.fileNameDisplay.textContent.trim();
@@ -562,8 +564,8 @@
                     'Save File'
                 );
                 if (response === null) {
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = 'Save cancelled';
+                    if (MarkdownEditor.statusManager) {
+                        MarkdownEditor.statusManager.showInfo('Save cancelled');
                     }
                     return false;
                 }
@@ -582,8 +584,8 @@
                     return true;
                 } catch (error) {
                     if (error.name === 'AbortError') {
-                        if (elements.autosaveStatus) {
-                            elements.autosaveStatus.textContent = 'Save cancelled';
+                        if (MarkdownEditor.statusManager) {
+                            MarkdownEditor.statusManager.showInfo('Save cancelled');
                         }
                         return false;
                     }
@@ -596,8 +598,8 @@
             await saveFileWithTraditionalMethod(content, normalizedName);
             return true;
         } catch (error) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Save failed';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showError('Save failed');
             }
             await dialogs.alertDialog(
                 'An error occurred while saving the file. Please try again.',
@@ -724,8 +726,8 @@ if (window.Prism) {
                 URL.revokeObjectURL(url);
             }, 100);
         } catch (error) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Export failed';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showError('Export failed');
             }
             await dialogs.alertDialog(
                 'An error occurred while exporting to HTML. Please try again.',
@@ -768,8 +770,8 @@ if (window.Prism) {
                 URL.revokeObjectURL(url);
             }, 100);
         } catch (error) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Export failed';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showError('Export failed');
             }
             await dialogs.alertDialog(
                 'An error occurred while exporting to plain text. Please try again.',
@@ -901,8 +903,8 @@ if (window.Prism) {
                 }, 100);
             }, 500);
         } catch (error) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Export failed';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showError('Export failed');
             }
             await dialogs.alertDialog(
                 'An error occurred while exporting to PDF. Please try again.',
@@ -924,40 +926,40 @@ if (window.Prism) {
         const exportFormat = await dialogs.showExportDialog();
 
         if (!exportFormat) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Export cancelled';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showInfo('Export cancelled');
             }
             return;
         }
 
         try {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Exporting...';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showOperation('Exporting...');
             }
 
             switch (exportFormat) {
                 case 'html':
                     await exportToHtml();
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = 'Exported as HTML';
+                    if (MarkdownEditor.statusManager) {
+                        MarkdownEditor.statusManager.showSuccess('Exported as HTML');
                     }
                     break;
                 case 'pdf':
                     await exportToPdf();
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = 'Opening PDF export...';
+                    if (MarkdownEditor.statusManager) {
+                        MarkdownEditor.statusManager.showSuccess('Opening PDF export...');
                     }
                     break;
                 case 'txt':
                     await exportToPlainText();
-                    if (elements.autosaveStatus) {
-                        elements.autosaveStatus.textContent = 'Exported as plain text';
+                    if (MarkdownEditor.statusManager) {
+                        MarkdownEditor.statusManager.showSuccess('Exported as plain text');
                     }
                     break;
             }
         } catch (error) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Export failed';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showError('Export failed');
             }
             await dialogs.alertDialog(
                 'An error occurred while exporting the document. Please try again.',

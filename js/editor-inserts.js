@@ -27,8 +27,8 @@
         const isInsideCodeBlock = codeFenceCount % 2 !== 0;
 
         if (isInsideCodeBlock) {
-            if (elements.autosaveStatus) {
-                elements.autosaveStatus.textContent = 'Cannot insert link inside code block';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showWarning('Cannot insert link inside code block');
             }
             await dialogs.alertDialog(
                 'Links cannot be inserted inside code blocks.',
@@ -528,7 +528,9 @@
         const backticksBefore = (before.match(/```/g) || []).length;
         const isInsideCodeBlock = backticksBefore % 2 !== 0;
         if (isInsideCodeBlock) {
-            elements.autosaveStatus.textContent = 'Cannot insert table inside code block';
+            if (MarkdownEditor.statusManager) {
+                MarkdownEditor.statusManager.showWarning('Cannot insert table inside code block');
+            }
             await dialogs.alertDialog(
                 'Tables cannot be inserted inside code blocks.',
                 'Insert Table'

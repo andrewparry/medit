@@ -179,6 +179,10 @@
 
         // Dark mode toggle
         if (elements.darkModeToggle && MarkdownEditor.ui) {
+            // Use mousedown with preventDefault to prevent button from stealing focus
+            elements.darkModeToggle.addEventListener('mousedown', (e) => {
+                e.preventDefault(); // Prevent focus change
+            });
             elements.darkModeToggle.addEventListener('click', MarkdownEditor.ui.toggleDarkMode);
         }
 

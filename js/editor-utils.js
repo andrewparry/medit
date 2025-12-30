@@ -226,6 +226,9 @@
         elements.fileNameDisplay.contentEditable = 'false';
         delete elements.fileNameDisplay.dataset.originalName;
 
+        // Update browser tab title
+        updateDocumentTitle();
+
         // Trigger autosave if available
         if (MarkdownEditor.autosave && MarkdownEditor.autosave.scheduleAutosave) {
             MarkdownEditor.autosave.scheduleAutosave();
@@ -319,6 +322,32 @@
         return false;
     };
 
+    /**
+     * Update the browser tab title based on the current filename
+     * Shows "Markdown Editor" for untitled documents
+     * Shows just the filename for named documents
+     *
+     * @returns {void}
+     *
+     * @example
+     * updateDocumentTitle(); // Updates tab to "my-doc.md"
+     */
+    const updateDocumentTitle = () => {
+        if (!elements.fileNameDisplay) {
+            return;
+        }
+
+        const filename = elements.fileNameDisplay.textContent.trim();
+
+        // Show just "Markdown Editor" for untitled documents
+        if (!filename || filename === 'Untitled.md') {
+            document.title = 'Markdown Editor';
+        } else {
+            // Show just the filename for named documents
+            document.title = filename;
+        }
+    };
+
     // Expose public API
     MarkdownEditor.utils = {
         normalizeWhitespace,
@@ -330,7 +359,8 @@
         handleFilenameEdit,
         finalizeFilename,
         escapeHtml,
-        isValidUrl
+        isValidUrl,
+        updateDocumentTitle
     };
 
     window.MarkdownEditor = MarkdownEditor;

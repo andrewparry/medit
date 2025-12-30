@@ -201,6 +201,21 @@
             elements.helpButton.addEventListener('click', MarkdownEditor.ui.openCheatSheet);
         }
 
+        // Toolbar icon (version info)
+        if (elements.toolbarIconWrapper && MarkdownEditor.version) {
+            elements.toolbarIconWrapper.addEventListener(
+                'click',
+                MarkdownEditor.version.showVersionInfo
+            );
+            // Also support keyboard activation
+            elements.toolbarIconWrapper.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    MarkdownEditor.version.showVersionInfo();
+                }
+            });
+        }
+
         // Filename editing
         if (elements.fileNameDisplay && MarkdownEditor.utils) {
             elements.fileNameDisplay.addEventListener(

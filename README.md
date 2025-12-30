@@ -466,7 +466,13 @@ For issues, questions, or contributions:
 
 If you find this project useful, please consider giving it a star on GitHub!
 
-[![Star History Chart](https://api.star-history.com/svg?repos=andrewparry/medit&type=Date)](https://star-history.com/#andrewparry/medit&Date)
+<a href="https://star-history.com/#andrewparry/medit&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=andrewparry/medit&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=andrewparry/medit&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=andrewparry/medit&type=Date" />
+ </picture>
+</a>
 
 ## 🙏 Acknowledgments
 

@@ -387,9 +387,33 @@
                 console.error('Failed to restore HTML rendering preference', error);
             }
         }
+
+        // Restore autosave draft (localStorage) on startup.
+        // This is intentionally independent from on-disk handles:
+        // - The draft protects against crashes/refreshes even if disk permission is lost.
+        // - Disk handles are restored best-effort below (without prompting).
         if (MarkdownEditor.autosave) {
             MarkdownEditor.autosave.checkAutosaveStatus();
             MarkdownEditor.autosave.restoreAutosave();
+        }
+
+        // Best-effort restoration of the last on-disk file handle (Chromium-only).
+        // We DO NOT prompt on startup because permission prompts require user gesture.
+        // If permission is already granted, this reconnects "Save" to the same file.
+        let restoredDiskHandleName = null;
+        if (
+            MarkdownEditor.storageFSA &&
+            typeof MarkdownEditor.storageFSA.restorePersistedFileHandle === 'function'
+        ) {
+            try {
+                const handle = await MarkdownEditor.storageFSA.restorePersistedFileHandle({
+                    mode: 'readwrite',
+                    allowPrompt: false
+                });
+                restoredDiskHandleName = handle && handle.name ? handle.name : null;
+            } catch {
+                restoredDiskHandleName = null;
+            }
         }
         if (MarkdownEditor.syntaxHighlight) {
             MarkdownEditor.syntaxHighlight.initScrollSync();
@@ -413,9 +437,12 @@
             MarkdownEditor.syntaxHighlight.updateRawHighlights();
         }
 
-        // Set autosave status
+        // Set status bar message.
+        // If we successfully reconnected to an on-disk file, reflect that subtly.
         if (elements.autosaveStatus && !MarkdownEditor.state.autosaveDisabled) {
-            elements.autosaveStatus.textContent = 'Ready';
+            elements.autosaveStatus.textContent = restoredDiskHandleName
+                ? `Ready (disk: ${restoredDiskHandleName})`
+                : 'Ready';
         }
 
         // Initialize history

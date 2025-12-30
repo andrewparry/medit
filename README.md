@@ -73,8 +73,8 @@ The easiest way to start using the editor is to [try the online demo](https://an
     ```
 
 2. **Open the editor:**
-    - Simply open `index.html` directly in your web browser
-    - Or double-click `index.html` in your file explorer
+    - Simply open `medit.html` directly in your web browser
+    - Or double-click `medit.html` in your file explorer
     - That's it! No installation or server setup needed.
 
 ### Using a Local Web Server (Optional - For Development)
@@ -106,7 +106,7 @@ php -S localhost:8000
 
 Then navigate to `http://localhost:8000`
 
-**Note:** A local server is only needed for development testing. End users can simply open `index.html` directly.
+**Note:** A local server is only needed for development testing. End users can simply open `medit.html` directly.
 
 ## Usage
 
@@ -226,7 +226,7 @@ npm run test:coverage
 
 ```
 mdedit/
-├── index.html                    # Main HTML file
+├── medit.html                    # Main HTML file
 ├── styles.css                    # CSS styles and themes (light/dark)
 ├── js/                           # Modular JavaScript architecture
 │   ├── editor-core.js           # Core editor orchestrator

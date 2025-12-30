@@ -65,15 +65,15 @@ cd medit
 npm install
 
 # Open the editor
-# Option 1: Simply open index.html in your browser (easiest)
-open index.html
+# Option 1: Simply open medit.html in your browser (easiest)
+open medit.html
 
 # Option 2: Use a local server (optional, for development)
 python -m http.server 8000
 # Then navigate to http://localhost:8000
 ```
 
-**Note:** The editor works by simply opening `index.html` - no build step or server required!
+**Note:** The editor works by simply opening `medit.html` - no build step or server required!
 
 ### Running Tests
 

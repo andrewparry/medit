@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-This is a pure client-side application. Simply open `index.html` in your browser and follow these test scenarios. No server setup required!
+This is a pure client-side application. Simply open `medit.html` in your browser and follow these test scenarios. No server setup required!
 
 ## Test Scenario 1: Bold Highlighted Text ✅
 

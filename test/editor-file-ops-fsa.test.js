@@ -134,7 +134,7 @@ describe('editor-file-ops (File System Access integration)', () => {
             }
         };
 
-        // Load the storage module first (index.html does this in production).
+        // Load the storage module first (medit.html does this in production).
         // eslint-disable-next-line global-require
         require('../js/editor-storage-fsa.js');
         // Then load file-ops, which reads MarkdownEditor.storageFSA at module init.

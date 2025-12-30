@@ -2,7 +2,7 @@
   "name": "markdown-wysiwyg-editor",
   "version": "1.1.0",
   "description": "A pure client-side markdown WYSIWYG editor with real-time preview, local file management, and offline functionality. No server required - runs entirely in your browser using the File System Access API.",
-  "main": "index.html",
+  "main": "medit.html",
   "keywords": [
     "markdown",
     "editor",

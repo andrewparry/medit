@@ -45,7 +45,7 @@ Show HN: Markdown Editor - Pure client-side WYSIWYG editor with no backend
 I built a fully-featured markdown WYSIWYG editor that runs entirely in the browser - no server, no backend, no data transmission.
 
 Key features:
-- Pure client-side - just open index.html in your browser
+- Pure client-side - just open medit.html in your browser
 - Real-time preview with synchronized scrolling
 - Syntax highlighting for code blocks (10+ languages via Prism.js)
 - Local file management using File System Access API (with fallbacks)

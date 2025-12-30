@@ -177,7 +177,7 @@ Tested the following scenarios successfully:
 ## Files Modified
 
 1. **New file**: `js/editor-status.js` - Centralized status manager
-2. **Modified**: `index.html` - Added script tag for new module
+2. **Modified**: `medit.html` - Added script tag for new module
 3. **Modified**: `js/editor-init.js` - Updated 4 status message locations
 4. **Modified**: `js/editor-autosave.js` - Updated 10 status message locations
 5. **Modified**: `js/editor-file-ops.js` - Updated 25 status message locations

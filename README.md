@@ -8,7 +8,7 @@
 
 A fully functional **client-side** markdown WYSIWYG (What You See Is What You Get) editor that runs entirely in your browser. Create, edit, and save markdown files locally with no server required. The editor provides a seamless editing experience with real-time preview capabilities and local file management using modern browser APIs.
 
-**✨ [Try it online](https://andrewparry.github.io/medit/) ✨**
+**✨ [Try it online](https://andrewparry.github.io/medit/medit.html) ✨**
 
 ## Features
 

@@ -41,8 +41,8 @@
 - [x] Manual testing completed
 - [ ] Accessibility review completed and evidence linked
 - [x] Browser compatibility tested
-- [x] Security audit completed
-- [x] Performance audit completed
+- [ ] Current security audit reviewed and any accepted risk documented
+- [ ] Performance validation reviewed and evidence linked
 - [ ] Validation evidence linked from CI runs, issues, or release notes
 
 ## Release Steps

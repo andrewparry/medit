@@ -151,7 +151,7 @@ Create a detailed blog post covering:
 4. **Challenges & Solutions**
     - File System Access API implementation
     - Test coverage for browser-only code
-    - Accessibility compliance
+    - Accessibility approach and current validation evidence
 
 5. **What's Next**
     - Future roadmap

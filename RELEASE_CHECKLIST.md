@@ -29,7 +29,7 @@
 - [x] GitHub Actions workflows configured (CI, Lint, Pages)
 - [x] Dependabot configured
 - [ ] GitHub repository settings configured:
-    - [ ] Enable GitHub Pages (Settings > Pages > Source: main branch)
+    - [ ] Enable GitHub Pages with GitHub Actions artifact deployment
     - [ ] Enable Discussions (Settings > General > Features)
     - [ ] Add repository description
     - [ ] Add repository topics/tags
@@ -136,7 +136,7 @@ git push origin v1.1.0
 
 **Pages:**
 
-- Source: Deploy from main branch
+- Source: GitHub Actions artifact deployment
 - Custom domain: (optional)
 
 **Branch Protection (main branch):**

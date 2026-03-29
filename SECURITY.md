@@ -6,7 +6,7 @@ We release patches for security vulnerabilities. Which versions are eligible for
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
+| 1.1.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
@@ -78,7 +78,7 @@ Please include the following information in your report:
 
 2. **Pure Client-Side - No Server Communication**
     - The editor is 100% client-side - no backend required
-    - Works entirely offline once loaded
+    - Core editing works locally once the app and any external assets are loaded
     - No data is transmitted to any servers
     - No analytics or tracking is performed
     - All file operations happen locally in your browser
@@ -112,7 +112,7 @@ When a security vulnerability is reported:
 
 ## Security Updates
 
-Security updates will be released as patch versions (e.g., 1.0.1) and will be clearly marked in:
+Security updates will be released as patch versions (e.g., 1.1.1) and will be clearly marked in:
 
 - GitHub Releases
 - CHANGELOG.md

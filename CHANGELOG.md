@@ -5,15 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2024-11-05
+## [1.1.0] - 2025-12-30
 
 ### Added
 
 - **Pure client-side architecture** - no server required, runs entirely in the browser
-- **Complete WYSIWYG markdown editor** with visual formatting toolbar
+- **Markdown editor with live preview** and visual formatting toolbar
 - **Real-time preview** pane with synchronized scrolling
 - **Local file management** using File System Access API with fallbacks for older browsers
-- **Offline functionality** - full functionality without internet connectivity
+- **Offline editing** - core editing works locally after the app and its external assets are loaded
 - **Comprehensive keyboard shortcuts** for all formatting operations
 - **Full accessibility support** with ARIA labels and keyboard navigation
 - **Responsive design** for desktop and mobile devices
@@ -39,8 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Status bar** with filename, word count, character count, and auto-save status
 - **Filename editing** by clicking on status bar
 - **Modular architecture** with 16 separate JavaScript modules
-- **Comprehensive test suite** with 340 passing tests
-- **Test coverage** for core functionality, formatting, file operations, accessibility, and performance
+- **Automated test, lint, and formatting workflows** for contributor validation
 
 ### Fixed
 
@@ -96,6 +95,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-- **1.0.0** - Initial public release with full feature set
+- **1.1.0** - Documentation and release-truth alignment update
 
-[1.0.0]: https://github.com/andrewparry/medit/releases/tag/v1.0.0
+[1.1.0]: https://github.com/andrewparry/medit/releases/tag/v1.1.0

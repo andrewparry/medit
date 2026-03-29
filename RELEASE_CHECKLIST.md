@@ -1,12 +1,12 @@
-# Release Checklist for v1.0.0
+# Release Checklist for v1.1.0
 
 ## Pre-Release Verification
 
 ### Code Quality
 
-- [x] All tests passing (340 tests)
+- [x] All documented validation commands pass in a clean clone
 - [x] No linter errors
-- [x] No security vulnerabilities (npm audit clean)
+- [ ] Review current `npm audit` output and document any accepted dev-only risk
 - [x] Code formatted with Prettier
 - [x] All documentation up to date
 
@@ -39,11 +39,11 @@
 ### Testing & Quality
 
 - [x] Manual testing completed
-- [x] Accessibility audit completed (WCAG 2.1 AA)
+- [ ] Accessibility review completed and evidence linked
 - [x] Browser compatibility tested
 - [x] Security audit completed
 - [x] Performance audit completed
-- [x] Audit report created (AUDIT_REPORT.md)
+- [ ] Validation evidence linked from CI runs, issues, or release notes
 
 ## Release Steps
 
@@ -71,17 +71,17 @@ git checkout main
 git pull origin main
 
 # Create annotated tag
-git tag -a v1.0.0 -m "Release v1.0.0 - Initial public release"
+git tag -a v1.1.0 -m "Release v1.1.0"
 
 # Push tag to GitHub
-git push origin v1.0.0
+git push origin v1.1.0
 ```
 
 ### 3. Create GitHub Release
 
 1. Go to https://github.com/andrewparry/medit/releases/new
-2. Select tag: v1.0.0
-3. Release title: "v1.0.0 - Initial Public Release"
+2. Select tag: v1.1.0
+3. Release title: "v1.1.0"
 4. Use content from `.github/RELEASE_TEMPLATE.md`
 5. Attach source code archives (auto-generated)
 6. Check "Set as the latest release"
@@ -92,7 +92,7 @@ git push origin v1.0.0
 ```bash
 # GitHub Actions will auto-deploy, or manually:
 # Ensure GitHub Pages is enabled in repository settings
-# Source: main branch, / (root)
+# Source: GitHub Actions artifact
 ```
 
 ### 5. Verify Deployment
@@ -115,7 +115,7 @@ git push origin v1.0.0
 
 **General:**
 
-- Description: "A pure client-side markdown WYSIWYG editor with real-time preview - no server required"
+- Description: "A pure client-side markdown editor with live preview - no server required"
 - Website: https://andrewparry.github.io/medit/
 - Topics: `markdown`, `editor`, `wysiwyg`, `javascript`, `client-side`, `static`, `offline`, `markdown-editor`, `text-editor`, `accessibility`, `file-system-access-api`, `no-backend`
 
@@ -180,7 +180,7 @@ Create the following labels:
 
 - [ ] Review and triage all issues
 - [ ] Merge approved pull requests
-- [ ] Plan next minor release (v1.1.0)
+- [ ] Plan next minor release
 - [ ] Update roadmap based on feedback
 - [ ] Write retrospective blog post
 
@@ -217,7 +217,7 @@ If critical issues are discovered:
 2. Document the issue in a GitHub issue
 3. Pin the issue to repository
 4. Create hotfix branch
-5. Release v1.0.1 with fix ASAP
+5. Release a patch version with fix ASAP
 6. Update release notes
 
 ## Notes
@@ -231,5 +231,5 @@ If critical issues are discovered:
 ---
 
 **Prepared by**: Comprehensive review and planning
-**Date**: November 5, 2024
-**Status**: Ready for v1.0.0 launch
+**Date**: December 30, 2025
+**Status**: Template updated for truthful release checks

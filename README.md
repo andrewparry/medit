@@ -6,17 +6,17 @@
 [![GitHub release](https://img.shields.io/github/release/andrewparry/medit.svg)](https://github.com/andrewparry/medit/releases)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-A fully functional **client-side** markdown WYSIWYG (What You See Is What You Get) editor that runs entirely in your browser. Create, edit, and save markdown files locally with no server required. The editor provides a seamless editing experience with real-time preview capabilities and local file management using modern browser APIs.
+A fully functional **client-side** markdown editor with live preview that runs entirely in your browser. Create, edit, and save markdown files locally with no server required. The editor provides a seamless editing experience with real-time preview capabilities and local file management using modern browser APIs.
 
 **✨ [Try it online](https://andrewparry.github.io/medit/medit.html) ✨**
 
 ## Features
 
-- **WYSIWYG Editing**: Visual markdown editing with comprehensive formatting toolbar
+- **Markdown Editing with Live Preview**: Edit markdown directly with a comprehensive formatting toolbar and side-by-side preview
 - **Real-time Preview**: Live preview pane showing rendered markdown with synchronized scrolling
 - **Local File Management**: Open and save markdown files directly to your computer using File System Access API
 - **Pure Client-Side**: Works entirely in the browser - no server required, no data transmission
-- **Offline Functionality**: Full functionality without internet connectivity once loaded
+- **Offline Editing**: Core editing works locally in your browser after the app and its external assets are loaded
 - **Keyboard Shortcuts**: Extensive keyboard shortcuts for all common operations (Ctrl+B, Ctrl+I, Ctrl+K, etc.)
 - **Accessibility Support**: Full keyboard navigation and screen reader support
 - **Responsive Design**: Works on desktop and mobile devices
@@ -411,7 +411,7 @@ npm run lint
 - ESLint for code linting: `npm run lint`
 - Prettier for formatting: `npm run format`
 - Pre-commit hooks ensure code quality
-- 340 comprehensive tests with high coverage
+- Automated test, lint, and formatting workflows are included for contributor validation
 
 ## License
 
@@ -433,9 +433,9 @@ All third-party libraries are open source and MIT licensed, compatible with this
 
 ## Changelog
 
-### Version 1.0.0
+### Version 1.1.0
 
-- Initial release with full WYSIWYG editing capabilities
+- Current application version shown in the app's About dialog
 - Local file management with browser API support
 - Real-time preview and formatting toolbar
 - Comprehensive keyboard shortcuts

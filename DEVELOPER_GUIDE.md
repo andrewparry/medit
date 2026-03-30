@@ -41,7 +41,7 @@ npm test -- --coverage
 ### File Structure
 
 ```
-mdedit/
+medit/
 ├── medit.html              # Main HTML entry point
 ├── styles.css              # All styles (light/dark theme)
 ├── js/                     # Modular JavaScript architecture

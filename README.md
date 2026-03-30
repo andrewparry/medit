@@ -225,7 +225,7 @@ npm run test:coverage
 ### Project Structure
 
 ```
-mdedit/
+medit/
 ├── medit.html                    # Main HTML file
 ├── styles.css                    # CSS styles and themes (light/dark)
 ├── js/                           # Modular JavaScript architecture
@@ -241,6 +241,9 @@ mdedit/
 │   ├── editor-inserts.js         # Insert operations (links, images, tables, etc.)
 │   ├── editor-find-replace.js    # Find and replace functionality
 │   ├── editor-file-ops.js        # File operations (open, save, export)
+│   ├── editor-storage-fsa.js     # File System Access API wrapper
+│   ├── editor-status.js          # Centralized status message manager
+│   ├── editor-version.js         # Version information and About dialog
 │   ├── editor-ui.js              # UI interactions and keyboard shortcuts
 │   ├── editor-init.js            # Initialization and setup
 │   ├── marked-lite.js            # Markdown parser
@@ -281,6 +284,9 @@ The editor is built with a modular, event-driven architecture:
 - **EditorInserts** (`editor-inserts.js`): Insert operations (links, images, tables, footnotes, code blocks)
 - **EditorFindReplace** (`editor-find-replace.js`): Find and replace functionality
 - **EditorFileOps** (`editor-file-ops.js`): File operations using File System Access API with fallbacks
+- **EditorStorageFsa** (`editor-storage-fsa.js`): File System Access API wrapper
+- **EditorStatus** (`editor-status.js`): Centralized status message manager
+- **EditorVersion** (`editor-version.js`): Version information and About dialog
 - **EditorUI** (`editor-ui.js`): UI interactions, keyboard shortcuts, and toolbar management
 - **EditorInit** (`editor-init.js`): Initialization, module coordination, and event binding
 - **MarkedLite** (`marked-lite.js`): Lightweight markdown parser

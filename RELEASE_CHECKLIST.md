@@ -1,5 +1,7 @@
 # Release Checklist for v1.1.0
 
+> **Status: Released** — v1.1.0 was released on 2025-12-30. This file is retained as a historical record and template for future releases. Unchecked items reflect tasks that were either completed via other means or deferred.
+
 ## Pre-Release Verification
 
 ### Code Quality

@@ -110,7 +110,15 @@ The end-to-end integration tests cover complete user workflows, performance, and
 - `markdownparser.test.js` - Markdown parsing unit tests
 - `formatting.test.js` - Formatting operations unit tests
 - `fileoperations.test.js` - File management unit tests
+- `editor-file-ops-fsa.test.js` - File System Access API file operations tests
+- `storage-fsa.test.js` - File System Access API storage wrapper tests
 - `preview.test.js` - Preview functionality unit tests
+- `dialogs.test.js` - Dialog accessibility unit tests
+- `cursor-positioning.test.js` - Cursor position management tests
+- `codeblocks.test.js` - Code block handling tests
+- `header-empty-line.test.js` - Header and empty line interaction tests
+- `filename-editing.test.js` - Filename editing tests
+- `scrolling-performance.test.js` - Scrolling performance tests
 - `e2e-integration.test.js` - End-to-end integration tests
 - `performance-utils.js` - Performance testing utilities
 - `accessibility-utils.js` - Accessibility testing utilities

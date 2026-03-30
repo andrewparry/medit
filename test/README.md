@@ -1,53 +1,34 @@
-# Markdown WYSIWYG Editor Test Suite
+# Markdown Editor Test Suite
 
-This directory contains comprehensive tests for the Markdown WYSIWYG Editor, including unit tests, integration tests, and end-to-end tests.
+This directory contains Jest-based tests and test helpers for the markdown editor. The current suite mixes focused unit-style tests with jsdom-backed integration-style tests and a small number of targeted regression tests.
 
-## Test Coverage
+These tests improve confidence in parser behavior, editor workflows, and browser-API adapters, but they do **not** replace manual validation or a full real-browser smoke suite.
 
-### Unit Tests
+## What the current suite covers
 
-The unit tests cover the following aspects of EditorCore state management as required by **Requirement 1.3**:
+- Markdown parsing and parser regressions
+- Formatting operations and cursor-position behavior
+- Preview, dialog, filename-editing, and related editor UI flows in jsdom
+- File operations and File System Access API wrappers
+- Scrolling and large-document behavior checks in the test harness
+- End-to-end style editor workflows simulated in jsdom
 
-### State Initialization Tests
+## Notes on evidence and scope
 
-- ✅ Correct default state structure initialization
-- ✅ Event listeners map initialization
-- ✅ Markdown parser initialization
-- ✅ DOM element references setup
+- `e2e-integration.test.js` simulates browser workflows in jsdom; it is not a full browser-automation suite.
+- Accessibility-related assertions in this directory check attributes, structure, and keyboard/screen-reader-oriented behaviors exercised by the tests; they are not an accessibility certification.
+- Performance-oriented tests here are regression guards in a controlled test harness, not production benchmarking.
+- `npm run test:coverage` is available for local inspection, but coverage output alone should not be treated as a standalone quality guarantee.
 
-### State Updates Tests
+## Running tests
 
-- ✅ Markdown content updates and dirty state tracking
-- ✅ Preview toggle state management
-- ✅ File information updates (name, save time, unsaved changes)
-- ✅ Content dirty/clean state management
-- ✅ Active formatting set management
-- ✅ Cursor position tracking
-- ✅ Parsing state management
-
-### Event System Functionality Tests
-
-- ✅ Event listener registration
-- ✅ Event emission to registered listeners
-- ✅ Event listener removal
-- ✅ Error handling in event callbacks
-- ✅ Multiple event types support
-- ✅ Built-in events (contentChange, previewToggle)
-
-### State Consistency Tests
-
-- ✅ State consistency during multiple operations
-- ✅ State structure preservation after updates
-
-## Running Tests
-
-### Install Dependencies
+### Install dependencies
 
 ```bash
 npm install
 ```
 
-### Run Tests
+### Run tests
 
 ```bash
 # Run all tests once
@@ -56,83 +37,27 @@ npm test
 # Run tests in watch mode (for development)
 npm run test:watch
 
-# Run tests with coverage report
+# Run tests with coverage output
 npm run test:coverage
 ```
 
-## Test Structure
+## Test files
 
-The tests use Jest as the testing framework and include:
-
-- **Mock DOM Environment**: Complete DOM mocking for browser-independent testing
-- **Mock Dependencies**: All EditorCore dependencies are mocked for isolated testing
-- **Comprehensive Coverage**: 23 test cases covering all state management aspects
-- **Error Handling**: Tests verify graceful error handling in event system
-
-### End-to-End Integration Tests
-
-The end-to-end integration tests cover complete user workflows, performance, and accessibility compliance as required by **Requirements 6.1 and 1.1**:
-
-#### Complete User Workflows
-
-- ✅ Create → Edit → Save workflow testing
-- ✅ Open → Edit → Save existing file workflow
-- ✅ Multi-step formatting operations
-- ✅ Preview toggle and content synchronization
-
-#### Performance Testing
-
-- ✅ Large document loading (10,000+ lines)
-- ✅ Rapid typing performance in large documents
-- ✅ Preview update efficiency with large content
-- ✅ Memory usage optimization validation
-
-#### Accessibility Compliance
-
-- ✅ ARIA labels and semantic HTML structure
-- ✅ Button accessibility attributes
-- ✅ Editor accessibility attributes
-- ✅ Live regions for screen readers
-- ✅ Keyboard navigation support
-- ✅ Proper heading hierarchy
-- ✅ Focus management
-- ✅ Alternative text and descriptions
-
-#### Cross-Browser Compatibility
-
-- ✅ Different user agent scenarios
-- ✅ File System Access API availability detection
-- ✅ localStorage availability handling
-
-## Test Files
-
-- `editorcore.test.js` - EditorCore state management unit tests
-- `markdownparser.test.js` - Markdown parsing unit tests
-- `formatting.test.js` - Formatting operations unit tests
-- `fileoperations.test.js` - File management unit tests
+- `accessibility-utils.js` - accessibility-focused test helpers
+- `codeblocks.test.js` - code block handling tests
+- `cursor-positioning.test.js` - cursor position management tests
+- `dialogs.test.js` - dialog behavior and accessibility-related checks
 - `editor-file-ops-fsa.test.js` - File System Access API file operations tests
+- `editorcore.test.js` - state-management-oriented unit-style tests for the legacy EditorCore abstraction used in this suite
+- `e2e-integration.test.js` - jsdom-backed end-to-end style workflow tests
+- `fileoperations.test.js` - file management unit tests
+- `filename-editing.test.js` - filename editing tests
+- `formatting.test.js` - formatting operations unit tests
+- `header-empty-line.test.js` - header and empty-line interaction tests
+- `markdownparser.test.js` - markdown parsing unit tests
+- `marked-lite-parser.test.js` - parser regression tests for confirmed markdown defects
+- `performance-utils.js` - performance-oriented test helpers
+- `preview.test.js` - preview functionality unit tests
+- `scrolling-performance.test.js` - scrolling performance regression tests
 - `storage-fsa.test.js` - File System Access API storage wrapper tests
-- `preview.test.js` - Preview functionality unit tests
-- `dialogs.test.js` - Dialog accessibility unit tests
-- `cursor-positioning.test.js` - Cursor position management tests
-- `codeblocks.test.js` - Code block handling tests
-- `header-empty-line.test.js` - Header and empty line interaction tests
-- `filename-editing.test.js` - Filename editing tests
-- `scrolling-performance.test.js` - Scrolling performance tests
-- `e2e-integration.test.js` - End-to-end integration tests
-- `performance-utils.js` - Performance testing utilities
-- `accessibility-utils.js` - Accessibility testing utilities
-- `README.md` - This documentation file
-
-## Requirements Verification
-
-These tests verify compliance with **Requirement 1.3** from the requirements document:
-
-> "WHEN the user types text THEN the system SHALL maintain proper markdown structure in the background"
-
-The tests ensure that:
-
-1. State is properly initialized and maintained
-2. Content changes are tracked and events are emitted
-3. The event system works reliably for component communication
-4. State consistency is maintained across operations
+- `README.md` - this documentation file

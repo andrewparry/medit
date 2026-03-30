@@ -1,4 +1,6 @@
-# Developer Guide - Markdown WYSIWYG Editor
+# Developer Guide - Markdown Editor
+
+Use `README.md` for the user-facing overview and quick start. This guide focuses on implementation details and contributor workflow.
 
 ## Quick Start
 

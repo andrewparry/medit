@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Local file management** using File System Access API with fallbacks for older browsers
 - **Offline editing** - core editing works locally after the app and its external assets are loaded
 - **Comprehensive keyboard shortcuts** for all formatting operations
-- **Full accessibility support** with ARIA labels and keyboard navigation
+- **Accessibility support** including ARIA labels and keyboard navigation
 - **Responsive design** for desktop and mobile devices
 - **Auto-save functionality** to browser localStorage (every 1.5 seconds)
 - **Dark mode** with persistent theme preference
@@ -77,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Proper escaping in preview rendering
 - **100% client-side** - no data transmission to any servers
 - Local-only storage using browser APIs
-- Privacy-focused design - all operations happen in your browser
+- Privacy-focused design - core operations happen in your browser
 
 ## [Unreleased]
 
@@ -91,6 +91,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-- **1.1.0** - Initial public release
+- **1.1.0** - Current documented release in this repository
 
 [1.1.0]: https://github.com/andrewparry/medit/releases/tag/v1.1.0

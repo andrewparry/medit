@@ -75,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - XSS protection via HTML sanitizer
 - Content validation for all user inputs
 - Proper escaping in preview rendering
-- **100% client-side** - no data transmission to any servers
+- **100% client-side** - no application backend for document editing or file operations
 - Local-only storage using browser APIs
 - Privacy-focused design - core operations happen in your browser
 

@@ -15,7 +15,7 @@ A fully functional **client-side** markdown editor with live preview that runs e
 - **Markdown Editing with Live Preview**: Edit markdown directly with a comprehensive formatting toolbar and side-by-side preview
 - **Real-time Preview**: Live preview pane showing rendered markdown with synchronized scrolling
 - **Local File Management**: Open and save markdown files directly to your computer using File System Access API
-- **Pure Client-Side**: Works entirely in the browser - no server required, no data transmission
+- **Pure Client-Side**: Works entirely in the browser with no application backend; editing and file operations stay local in the browser
 - **Offline Editing**: Core editing works locally in your browser after the app and its external assets are loaded
 - **Keyboard Shortcuts**: Extensive keyboard shortcuts for all common operations (Ctrl+B, Ctrl+I, Ctrl+K, etc.)
 - **Accessibility Support**: Full keyboard navigation and screen reader support

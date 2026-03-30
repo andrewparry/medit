@@ -96,6 +96,20 @@ describe('Forward footnote reference numbering', () => {
         expect(result).toMatch(/href="#fn-a"[^>]*>2<\/a>/);
     });
 
+    test('inline code pseudo-references do not affect numbering', () => {
+        const md = '`[^fake]` then real [^real].\n\n[^real]: Real footnote.';
+        const result = parse(md);
+        expect(result).toMatch(/href="#fn-real"[^>]*>1<\/a>/);
+        expect(result).not.toContain('id="fn-fake"');
+    });
+
+    test('fenced code pseudo-references do not affect numbering', () => {
+        const md = '```\n[^fake]\n```\n\nreal [^real].\n\n[^real]: Real footnote.';
+        const result = parse(md);
+        expect(result).toMatch(/href="#fn-real"[^>]*>1<\/a>/);
+        expect(result).not.toContain('id="fn-fake"');
+    });
+
     test('footnote definitions section uses correct numbers', () => {
         const md = 'Ref [^x].\n\n[^x]: X footnote.';
         const result = parse(md);

@@ -42,7 +42,7 @@ Try it now → https://andrewparry.github.io/medit/
 ```
 Show HN: Markdown Editor - Pure client-side markdown editor with live preview and no backend
 
-I built a fully-featured markdown editor with live preview that runs entirely in the browser - no server, no backend, no data transmission.
+I built a fully-featured markdown editor with live preview that runs entirely in the browser - no application backend, with document editing and file operations staying local in the browser.
 
 Key features:
 - Pure client-side - just open medit.html in your browser

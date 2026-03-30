@@ -76,10 +76,10 @@ Please include the following information in your report:
     - Data stays on your device
     - Clear browser data to remove saved content
 
-2. **Pure Client-Side - No Server Communication**
+2. **Pure Client-Side - No Application Backend**
     - The editor is 100% client-side - no backend required
     - Core editing works locally once the app and any external assets are loaded
-    - No data is transmitted to any servers
+    - No application backend is used for document editing or file operations
     - No analytics or tracking is performed
     - All file operations happen locally in your browser
 

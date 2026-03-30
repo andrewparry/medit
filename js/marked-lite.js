@@ -167,6 +167,58 @@
             .split('|')
             .map((cell) => cell.trim());
 
+    const stripInlineCode = (input) => input.replace(/`([^`]+)`/g, '');
+
+    const collectFootnoteReferences = (lines) => {
+        const footnoteRefs = new Map();
+        let footnoteCounter = 1;
+        let inFencedCodeBlock = false;
+
+        for (const scanLine of lines) {
+            const trimmedScanLine = scanLine.trim();
+
+            if (/^```/.test(trimmedScanLine)) {
+                inFencedCodeBlock = !inFencedCodeBlock;
+                continue;
+            }
+
+            if (inFencedCodeBlock || /^\[\^[^\]]+\]:/.test(trimmedScanLine)) {
+                continue;
+            }
+
+            const refRegex = /\[\^([^\]]+)\]/g;
+            const scannableLine = stripInlineCode(scanLine);
+            let refMatch;
+            while ((refMatch = refRegex.exec(scannableLine)) !== null) {
+                const id = refMatch[1];
+                if (!footnoteRefs.has(id)) {
+                    footnoteRefs.set(id, footnoteCounter++);
+                }
+            }
+        }
+
+        inFencedCodeBlock = false;
+        for (const scanLine of lines) {
+            const trimmedScanLine = scanLine.trim();
+
+            if (/^```/.test(trimmedScanLine)) {
+                inFencedCodeBlock = !inFencedCodeBlock;
+                continue;
+            }
+
+            if (inFencedCodeBlock) {
+                continue;
+            }
+
+            const defMatch = trimmedScanLine.match(/^\[\^([^\]]+)\]:/);
+            if (defMatch && !footnoteRefs.has(defMatch[1])) {
+                footnoteRefs.set(defMatch[1], footnoteCounter++);
+            }
+        }
+
+        return footnoteRefs;
+    };
+
     const parse = (markdown, options = {}) => {
         const renderHtml = options.renderHtml || false;
         const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
@@ -182,32 +234,9 @@
         // Footnotes: map identifier -> { number, text }
         const footnoteDefs = new Map();
 
-        // Pre-scan: assign footnote numbers in order of first reference appearance
-        // so forward references (reference before definition) get correct numbers.
-        const footnoteRefs = new Map(); // identifier -> number
-        let footnoteCounter = 1;
-
-        // Pass 1: assign numbers to identifiers referenced in body text (non-definition lines)
-        for (const scanLine of lines) {
-            if (/^\[\^[^\]]+\]:/.test(scanLine.trim())) {
-                continue; // skip definition lines
-            }
-            const refRegex = /\[\^([^\]]+)\]/g;
-            let refMatch;
-            while ((refMatch = refRegex.exec(scanLine)) !== null) {
-                const id = refMatch[1];
-                if (!footnoteRefs.has(id)) {
-                    footnoteRefs.set(id, footnoteCounter++);
-                }
-            }
-        }
-        // Pass 2: assign numbers to identifiers that only appear in definitions (no prior reference)
-        for (const scanLine of lines) {
-            const defMatch = scanLine.trim().match(/^\[\^([^\]]+)\]:/);
-            if (defMatch && !footnoteRefs.has(defMatch[1])) {
-                footnoteRefs.set(defMatch[1], footnoteCounter++);
-            }
-        }
+        // Pre-scan: assign footnote numbers in order of first reference appearance,
+        // ignoring pseudo-references inside inline code and fenced code blocks.
+        const footnoteRefs = collectFootnoteReferences(lines);
 
         for (let index = 0; index < lines.length; index += 1) {
             const line = lines[index];

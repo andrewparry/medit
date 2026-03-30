@@ -31,7 +31,7 @@
 - [x] GitHub Actions workflows configured (CI, Lint, Pages)
 - [x] Dependabot configured
 - [ ] GitHub repository settings configured:
-    - [ ] Enable GitHub Pages with GitHub Actions artifact deployment
+    - [ ] Enable GitHub Pages with GitHub Actions artifact deployment (uploaded `./_site` artifact; not branch-source deployment)
     - [ ] Enable Discussions (Settings > General > Features)
     - [ ] Add repository description
     - [ ] Add repository topics/tags
@@ -92,9 +92,9 @@ git push origin v1.1.0
 ### 4. Deploy to GitHub Pages
 
 ```bash
-# GitHub Actions will auto-deploy, or manually:
-# Ensure GitHub Pages is enabled in repository settings
-# Source: GitHub Actions artifact
+# GitHub Actions will auto-deploy the uploaded ./_site artifact.
+# Ensure GitHub Pages is enabled in repository settings for GitHub Actions artifact deployment.
+# This project does not deploy Pages from the main branch source.
 ```
 
 ### 5. Verify Deployment
@@ -138,7 +138,9 @@ git push origin v1.1.0
 
 **Pages:**
 
-- Source: GitHub Actions artifact deployment
+- Deployment model: GitHub Actions artifact deployment
+- Artifact uploaded by workflow: `./_site`
+- Not used: deploy-from-branch / main-branch source publishing
 - Custom domain: (optional)
 
 **Branch Protection (main branch):**

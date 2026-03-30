@@ -83,10 +83,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned
 
-- GitHub Pages deployment for live demo
-- CI/CD pipeline with automated testing
-- Code quality tools (ESLint, Prettier)
-- Automated dependency updates
 - Performance optimizations for very large documents
 - Additional export formats
 - Plugin system for extensibility
@@ -95,6 +91,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-- **1.1.0** - Documentation and release-truth alignment update
+- **1.1.0** - Initial public release
 
 [1.1.0]: https://github.com/andrewparry/medit/releases/tag/v1.1.0

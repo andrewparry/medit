@@ -100,15 +100,17 @@
         }
 
         // Images must be parsed before links to avoid double wrapping.
+        // URL pattern allows one level of balanced parentheses, e.g. Wikipedia URLs.
         result = result.replace(
-            /!\[([^\]]*)\]\(([^)]+)\)/g,
+            /!\[([^\]]*)\]\(((?:[^)(]|\([^)]*\))+)\)/g,
             (_, alt, url) =>
                 `<img src="${escapeAttribute(url)}" alt="${escapeHtml(alt)}" loading="lazy">`
         );
 
         // Parse links with safe attributes (but not footnote references).
+        // URL pattern allows one level of balanced parentheses, e.g. Wikipedia URLs.
         result = result.replace(
-            /\[([^\]]+)\]\(([^)]+)\)/g,
+            /\[([^\]]+)\]\(((?:[^)(]|\([^)]*\))+)\)/g,
             (_, label, url) =>
                 `<a href="${escapeAttribute(url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`
         );
@@ -126,19 +128,10 @@
             result = result.replace(/§§FOOTNOTE(\d+)§§/g, (_, index) => {
                 const identifier = footnotePlaceholders[parseInt(index, 10)];
                 const safeId = escapeAttribute(identifier);
-                // Assign number on first appearance (standard markdown behavior)
-                // If definition already assigned a number, use that; otherwise assign sequential number
-                if (!footnoteRefs.has(identifier)) {
-                    // This reference hasn't been seen before - it will get a number when definition is found
-                    // For now, we'll use a placeholder that will be resolved when definition is parsed
-                    // We need to track that this identifier was referenced
-                    footnoteRefs.set(identifier, null); // Placeholder - will be set when definition is found
-                }
-                // Get the footnote number (if definition already assigned it, use that; otherwise wait for definition)
+                // Numbers are pre-assigned in parse()'s pre-scan phase, so footnoteRefs
+                // always contains the correct sequential number for every identifier.
                 const footnoteNum = footnoteRefs.get(identifier);
-                // If number not yet assigned, we'll use the identifier temporarily
-                // The definition will assign the proper number when encountered
-                return `<sup><a href="#fn-${safeId}" id="fnref-${safeId}" class="footnote-ref">${footnoteNum !== null ? footnoteNum : identifier}</a></sup>`;
+                return `<sup><a href="#fn-${safeId}" id="fnref-${safeId}" class="footnote-ref">${footnoteNum !== undefined ? footnoteNum : identifier}</a></sup>`;
             });
         }
 
@@ -188,8 +181,33 @@
 
         // Footnotes: map identifier -> { number, text }
         const footnoteDefs = new Map();
-        const footnoteRefs = new Map(); // identifier -> number (assigned in order of first reference appearance)
-        let footnoteCounter = 1; // Counter for assigning numbers to footnotes
+
+        // Pre-scan: assign footnote numbers in order of first reference appearance
+        // so forward references (reference before definition) get correct numbers.
+        const footnoteRefs = new Map(); // identifier -> number
+        let footnoteCounter = 1;
+
+        // Pass 1: assign numbers to identifiers referenced in body text (non-definition lines)
+        for (const scanLine of lines) {
+            if (/^\[\^[^\]]+\]:/.test(scanLine.trim())) {
+                continue; // skip definition lines
+            }
+            const refRegex = /\[\^([^\]]+)\]/g;
+            let refMatch;
+            while ((refMatch = refRegex.exec(scanLine)) !== null) {
+                const id = refMatch[1];
+                if (!footnoteRefs.has(id)) {
+                    footnoteRefs.set(id, footnoteCounter++);
+                }
+            }
+        }
+        // Pass 2: assign numbers to identifiers that only appear in definitions (no prior reference)
+        for (const scanLine of lines) {
+            const defMatch = scanLine.trim().match(/^\[\^([^\]]+)\]:/);
+            if (defMatch && !footnoteRefs.has(defMatch[1])) {
+                footnoteRefs.set(defMatch[1], footnoteCounter++);
+            }
+        }
 
         for (let index = 0; index < lines.length; index += 1) {
             const line = lines[index];
@@ -384,21 +402,7 @@
                 closeListIfNeeded(state, output);
                 const identifier = footnoteDefMatch[1];
                 const footnoteText = footnoteDefMatch[2];
-
-                // Assign number to this footnote
-                // Standard markdown: numbers are assigned in order of first reference appearance
-                // If this identifier was referenced before, it should already be in footnoteRefs (possibly with null)
-                // If not referenced yet, assign it the next number
-                if (!footnoteRefs.has(identifier)) {
-                    // Definition appears before any reference - assign next number
-                    footnoteRefs.set(identifier, footnoteCounter++);
-                } else if (footnoteRefs.get(identifier) === null) {
-                    // Identifier was referenced but number not yet assigned - assign next number
-                    footnoteRefs.set(identifier, footnoteCounter++);
-                }
-                // If identifier already has a number, keep it (definition was encountered after reference)
-
-                // Store the definition
+                // Number was pre-assigned during the pre-scan phase; just store the definition.
                 footnoteDefs.set(identifier, {
                     number: footnoteRefs.get(identifier),
                     text: footnoteText

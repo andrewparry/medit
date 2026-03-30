@@ -16,7 +16,7 @@
             return `${this.major}.${this.minor}.${this.patch}`;
         },
         name: 'Medit',
-        description: 'Markdown WYSIWYG Editor',
+        description: 'Markdown editor with live preview',
         year: new Date().getFullYear(),
         license: 'MIT',
         repository: 'https://github.com/andrewparry/medit'

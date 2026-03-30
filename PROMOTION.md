@@ -22,14 +22,14 @@
 ### Short Version (Twitter/Social Media)
 
 ```
-🎉 Introducing Markdown Editor v1.0.0!
+🎉 Introducing Markdown Editor v1.1.0!
 
-A pure client-side WYSIWYG markdown editor - no server required!
+A pure client-side markdown editor with live preview - no server required!
 ✨ Real-time preview
 🎨 Dark mode
 💾 Local file management (File System Access API)
 ⌨️ Full keyboard shortcuts
-♿ WCAG 2.1 AA compliant
+♿ Accessibility-minded keyboard and screen reader support
 🔒 100% private - runs entirely in your browser
 
 Try it now → https://andrewparry.github.io/medit/
@@ -40,9 +40,9 @@ Try it now → https://andrewparry.github.io/medit/
 ### Medium Version (Reddit, Hacker News)
 
 ```
-Show HN: Markdown Editor - Pure client-side WYSIWYG editor with no backend
+Show HN: Markdown Editor - Pure client-side markdown editor with live preview and no backend
 
-I built a fully-featured markdown WYSIWYG editor that runs entirely in the browser - no server, no backend, no data transmission.
+I built a fully-featured markdown editor with live preview that runs entirely in the browser - no server, no backend, no data transmission.
 
 Key features:
 - Pure client-side - just open medit.html in your browser
@@ -51,8 +51,8 @@ Key features:
 - Local file management using File System Access API (with fallbacks)
 - Auto-save to localStorage
 - Dark mode
-- Full keyboard navigation and screen reader support (WCAG 2.1 AA)
-- 340 comprehensive tests
+- Keyboard-friendly controls and screen reader-aware UI
+- Automated test and lint workflows
 
 It's completely open source (MIT) and privacy-focused - all operations happen locally in your browser.
 
@@ -75,7 +75,7 @@ See `BLOG_POST_DRAFT.md` below.
 ### Reddit Communities
 
 1. **r/opensource** - Post as "Show & Tell"
-    - Title: "[Show & Tell] Markdown Editor - Browser-based WYSIWYG editor with offline support"
+    - Title: "[Show & Tell] Markdown Editor - Browser-based markdown editor with live preview"
     - Include: features, tech stack, why you built it
 
 2. **r/javascript** - Focus on technical implementation
@@ -91,12 +91,12 @@ See `BLOG_POST_DRAFT.md` below.
     - Highlight: modern web APIs, progressive enhancement
 
 5. **r/markdown** - Markdown-specific community
-    - Title: "Built a WYSIWYG markdown editor for the browser"
+    - Title: "Built a markdown editor with live preview for the browser"
     - Emphasize: markdown features, CommonMark compatibility
 
 ### Hacker News
 
-- **Show HN**: "Show HN: Markdown Editor – Browser-based WYSIWYG with offline support"
+- **Show HN**: "Show HN: Markdown Editor – Browser-based markdown editor with live preview"
 - Post timing: Tuesday-Thursday, 9-11 AM EST
 - Be active in comments for first 2-3 hours
 
@@ -136,7 +136,7 @@ Create a detailed blog post covering:
 
 1. **Introduction**
     - Problem: Need for simple, privacy-focused markdown editor
-    - Solution: Browser-based WYSIWYG editor
+    - Solution: Browser-based markdown editor with live preview
 
 2. **Key Features**
     - Overview of main features
@@ -151,7 +151,7 @@ Create a detailed blog post covering:
 4. **Challenges & Solutions**
     - File System Access API implementation
     - Test coverage for browser-only code
-    - Accessibility compliance
+    - Accessibility approach and current validation evidence
 
 5. **What's Next**
     - Future roadmap

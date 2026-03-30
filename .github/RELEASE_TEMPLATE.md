@@ -1,17 +1,17 @@
-# Release v1.0.0 - Initial Public Release
+# Release v1.1.0
 
-## 🎉 Welcome to Markdown Editor v1.0.0!
+## 🎉 Welcome to Markdown Editor v1.1.0!
 
-We're excited to announce the initial public release of Markdown Editor - a fully functional, browser-based WYSIWYG markdown editor.
+We're excited to announce a new release of Markdown Editor - a fully functional, browser-based markdown editor with live preview.
 
 ### ✨ Highlights
 
-- **Complete WYSIWYG editing** with visual formatting toolbar
+- **Markdown editing with live preview** and a visual formatting toolbar
 - **Real-time preview** with synchronized scrolling
 - **Local file management** with modern File System Access API
-- **Offline-first** - works entirely in your browser
-- **Accessibility focused** - WCAG 2.1 AA compliant
-- **340 comprehensive tests** ensuring reliability
+- **Local-first** - core editing happens entirely in your browser
+- **Accessibility-minded** keyboard and screen reader support
+- **Automated test and lint workflows** for contributor validation
 
 ### 🚀 Try It Now
 
@@ -45,7 +45,7 @@ We're excited to announce the initial public release of Markdown Editor - a full
 - **Dependencies**: Only Prism.js for syntax highlighting (loaded from CDN)
 - **Architecture**: Modular design with 16 separate JavaScript modules
 - **Browser Support**: Chrome 86+, Firefox 82+, Safari 14+, Edge 86+
-- **Tests**: 340 passing tests with comprehensive coverage
+- **Validation**: CI runs test, lint, and format checks
 
 ### 📚 Documentation
 
@@ -56,14 +56,14 @@ We're excited to announce the initial public release of Markdown Editor - a full
 
 ### 🛡️ Security
 
-- ✅ 0 vulnerabilities (npm audit)
+- ✅ Current security posture should be summarized from the latest audit output
 - ✅ XSS protection via HTML sanitizer
 - ✅ No data transmission to external servers
 - ✅ Local-only storage
 
 ### ♿ Accessibility
 
-- ✅ WCAG 2.1 AA compliant
+- ✅ Keyboard navigation and screen reader support are included
 - ✅ Full keyboard navigation
 - ✅ Screen reader support
 - ✅ Proper ARIA labels and semantic HTML
@@ -99,7 +99,7 @@ python -m http.server 8000
 
 ### Option 3: Download Release Archive
 
-Download the source code archive from the [releases page](https://github.com/andrewparry/medit/releases/tag/v1.0.0) and extract it.
+Download the source code archive from the [releases page](https://github.com/andrewparry/medit/releases/tag/v1.1.0) and extract it.
 
 ---
 

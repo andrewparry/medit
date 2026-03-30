@@ -281,7 +281,7 @@ Before considering the bold button complete, verify:
 - [ ] Works with multiple bold sections
 - [ ] Cursor position is correct after all operations
 - [ ] No console errors
-- [ ] All 340 tests pass
+- [ ] All documented automated checks pass in a clean clone
 - [ ] Preview renders correctly
 - [ ] Undo/redo works (if implemented)
 - [ ] Works on mobile (if supporting mobile)
@@ -290,7 +290,7 @@ Before considering the bold button complete, verify:
 
 ## Notes
 
-- All automated tests pass (340 tests)
+- All documented automated checks pass
 - No breaking changes to existing functionality
 - Implementation follows existing code patterns
 - Performance impact is minimal

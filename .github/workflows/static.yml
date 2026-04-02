@@ -40,7 +40,7 @@ jobs:
           cp medit.html styles.css LICENSE NOTICE _site/
           cp -R js images _site/
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: './_site'
       - name: Deploy to GitHub Pages

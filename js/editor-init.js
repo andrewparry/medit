@@ -87,13 +87,6 @@
                 }
             });
 
-            // Keyboard shortcuts
-            elements.editor.addEventListener('keydown', (event) => {
-                if (MarkdownEditor.ui) {
-                    MarkdownEditor.ui.handleShortcut(event);
-                }
-            });
-
             // Paste event handler for automatic link detection
             elements.editor.addEventListener('paste', (event) => {
                 // Only handle if editor is focused

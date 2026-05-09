@@ -95,7 +95,7 @@
         if (renderHtml && htmlTags.length > 0) {
             result = result.replace(
                 /___HTML_TAG_(\d+)___/g,
-                (_, index) => htmlTags[parseInt(index, 10)]
+                (match, index) => htmlTags[parseInt(index, 10)] ?? match
             );
         }
 
@@ -123,8 +123,11 @@
         // Note: footnoteRefs is passed by reference, so we can modify it here
         // Numbers are assigned in order of first reference appearance
         if (footnoteRefs !== null && footnotePlaceholders.length > 0) {
-            result = result.replace(/§§FOOTNOTE(\d+)§§/g, (_, index) => {
+            result = result.replace(/§§FOOTNOTE(\d+)§§/g, (match, index) => {
                 const identifier = footnotePlaceholders[parseInt(index, 10)];
+                if (identifier === undefined) {
+                    return match;
+                }
                 const safeId = escapeAttribute(identifier);
                 // Assign number on first appearance (standard markdown behavior)
                 // If definition already assigned a number, use that; otherwise assign sequential number
@@ -143,10 +146,10 @@
         }
 
         // Restore inline code segments now that formatting is done.
-        result = result.replace(
-            /§§CODE(\d+)§§/g,
-            (_, index) => `<code>${escapeHtml(codeSegments[index])}</code>`
-        );
+        result = result.replace(/§§CODE(\d+)§§/g, (match, index) => {
+            const code = codeSegments[parseInt(index, 10)];
+            return code === undefined ? match : `<code>${escapeHtml(code)}</code>`;
+        });
 
         return result;
     };

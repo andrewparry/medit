@@ -33,11 +33,6 @@ describe('Editor initialization events', () => {
         global.Event = dom.window.Event;
         global.KeyboardEvent = dom.window.KeyboardEvent;
 
-        Object.defineProperty(document, 'readyState', {
-            value: 'loading',
-            configurable: true
-        });
-
         editor = document.getElementById('editor');
         handleShortcut = jest.fn();
 
@@ -54,11 +49,46 @@ describe('Editor initialization events', () => {
             constants: {
                 AUTOSAVE_INTERVAL: 1500
             },
+            initElements: jest.fn(() => true),
             ui: {
                 handleShortcut,
-                handleToolbarClick: jest.fn()
+                handleToolbarClick: jest.fn(),
+                initializeTheme: jest.fn(),
+                initializeResize: jest.fn(),
+                recomputeFindBarOffset: jest.fn()
+            },
+            preview: {
+                initializePreviewState: jest.fn(),
+                updatePreview: jest.fn()
+            },
+            autosave: {
+                checkAutosaveStatus: jest.fn(),
+                restoreAutosave: jest.fn()
+            },
+            utils: {
+                updateDocumentTitle: jest.fn(),
+                updateCounters: jest.fn()
+            },
+            syntaxHighlight: {
+                initScrollSync: jest.fn(),
+                updateRawHighlights: jest.fn()
+            },
+            formatting: {
+                updateToolbarStates: jest.fn()
+            },
+            statusManager: {
+                setDefaultMessage: jest.fn(),
+                showReady: jest.fn()
+            },
+            history: {
+                initHistory: jest.fn()
             }
         };
+
+        Object.defineProperty(document, 'readyState', {
+            value: 'complete',
+            configurable: true
+        });
 
         require('../js/editor-init.js');
     });
@@ -73,8 +103,6 @@ describe('Editor initialization events', () => {
     });
 
     test('handles bubbling editor keydown shortcuts once', () => {
-        window.MarkdownEditor.init.bindEvents();
-
         editor.dispatchEvent(
             new KeyboardEvent('keydown', {
                 key: 'b',

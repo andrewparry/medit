@@ -30,6 +30,8 @@ describe('File export', () => {
         global.window = dom.window;
         global.document = dom.window.document;
 
+        dom.window.HTMLAnchorElement.prototype.click = jest.fn();
+
         createObjectURL = jest.fn(() => 'blob:export');
         global.URL = {
             createObjectURL,

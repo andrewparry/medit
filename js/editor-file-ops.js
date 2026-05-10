@@ -19,6 +19,9 @@
     // Constants
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+    const escapeHtmlText = (value) =>
+        value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
     /**
      * Reset file handles and clear persisted file state
      * Clears active file handle so next save triggers "Save As"
@@ -654,6 +657,7 @@
         try {
             const filename = elements.fileNameDisplay.textContent.trim().replace(/\.md$/, '');
             const htmlFilename = filename.endsWith('.html') ? filename : `${filename}.html`;
+            const safeTitle = escapeHtmlText(filename);
 
             const renderHtml = (state && state.renderHtml) || false;
             const rawHtml = window.markedLite.parse(content, { renderHtml });
@@ -664,7 +668,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${filename}</title>
+    <title>${safeTitle}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
     <style>
         body {

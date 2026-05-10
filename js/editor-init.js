@@ -7,6 +7,32 @@
 
     const MarkdownEditor = window.MarkdownEditor || {};
     const { elements, state } = MarkdownEditor;
+    let renderFrame = null;
+
+    const scheduleFullDocumentRender = () => {
+        if (renderFrame !== null) {
+            return;
+        }
+
+        const schedule =
+            window.requestAnimationFrame ||
+            ((callback) => {
+                window.setTimeout(callback, 0);
+            });
+
+        renderFrame = schedule(() => {
+            renderFrame = null;
+            if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
+                MarkdownEditor.preview.updatePreview();
+            }
+            if (
+                MarkdownEditor.syntaxHighlight &&
+                MarkdownEditor.syntaxHighlight.updateRawHighlights
+            ) {
+                MarkdownEditor.syntaxHighlight.updateRawHighlights();
+            }
+        });
+    };
 
     /**
      * Handle input events in the editor textarea
@@ -18,9 +44,7 @@
      * editor.addEventListener('input', handleInput);
      */
     const handleInput = () => {
-        if (MarkdownEditor.preview && MarkdownEditor.preview.updatePreview) {
-            MarkdownEditor.preview.updatePreview();
-        }
+        scheduleFullDocumentRender();
         if (MarkdownEditor.utils && MarkdownEditor.utils.updateCounters) {
             MarkdownEditor.utils.updateCounters();
         }
@@ -40,9 +64,6 @@
         }
         if (MarkdownEditor.history && MarkdownEditor.history.pushHistoryDebounced) {
             MarkdownEditor.history.pushHistoryDebounced();
-        }
-        if (MarkdownEditor.syntaxHighlight && MarkdownEditor.syntaxHighlight.updateRawHighlights) {
-            MarkdownEditor.syntaxHighlight.updateRawHighlights();
         }
         // Auto-renumber ordered lists to keep editor in sync with preview
         if (
@@ -84,13 +105,6 @@
             elements.editor.addEventListener('mouseup', () => {
                 if (MarkdownEditor.formatting && MarkdownEditor.formatting.updateToolbarStates) {
                     MarkdownEditor.formatting.updateToolbarStates();
-                }
-            });
-
-            // Keyboard shortcuts
-            elements.editor.addEventListener('keydown', (event) => {
-                if (MarkdownEditor.ui) {
-                    MarkdownEditor.ui.handleShortcut(event);
                 }
             });
 

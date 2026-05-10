@@ -16,6 +16,8 @@
     const escapeAttribute = (value) =>
         escapeHtml(value).replace(/\(/g, '&#40;').replace(/\)/g, '&#41;');
 
+    const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     const parseInline = (input, footnoteRefs = null, renderHtml = false) => {
         const codeSegments = [];
 
@@ -95,7 +97,7 @@
         if (renderHtml && htmlTags.length > 0) {
             result = result.replace(
                 /___HTML_TAG_(\d+)___/g,
-                (_, index) => htmlTags[parseInt(index, 10)]
+                (match, index) => htmlTags[parseInt(index, 10)] ?? match
             );
         }
 
@@ -123,8 +125,11 @@
         // Note: footnoteRefs is passed by reference, so we can modify it here
         // Numbers are assigned in order of first reference appearance
         if (footnoteRefs !== null && footnotePlaceholders.length > 0) {
-            result = result.replace(/§§FOOTNOTE(\d+)§§/g, (_, index) => {
+            result = result.replace(/§§FOOTNOTE(\d+)§§/g, (match, index) => {
                 const identifier = footnotePlaceholders[parseInt(index, 10)];
+                if (identifier === undefined) {
+                    return match;
+                }
                 const safeId = escapeAttribute(identifier);
                 // Assign number on first appearance (standard markdown behavior)
                 // If definition already assigned a number, use that; otherwise assign sequential number
@@ -143,10 +148,10 @@
         }
 
         // Restore inline code segments now that formatting is done.
-        result = result.replace(
-            /§§CODE(\d+)§§/g,
-            (_, index) => `<code>${escapeHtml(codeSegments[index])}</code>`
-        );
+        result = result.replace(/§§CODE(\d+)§§/g, (match, index) => {
+            const code = codeSegments[parseInt(index, 10)];
+            return code === undefined ? match : `<code>${escapeHtml(code)}</code>`;
+        });
 
         return result;
     };
@@ -461,9 +466,25 @@
             output.push('</div>');
         }
 
-        return output
+        let html = output
             .filter((line, idx, arr) => !(line === '' && (idx === 0 || arr[idx - 1] === '')))
             .join('\n');
+
+        footnoteRefs.forEach((number, identifier) => {
+            if (number === null) {
+                return;
+            }
+            const safeId = escapeAttribute(identifier);
+            const refPattern = new RegExp(
+                `(<sup><a href="#fn-${escapeRegExp(safeId)}" id="fnref-${escapeRegExp(
+                    safeId
+                )}" class="footnote-ref">).*?(</a></sup>)`,
+                'g'
+            );
+            html = html.replace(refPattern, `$1${number}$2`);
+        });
+
+        return html;
     };
 
     const api = {

@@ -263,8 +263,19 @@
         // - write() accepts string/ArrayBuffer/etc.
         // - close() commits changes to disk
         const writable = await fileHandle.createWritable();
-        await writable.write(content);
-        await writable.close();
+        try {
+            await writable.write(content);
+            await writable.close();
+        } catch (error) {
+            if (typeof writable.abort === 'function') {
+                try {
+                    await writable.abort();
+                } catch {
+                    // Preserve the original write/close failure for callers.
+                }
+            }
+            throw error;
+        }
     };
 
     // ---- Best-effort handle persistence (Chromium-only) -----------------------

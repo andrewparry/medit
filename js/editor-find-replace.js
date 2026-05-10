@@ -36,6 +36,44 @@
         }
     };
 
+    const toGlobalRegex = (regex) =>
+        new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : `${regex.flags}g`);
+
+    const advancePastZeroLengthMatch = (regex) => {
+        regex.lastIndex += 1;
+    };
+
+    const getMatchRange = (match) => {
+        if (elements.findWhole?.checked && !elements.findRegex?.checked) {
+            const start = match.index + (match[1] ? match[1].length : 0);
+            const length = match[2] ? match[2].length : match[0].length;
+            return { start, end: start + length };
+        }
+
+        return {
+            start: match.index,
+            end: match.index + match[0].length
+        };
+    };
+
+    const collectMatchPositions = (regex, text) => {
+        const positions = [];
+        const re = toGlobalRegex(regex);
+        let match;
+
+        while ((match = re.exec(text)) !== null) {
+            const range = getMatchRange(match);
+            if (range.end > range.start) {
+                positions.push(range);
+            }
+            if (match[0].length === 0) {
+                advancePastZeroLengthMatch(re);
+            }
+        }
+
+        return positions;
+    };
+
     /**
      * Clear all find/search highlights from preview pane
      * Removes <mark> elements and normalizes text nodes
@@ -91,14 +129,13 @@
             let m;
             let lastIndex = 0;
             const fragments = [];
-            const re = new RegExp(
-                regex.source,
-                regex.flags.includes('g') ? regex.flags : `${regex.flags}g`
-            );
+            const re = toGlobalRegex(regex);
             while ((m = re.exec(value)) !== null) {
-                const start = m.index + (m[1] ? m[1].length : 0);
-                const len = m[2] ? m[2].length : m[0].length;
-                const end = start + len;
+                const { start, end } = getMatchRange(m);
+                if (end <= start) {
+                    advancePastZeroLengthMatch(re);
+                    continue;
+                }
                 if (start > lastIndex) {
                     fragments.push(document.createTextNode(value.slice(lastIndex, start)));
                 }
@@ -107,6 +144,9 @@
                 mark.textContent = value.slice(start, end);
                 fragments.push(mark);
                 lastIndex = end;
+                if (m[0].length === 0) {
+                    advancePastZeroLengthMatch(re);
+                }
             }
             if (lastIndex === 0) {
                 return;
@@ -123,18 +163,8 @@
         });
 
         // Update count
-        const positions = [];
         const src = elements.editor.value;
-        const reAll = new RegExp(
-            regex.source,
-            regex.flags.includes('g') ? regex.flags : `${regex.flags}g`
-        );
-        let mm;
-        while ((mm = reAll.exec(src)) !== null) {
-            const s = mm.index + (mm[1] ? mm[1].length : 0);
-            const l = mm[2] ? mm[2].length : mm[0].length;
-            positions.push({ start: s, end: s + l });
-        }
+        const positions = collectMatchPositions(regex, src);
         searchState.matches = positions;
         if (elements.findCount) {
             const cur = searchState.current >= 0 ? searchState.current + 1 : 0;
@@ -159,17 +189,7 @@
         }
 
         // Ensure positions are up-to-date
-        const positions = [];
-        const reAll = new RegExp(
-            regex.source,
-            regex.flags.includes('g') ? regex.flags : `${regex.flags}g`
-        );
-        let mm;
-        while ((mm = reAll.exec(text)) !== null) {
-            const s = mm.index + (mm[1] ? mm[1].length : 0);
-            const l = mm[2] ? mm[2].length : mm[0].length;
-            positions.push({ start: s, end: s + l });
-        }
+        const positions = collectMatchPositions(regex, text);
         searchState.matches = positions;
 
         let html = '';
@@ -280,24 +300,34 @@
                 ? Math.max(0, elements.editor.selectionStart - 1)
                 : Math.max(elements.editor.selectionEnd, searchState.lastIndex);
 
-        // Forward search from startFrom
-        regex.lastIndex = startFrom;
-        let match = regex.exec(value);
-
-        // Wrap-around
-        if (!match && startFrom > 0) {
-            regex.lastIndex = 0;
-            match = regex.exec(value);
+        const positions = collectMatchPositions(regex, value);
+        if (positions.length === 0) {
+            searchState.matches = [];
+            searchState.current = -1;
+            if (elements.findCount) {
+                elements.findCount.textContent = '0/0';
+            }
+            return false;
         }
 
-        if (match) {
-            let s = match.index;
-            const e = s + (match[2] ? match[2].length : match[0].length);
-            if (match[2]) {
-                s = match.index + (match[1] ? match[1].length : 0);
+        let position;
+        if (direction === -1) {
+            position = [...positions].reverse().find((pos) => pos.start <= startFrom);
+            if (!position) {
+                position = positions[positions.length - 1];
             }
+        } else {
+            position = positions.find((pos) => pos.start >= startFrom);
+            if (!position) {
+                [position] = positions;
+            }
+        }
+
+        if (position) {
+            const { start: s, end: e } = position;
             elements.editor.focus();
             elements.editor.setSelectionRange(s, e);
+            searchState.matches = positions;
 
             if (searchState.matches && searchState.matches.length > 0) {
                 const idx = searchState.matches.findIndex((p) => p.start === s && p.end === e);
@@ -431,21 +461,29 @@
         let caretAfter = 0;
 
         if (elements.findRegex?.checked) {
-            const reG = new RegExp(regex.source, regex.flags);
+            const reG = toGlobalRegex(regex);
             const parts = [];
             let last = 0;
             let accLen = 0;
             let m;
             while ((m = reG.exec(original)) !== null) {
-                const s0 = m.index;
-                const s = s0 + (m[1] ? m[1].length : 0);
-                const e = s + (m[2] ? m[2].length : m[0].length);
+                const { start: s, end: e } = getMatchRange(m);
+                if (e <= s) {
+                    advancePastZeroLengthMatch(reG);
+                    continue;
+                }
                 parts.push(original.slice(last, s));
-                parts.push(replacement);
-                accLen += s - last + replacement.length;
+                const replaceWith = original
+                    .slice(s, e)
+                    .replace(new RegExp(regex.source, regex.flags.replace('g', '')), replacement);
+                parts.push(replaceWith);
+                accLen += s - last + replaceWith.length;
                 caretAfter = accLen;
                 last = e;
                 count += 1;
+                if (m[0].length === 0) {
+                    advancePastZeroLengthMatch(reG);
+                }
             }
             parts.push(original.slice(last));
             elements.editor.value = parts.join('');
@@ -457,14 +495,16 @@
                 const wordRe = buildSearchRegex(query);
                 let m;
                 while ((m = wordRe.exec(original)) !== null) {
-                    const s = m.index + (m[1] ? m[1].length : 0);
-                    const e = s + (m[2] ? m[2].length : m[0].length);
+                    const { start: s, end: e } = getMatchRange(m);
                     parts.push(original.slice(last, s));
                     parts.push(replacement);
                     accLen += s - last + replacement.length;
                     caretAfter = accLen;
                     last = e;
                     count += 1;
+                    if (m[0].length === 0) {
+                        advancePastZeroLengthMatch(wordRe);
+                    }
                 }
                 parts.push(original.slice(last));
                 elements.editor.value = parts.join('');
@@ -485,6 +525,9 @@
                     caretAfter = accLen;
                     last = e;
                     count += 1;
+                    if (m[0].length === 0) {
+                        advancePastZeroLengthMatch(re);
+                    }
                 }
                 parts.push(original.slice(last));
                 elements.editor.value = parts.join('');

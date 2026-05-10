@@ -16,6 +16,8 @@
     const escapeAttribute = (value) =>
         escapeHtml(value).replace(/\(/g, '&#40;').replace(/\)/g, '&#41;');
 
+    const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     const parseInline = (input, footnoteRefs = null, renderHtml = false) => {
         const codeSegments = [];
 
@@ -464,9 +466,25 @@
             output.push('</div>');
         }
 
-        return output
+        let html = output
             .filter((line, idx, arr) => !(line === '' && (idx === 0 || arr[idx - 1] === '')))
             .join('\n');
+
+        footnoteRefs.forEach((number, identifier) => {
+            if (number === null) {
+                return;
+            }
+            const safeId = escapeAttribute(identifier);
+            const refPattern = new RegExp(
+                `(<sup><a href="#fn-${escapeRegExp(safeId)}" id="fnref-${escapeRegExp(
+                    safeId
+                )}" class="footnote-ref">).*?(</a></sup>)`,
+                'g'
+            );
+            html = html.replace(refPattern, `$1${number}$2`);
+        });
+
+        return html;
     };
 
     const api = {

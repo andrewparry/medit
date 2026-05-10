@@ -28,4 +28,15 @@ describe('marked-lite parser', () => {
             '<p>literal §§FOOTNOTE0§§ token</p>'
         );
     });
+
+    test('numbers footnote references that appear before definitions', () => {
+        const html = window.markedLite.parse('Hello[^note]\n\n[^note]: Footnote text');
+
+        expect(html).toContain(
+            '<p>Hello<sup><a href="#fn-note" id="fnref-note" class="footnote-ref">1</a></sup></p>'
+        );
+        expect(html).toContain(
+            '<li id="fn-note">Footnote text <a href="#fnref-note" class="footnote-backref">↩</a></li>'
+        );
+    });
 });

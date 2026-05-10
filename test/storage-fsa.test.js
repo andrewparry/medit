@@ -144,6 +144,24 @@ describe('storageFSA (File System Access storage)', () => {
         expect(writable.close).toHaveBeenCalled();
     });
 
+    test('writeTextToHandle aborts writable stream when write fails', async () => {
+        const writeError = new Error('disk full');
+        const writable = {
+            write: jest.fn().mockRejectedValue(writeError),
+            close: jest.fn().mockResolvedValue(undefined),
+            abort: jest.fn().mockResolvedValue(undefined)
+        };
+        const handle = {
+            createWritable: jest.fn().mockResolvedValue(writable)
+        };
+
+        await expect(storage.writeTextToHandle(handle, 'hello')).rejects.toBe(writeError);
+
+        expect(writable.write).toHaveBeenCalledWith('hello');
+        expect(writable.abort).toHaveBeenCalled();
+        expect(writable.close).not.toHaveBeenCalled();
+    });
+
     test('persistence functions are safe no-ops when IndexedDB is unavailable', async () => {
         // In Node/Jest we typically do not have indexedDB on window.
         storage.setCurrentFileHandle({ name: 'x.md' });

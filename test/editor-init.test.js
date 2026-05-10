@@ -10,9 +10,11 @@ describe('Editor initialization events', () => {
     let dom;
     let editor;
     let handleShortcut;
+    let rafCallbacks;
 
     beforeEach(() => {
         jest.resetModules();
+        rafCallbacks = [];
 
         dom = new JSDOM(
             `<!DOCTYPE html>
@@ -32,6 +34,10 @@ describe('Editor initialization events', () => {
         global.localStorage = dom.window.localStorage;
         global.Event = dom.window.Event;
         global.KeyboardEvent = dom.window.KeyboardEvent;
+        window.requestAnimationFrame = jest.fn((callback) => {
+            rafCallbacks.push(callback);
+            return rafCallbacks.length;
+        });
 
         editor = document.getElementById('editor');
         handleShortcut = jest.fn();
@@ -44,7 +50,8 @@ describe('Editor initialization events', () => {
                 togglePreviewButton: document.getElementById('toggle-preview')
             },
             state: {
-                dirty: false
+                dirty: false,
+                lastSavedContent: ''
             },
             constants: {
                 AUTOSAVE_INTERVAL: 1500
@@ -78,7 +85,11 @@ describe('Editor initialization events', () => {
             },
             statusManager: {
                 setDefaultMessage: jest.fn(),
-                showReady: jest.fn()
+                showReady: jest.fn(),
+                showOperation: jest.fn()
+            },
+            stateManager: {
+                markDirty: jest.fn()
             },
             history: {
                 initHistory: jest.fn()
@@ -91,6 +102,9 @@ describe('Editor initialization events', () => {
         });
 
         require('../js/editor-init.js');
+        window.MarkdownEditor.preview.updatePreview.mockClear();
+        window.MarkdownEditor.syntaxHighlight.updateRawHighlights.mockClear();
+        window.MarkdownEditor.utils.updateCounters.mockClear();
     });
 
     afterEach(() => {
@@ -112,5 +126,22 @@ describe('Editor initialization events', () => {
         );
 
         expect(handleShortcut).toHaveBeenCalledTimes(1);
+    });
+
+    test('coalesces full-document render work for rapid input events', () => {
+        editor.value = '# Updated';
+
+        editor.dispatchEvent(new Event('input', { bubbles: true }));
+        editor.dispatchEvent(new Event('input', { bubbles: true }));
+
+        expect(window.requestAnimationFrame).toHaveBeenCalledTimes(1);
+        expect(window.MarkdownEditor.preview.updatePreview).not.toHaveBeenCalled();
+        expect(window.MarkdownEditor.syntaxHighlight.updateRawHighlights).not.toHaveBeenCalled();
+
+        rafCallbacks[0]();
+
+        expect(window.MarkdownEditor.preview.updatePreview).toHaveBeenCalledTimes(1);
+        expect(window.MarkdownEditor.syntaxHighlight.updateRawHighlights).toHaveBeenCalledTimes(1);
+        expect(window.MarkdownEditor.utils.updateCounters).toHaveBeenCalledTimes(2);
     });
 });

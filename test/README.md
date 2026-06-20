@@ -60,6 +60,11 @@ npm run test:watch
 npm run test:coverage
 ```
 
+### Tooling Notes
+
+- Jest runs without a Babel transform because the production and test sources are plain CommonJS/script-compatible JavaScript. This keeps the test suite independent from optional Babel plugins in minimal or partially installed environments.
+- ESLint is configured through the repository-root `eslint.config.js` flat config so `npm run lint` works with current ESLint releases as well as the pinned development dependency.
+
 ## Test Structure
 
 The tests use Jest as the testing framework and include:

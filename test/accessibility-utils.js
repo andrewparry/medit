@@ -3,8 +3,6 @@
  * Helper functions for testing accessibility compliance
  */
 
-/* eslint-env node */
-
 /**
  * Check if element has proper ARIA attributes
  * @param {HTMLElement} element - Element to check

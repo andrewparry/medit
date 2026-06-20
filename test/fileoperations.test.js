@@ -5,7 +5,6 @@
  * Requirements: 2.1, 3.1
  */
 
-/* eslint-env jest, node */
 /* eslint-disable no-undef */
 
 // Mock DOM environment for testing

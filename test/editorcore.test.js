@@ -4,7 +4,6 @@
  * Requirements: 1.3
  */
 
-/* eslint-env jest, node */
 /* eslint-disable no-undef */
 
 // Mock DOM elements for testing

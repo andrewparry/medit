@@ -1,0 +1,81 @@
+module.exports = [
+    {
+        ignores: ['node_modules/**', 'coverage/**', 'dist/**', 'build/**']
+    },
+    {
+        files: ['js/**/*.js', 'test/**/*.js'],
+        languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'script',
+            globals: {
+                window: 'readonly',
+                document: 'readonly',
+                localStorage: 'readonly',
+                sessionStorage: 'readonly',
+                navigator: 'readonly',
+                Node: 'readonly',
+                Blob: 'readonly',
+                FileReader: 'readonly',
+                URL: 'readonly',
+                setTimeout: 'readonly',
+                clearTimeout: 'readonly',
+                setInterval: 'readonly',
+                clearInterval: 'readonly',
+                requestAnimationFrame: 'readonly',
+                CustomEvent: 'readonly',
+                KeyboardEvent: 'readonly',
+                MouseEvent: 'readonly',
+                Event: 'readonly',
+                HTMLElement: 'readonly',
+                HTMLTextAreaElement: 'readonly',
+                HTMLInputElement: 'readonly',
+                HTMLButtonElement: 'readonly',
+                Prism: 'readonly',
+                marked: 'readonly',
+                global: 'readonly',
+                process: 'readonly',
+                module: 'writable',
+                require: 'readonly',
+                exports: 'writable',
+                describe: 'readonly',
+                test: 'readonly',
+                it: 'readonly',
+                expect: 'readonly',
+                beforeEach: 'readonly',
+                afterEach: 'readonly',
+                beforeAll: 'readonly',
+                afterAll: 'readonly',
+                jest: 'readonly'
+            }
+        },
+        rules: {
+            'linebreak-style': ['error', 'unix'],
+            quotes: ['error', 'single', { avoidEscape: true }],
+            semi: ['error', 'always'],
+            'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+            'no-console': ['warn', { allow: ['warn', 'error'] }],
+            'no-debugger': 'warn',
+            eqeqeq: ['error', 'always'],
+            curly: ['error', 'all'],
+            'brace-style': ['error', '1tbs'],
+            'comma-dangle': ['error', 'never'],
+            'no-trailing-spaces': 'error',
+            'no-multiple-empty-lines': ['error', { max: 2, maxEOF: 1 }],
+            'space-before-function-paren': [
+                'error',
+                { anonymous: 'always', named: 'never', asyncArrow: 'always' }
+            ],
+            'keyword-spacing': ['error', { before: true, after: true }],
+            'space-infix-ops': 'error',
+            'object-curly-spacing': ['error', 'always'],
+            'array-bracket-spacing': ['error', 'never'],
+            'computed-property-spacing': ['error', 'never'],
+            'space-before-blocks': 'error',
+            'arrow-spacing': ['error', { before: true, after: true }],
+            'no-var': 'error',
+            'prefer-const': 'error',
+            'prefer-arrow-callback': 'error',
+            'prefer-template': 'warn'
+        }
+    }
+];

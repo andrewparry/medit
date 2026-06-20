@@ -4,7 +4,6 @@
  * Requirements: 6.1, 1.1
  */
 
-/* eslint-env jest, node */
 /* eslint-disable no-undef */
 
 // Mock browser environment for testing

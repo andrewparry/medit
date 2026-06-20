@@ -9,8 +9,6 @@
  * - Best-effort persistence behavior when IndexedDB is unavailable (Node/Jest)
  */
 
-/* eslint-env jest, node */
-
 describe('storageFSA (File System Access storage)', () => {
     let storage;
 

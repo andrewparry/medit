@@ -8,8 +8,6 @@
  * - Ensure user-facing state (editor value, filename display, status) updates.
  */
 
-/* eslint-env jest, node */
-
 const { JSDOM } = require('jsdom');
 
 describe('editor-file-ops (File System Access integration)', () => {

@@ -4,8 +4,6 @@
  * Requirements: 7.2, 7.3
  */
 
-/* eslint-env node, jest */
-
 // Mock DOM environment for testing
 class MockElement {
     constructor(tagName = 'div') {

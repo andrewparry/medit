@@ -33,8 +33,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "lint": "eslint \"js/**/*.js\" \"test/**/*.js\" --ignore-path .gitignore --max-warnings=100 --quiet",
-    "lint:fix": "eslint \"js/**/*.js\" \"test/**/*.js\" --fix --ignore-path .gitignore",
+    "lint": "eslint \"js/**/*.js\" \"test/**/*.js\" --ignore-pattern \"node_modules/**\" --max-warnings=100 --quiet",
+    "lint:fix": "eslint \"js/**/*.js\" \"test/**/*.js\" --fix --ignore-pattern \"node_modules/**\"",
     "format": "prettier --write \"**/*.{js,json,md,css,html}\" --ignore-path .prettierignore",
     "format:check": "prettier --check \"**/*.{js,json,md,css,html}\" --ignore-path .prettierignore",
     "prepare": "husky"
@@ -73,6 +73,7 @@
       "text",
       "lcov",
       "html"
-    ]
+    ],
+    "transform": {}
   }
 }
